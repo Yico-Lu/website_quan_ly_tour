@@ -11,4 +11,4 @@ Dự án PHP cơ bản mô phỏng cấu trúc MVC tối giản phục vụ họ
 - `src/controllers/`: nghiệp vụ mẫu (`HomeController` với nhiều action).
 - `views/`: giao diện tương ứng mỗi action (trang chủ, giỏ hàng, thanh toán...).
 - `public/`: tài nguyên tĩnh (css/js/images).
-- `.htaccess`: Dùng Rewrite URL Chuyển từ dạng "index.php?act=home" thành "/home"
+- `.htaccess`: Dùng Rewrite URL chuyển từ dạng `index.php?act=home` thành `/home`
