@@ -12,3 +12,7 @@ node_modules/
 *.log
 *.cache
 /public/images/uploads/
+
+AdminLTE-4.0.0-beta3
+
+website_ql_tour.sql
