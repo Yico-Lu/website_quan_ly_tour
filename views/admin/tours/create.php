@@ -95,7 +95,7 @@
                     class="form-control"
                     id="mo_ta"
                     name="mo_ta"
-                    rows="4"
+                    rows="2"
                     placeholder="Nhập mô tả chi tiết về tour..."
                     required
                 ><?= htmlspecialchars($old['mo_ta'] ?? '') ?></textarea>

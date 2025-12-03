@@ -69,8 +69,8 @@ match ($act) {
     // Xử lý route có tham số
     default => match($route) {
         'tours' => match($param) {
-            'edit' => $tourController->edit($actParts[2] ?? null),
-            default => $homeController->notFound()
+        'edit' => $tourController->edit($actParts[2] ?? null),
+        default => $homeController->notFound()
         },
         'tours/update' => $tourController->update(),
         default => $homeController->notFound()
