@@ -54,6 +54,13 @@
             $gia = trim($_POST['gia'] ?? 0);
             $trang_thai = isset($_POST['trang_thai']) ? 1 : 0;
             $anh_tour = trim($_POST['anh_tour'] ?? '');
+            $lich_trinh = trim($_POST['lich_trinh'] ?? '');
+            $chinh_sach_ten = trim($_POST['chinh_sach_ten'] ?? '');
+            $chinh_sach_noi_dung = trim($_POST['chinh_sach_noi_dung'] ?? '');
+            $nha_cung_cap_ten = trim($_POST['nha_cung_cap_ten'] ?? '');
+            $nha_cung_cap_loai = trim($_POST['nha_cung_cap_loai'] ?? '');
+            $nha_cung_cap_lien_he = trim($_POST['nha_cung_cap_lien_he'] ?? '');
+            $anh_chi_tiet = array_filter($_POST['anh_chi_tiet'] ?? []);
 
             //kiểm tra dữ liệu
             $errors = [];
@@ -90,7 +97,34 @@
                 'anh_tour' => $anh_tour
             ]);
 
-            if(Tour::save($tour)){
+            $tourId = Tour::save($tour);
+            if($tourId){
+                // Lưu chính sách
+                if(!empty($chinh_sach_ten) && !empty($chinh_sach_noi_dung)){
+                    $pdo = getDB();
+                    $sql = "INSERT INTO tour_chinh_sach (tour_id, ten_chinh_sach, noi_dung, ngay_tao, ngay_cap_nhat)
+                            VALUES (?, ?, ?, NOW(), NOW())";
+                    $pdo->prepare($sql)->execute([$tourId, $chinh_sach_ten, $chinh_sach_noi_dung]);
+                }
+
+                // Lưu lịch trình
+                Tour::saveLichTrinh($tourId, $lich_trinh);
+
+                // Lưu nhà cung cấp
+                if(!empty($nha_cung_cap_ten) && !empty($nha_cung_cap_loai)){
+                    $pdo = getDB();
+                    $sql = "INSERT INTO tour_nha_cung_cap (tour_id, ten_nha_cung_cap, loai, lien_he, ngay_tao, ngay_cap_nhat)
+                            VALUES (?, ?, ?, ?, NOW(), NOW())";
+                    $pdo->prepare($sql)->execute([$tourId, $nha_cung_cap_ten, $nha_cung_cap_loai, $nha_cung_cap_lien_he]);
+                }
+
+                // Lưu ảnh chi tiết
+                foreach($anh_chi_tiet as $anh){
+                    if(!empty(trim($anh))){
+                        Tour::saveAnhChiTiet($tourId, trim($anh));
+                    }
+                }
+
                 $_SESSION['success'] = 'Thêm tour mới thành công';
                 header('Location: ' . BASE_URL . 'tours');
                 exit;
@@ -106,7 +140,7 @@
         {
             requireAdmin();
 
-            $tour = Tour::find($id);
+            $tour = Tour::find($id, true); // Load dữ liệu liên quan
             if(!$tour){
                 $_SESSION['error'] = 'Tour không tồn tại';
                 header('Location: ' . BASE_URL . 'tours');
@@ -151,6 +185,13 @@
             $gia = trim($_POST['gia'] ?? 0);
             $trang_thai = isset($_POST['trang_thai']) ? 1 : 0;
             $anh_tour = trim($_POST['anh_tour'] ?? '');
+            $lich_trinh = trim($_POST['lich_trinh'] ?? '');
+            $chinh_sach_ten = trim($_POST['chinh_sach_ten'] ?? '');
+            $chinh_sach_noi_dung = trim($_POST['chinh_sach_noi_dung'] ?? '');
+            $nha_cung_cap_ten = trim($_POST['nha_cung_cap_ten'] ?? '');
+            $nha_cung_cap_loai = trim($_POST['nha_cung_cap_loai'] ?? '');
+            $nha_cung_cap_lien_he = trim($_POST['nha_cung_cap_lien_he'] ?? '');
+            $anh_chi_tiet = array_filter($_POST['anh_chi_tiet'] ?? []);
 
             //kiểm tra dữ liệu
             $errors = [];
@@ -191,6 +232,36 @@
             ]);
 
             if(Tour::update($tour)){
+                $pdo = getDB();
+
+                // Cập nhật chính sách - xóa cũ và thêm mới
+                $pdo->prepare("DELETE FROM tour_chinh_sach WHERE tour_id = ?")->execute([$id]);
+                if(!empty($chinh_sach_ten) && !empty($chinh_sach_noi_dung)){
+                    $sql = "INSERT INTO tour_chinh_sach (tour_id, ten_chinh_sach, noi_dung, ngay_tao, ngay_cap_nhat)
+                            VALUES (?, ?, ?, NOW(), NOW())";
+                    $pdo->prepare($sql)->execute([$id, $chinh_sach_ten, $chinh_sach_noi_dung]);
+                }
+
+                // Cập nhật lịch trình - xóa cũ và thêm mới
+                $pdo->prepare("DELETE FROM tour_lich_trinh WHERE tour_id = ?")->execute([$id]);
+                Tour::saveLichTrinh($id, $lich_trinh);
+
+                // Cập nhật nhà cung cấp - xóa cũ và thêm mới
+                $pdo->prepare("DELETE FROM tour_nha_cung_cap WHERE tour_id = ?")->execute([$id]);
+                if(!empty($nha_cung_cap_ten) && !empty($nha_cung_cap_loai)){
+                    $sql = "INSERT INTO tour_nha_cung_cap (tour_id, ten_nha_cung_cap, loai, lien_he, ngay_tao, ngay_cap_nhat)
+                            VALUES (?, ?, ?, ?, NOW(), NOW())";
+                    $pdo->prepare($sql)->execute([$id, $nha_cung_cap_ten, $nha_cung_cap_loai, $nha_cung_cap_lien_he]);
+                }
+
+                // Cập nhật ảnh chi tiết - xóa cũ và thêm mới
+                $pdo->prepare("DELETE FROM tour_anh WHERE tour_id = ?")->execute([$id]);
+                foreach($anh_chi_tiet as $anh){
+                    if(!empty(trim($anh))){
+                        Tour::saveAnhChiTiet($id, trim($anh));
+                    }
+                }
+
                 $_SESSION['success'] = 'Cập nhật tour thành công';
                 header('Location: ' . BASE_URL . 'tours');
                 exit;
@@ -199,6 +270,30 @@
                 header('Location: ' . BASE_URL . 'tours/edit/' . $id);
                 exit;
             }
+        }
+
+        //xem chi tiết tour
+        public function show($id):void
+        {
+            requireAdmin();
+
+            $tour = Tour::getTourWithDetails($id); // Lấy tour với tất cả thông tin
+            if(!$tour){
+                $_SESSION['error'] = 'Tour không tồn tại';
+                header('Location: ' . BASE_URL . 'tours');
+                exit;
+            }
+
+            view('admin.tours.show', [
+                'title' => 'Chi tiết Tour: ' . $tour->ten_tour,
+                'pageTitle' => 'Chi tiết Tour',
+                'tour' => $tour,
+                'breadcrumb' => [
+                    ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
+                    ['label' => 'Danh sách tour', 'url' => BASE_URL . 'tours'],
+                    ['label' => 'Chi tiết tour', 'url' => BASE_URL . 'tours/show/' . $id, 'active' => true],
+                ],
+            ]);
         }
 
         //xoá tour

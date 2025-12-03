@@ -24,10 +24,16 @@ $tourController = new TourController();
 // Xác định route dựa trên tham số act (mặc định là trang chủ '/')
 $act = $_GET['act'] ?? '/';
 
-// Xử lý route có tham số
+// Xử lý route có tham số trước
 if (strpos($act, 'tours/edit/') === 0) {
     $id = str_replace('tours/edit/', '', $act);
     $tourController->edit($id);
+    exit;
+}
+
+if (strpos($act, 'tours/show/') === 0) {
+    $id = str_replace('tours/show/', '', $act);
+    $tourController->show($id);
     exit;
 }
 
@@ -51,16 +57,6 @@ match ($act) {
     'tours/update' => $tourController->update(),
     'tours/delete' => $tourController->delete(),
 
-    // Xử lý route có tham số
-    default => match($route) {
-        'tours' => match($param) {
-            'edit' => $tourController->edit($actParts[2] ?? null),
-            default => $homeController->notFound()
-        },
-        'tours/update' => $tourController->update(),
-        default => $homeController->notFound()
-    }
-
     // Đường dẫn không tồn tại
-    // default => $homeController->notFound(),
+    default => $homeController->notFound(),
 };
