@@ -7,7 +7,7 @@
         <h3 class="card-title">Thêm Tour Mới</h3>
     </div>
 
-    <form action="<?= BASE_URL ?>tours/store" method="POST">
+    <form action="<?= BASE_URL ?>tours/store" method="POST" enctype="multipart/form-data">
         <div class="card-body">
             <!-- Hiển thị lỗi -->
             <?php if(isset($errors) && !empty($errors)): ?>
@@ -105,14 +105,16 @@
             <div class="mb-3">
                 <label for="anh_tour" class="form-label">Ảnh Tour</label>
                 <input
-                    type="text"
+                    type="file"
                     class="form-control"
                     id="anh_tour"
                     name="anh_tour"
-                    value="<?= htmlspecialchars($old['anh_tour'] ?? '') ?>"
-                    placeholder="Đường dẫn ảnh tour (VD: tour-ha-noi.jpg)"
+                    accept="image/*"
                 />
-                <div class="form-text">Có thể để trống, sẽ dùng ảnh mặc định</div>
+                <div class="form-text">
+                    Chọn ảnh cho tour (JPG, PNG, GIF). Kích thước tối đa 2MB.<br>
+                    Nếu không chọn ảnh, sẽ dùng ảnh mặc định.
+                </div>
             </div>
 
             <!-- CHÍNH SÁCH TOUR -->
@@ -206,33 +208,15 @@ Ngày 2: Hạ Long - Hà Nội (Tham quan hang Sửng Sốt, về Hà Nội)"
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="anh_1" class="form-label">Ảnh 1 <span class="text-muted">(không bắt buộc)</span></label>
-                            <input type="text" class="form-control" id="anh_1" name="anh_chi_tiet[]"
-                                   value="<?= htmlspecialchars($old['anh_chi_tiet'][0] ?? '') ?>"
-                                   placeholder="tour-detail-1.jpg">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="anh_2" class="form-label">Ảnh 2 <span class="text-muted">(không bắt buộc)</span></label>
-                            <input type="text" class="form-control" id="anh_2" name="anh_chi_tiet[]"
-                                   value="<?= htmlspecialchars($old['anh_chi_tiet'][1] ?? '') ?>"
-                                   placeholder="tour-detail-2.jpg">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="anh_3" class="form-label">Ảnh 3 <span class="text-muted">(không bắt buộc)</span></label>
-                            <input type="text" class="form-control" id="anh_3" name="anh_chi_tiet[]"
-                                   value="<?= htmlspecialchars($old['anh_chi_tiet'][2] ?? '') ?>"
-                                   placeholder="tour-detail-3.jpg">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="anh_4" class="form-label">Ảnh 4 <span class="text-muted">(không bắt buộc)</span></label>
-                            <input type="text" class="form-control" id="anh_4" name="anh_chi_tiet[]"
-                                   value="<?= htmlspecialchars($old['anh_chi_tiet'][3] ?? '') ?>"
-                                   placeholder="tour-detail-4.jpg">
+                    <div class="mb-3">
+                        <label for="anh_chi_tiet" class="form-label">Chọn nhiều ảnh chi tiết <span class="text-muted">(không bắt buộc)</span></label>
+                        <input type="file" class="form-control" id="anh_chi_tiet" name="anh_chi_tiet[]"
+                               accept="image/*" multiple>
+                        <div class="form-text">
+                            Có thể chọn nhiều ảnh cùng lúc (JPG, PNG, GIF).<br>
+                            Mỗi ảnh tối đa 2MB. Để trống nếu không có ảnh.
                         </div>
                     </div>
-                    <div class="form-text">Để trống nếu không có ảnh. Hệ thống sẽ dùng ảnh mặc định.</div>
                 </div>
             </div>
         </div>

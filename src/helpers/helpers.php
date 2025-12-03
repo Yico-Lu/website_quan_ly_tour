@@ -143,9 +143,105 @@ function requireAdmin()
 function requireGuideOrAdmin()
 {
     requireLogin();
-    
+
     if (!isGuide() && !isAdmin()) {
         header('Location: ' . BASE_URL);
         exit;
     }
+}
+
+// Thiết lập thông báo flash message
+function setFlashMessage($type, $message)
+{
+    $_SESSION['flash_messages'][] = [
+        'type' => $type,
+        'message' => $message,
+        'timestamp' => time()
+    ];
+}
+
+// Lấy và xóa thông báo flash message
+function getFlashMessages()
+{
+    $messages = $_SESSION['flash_messages'] ?? [];
+    unset($_SESSION['flash_messages']);
+    return $messages;
+}
+
+// Upload một ảnh đơn
+function uploadImage($file, $prefix = 'file', $uploadDir = 'uploads/general/')
+{
+    if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
+
+    // Validate file type
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!in_array($file['type'], $allowedTypes)) {
+        return null; // Invalid file type
+    }
+
+    // Validate file size (5MB max)
+    $maxSize = 5 * 1024 * 1024; // 5MB
+    if ($file['size'] > $maxSize) {
+        return null; // File too large
+    }
+
+    // Get file extension
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+    // Validate extension as additional security
+    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    if (!in_array($extension, $allowedExtensions)) {
+        return null; // Invalid extension
+    }
+
+    // Generate unique filename
+    $fileName = $prefix . '_' . time() . '_' . rand(1000, 9999) . '.' . $extension;
+
+    // Full path to save file
+    $fullUploadDir = __DIR__ . '/../../public/' . $uploadDir;
+    $filePath = $fullUploadDir . $fileName;
+
+    // Create directory if it doesn't exist
+    if (!is_dir($fullUploadDir)) {
+        mkdir($fullUploadDir, 0755, true);
+    }
+
+    // Move uploaded file
+    if (move_uploaded_file($file['tmp_name'], $filePath)) {
+        return '/' . $uploadDir . $fileName; // Return web path
+    }
+
+    return null;
+}
+
+// Upload nhiều ảnh
+function uploadMultipleImages($files, $prefix = 'file', $uploadDir = 'uploads/general/')
+{
+    $uploadedPaths = [];
+
+    if (!$files || !is_array($files['name'])) {
+        return $uploadedPaths;
+    }
+
+    // Process each file
+    foreach ($files['name'] as $key => $name) {
+        if ($files['error'][$key] !== UPLOAD_ERR_NO_FILE) {
+            $file = [
+                'name' => $files['name'][$key],
+                'type' => $files['type'][$key],
+                'tmp_name' => $files['tmp_name'][$key],
+                'error' => $files['error'][$key],
+                'size' => $files['size'][$key]
+            ];
+
+            $path = uploadImage($file, $prefix, $uploadDir);
+            if ($path) {
+                $uploadedPaths[] = $path;
+            }
+        }
+    }
+
+    return $uploadedPaths;
 }

@@ -7,11 +7,9 @@
         <h3 class="card-title">Sửa Tour</h3>
     </div>
 
-    <form action="<?= BASE_URL ?>tours/update" method="POST">
+    <form action="<?= BASE_URL ?>tours/update" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="<?= $tour->id ?>">
         <div class="card-body">
-            <!-- Hidden ID -->
-            <input type="hidden" name="id" value="<?= $tour->id ?>">
-
             <!-- Hiển thị lỗi -->
             <?php if(isset($errors) && !empty($errors)): ?>
                 <div class="alert alert-danger">
@@ -111,14 +109,23 @@
             <div class="mb-3">
                 <label for="anh_tour" class="form-label">Ảnh Tour</label>
                 <input
-                    type="text"
+                    type="file"
                     class="form-control"
                     id="anh_tour"
                     name="anh_tour"
-                    value="<?= htmlspecialchars($old['anh_tour'] ?? $tour->anh_tour) ?>"
-                    placeholder="Đường dẫn ảnh tour (VD: tour-ha-noi.jpg)"
+                    accept="image/*"
                 />
-                <div class="form-text">Có thể để trống, sẽ dùng ảnh mặc định</div>
+                <?php if(!empty($tour->anh_tour)): ?>
+                    <div class="mt-2">
+                        <small class="text-muted">Ảnh hiện tại:</small><br>
+                        <img src="<?= asset($tour->anh_tour) ?>" alt="Ảnh hiện tại"
+                             style="max-width: 100px; max-height: 100px;" class="border rounded">
+                    </div>
+                <?php endif; ?>
+                <div class="form-text">
+                    Chọn ảnh mới để thay đổi (JPG, PNG, GIF). Kích thước tối đa 2MB.<br>
+                    Nếu không chọn ảnh, sẽ giữ ảnh hiện tại.
+                </div>
             </div>
 
             <!-- CHÍNH SÁCH TOUR -->
@@ -221,21 +228,32 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <?php
-                        $anhChiTietList = $tour->getAnhChiTiet();
-                        for($i = 0; $i < 4; $i++):
-                            $anh = $anhChiTietList[$i] ?? null;
-                        ?>
-                        <div class="col-md-6 mb-3">
-                            <label for="anh_<?= $i + 1 ?>" class="form-label">Ảnh <?= $i + 1 ?> <span class="text-muted">(không bắt buộc)</span></label>
-                            <input type="text" class="form-control" id="anh_<?= $i + 1 ?>" name="anh_chi_tiet[]"
-                                   value="<?= htmlspecialchars($anh ? $anh['duong_dan'] : '') ?>"
-                                   placeholder="tour-detail-<?= $i + 1 ?>.jpg">
+                    <!-- Hiển thị ảnh hiện tại -->
+                    <?php $anhChiTietList = $tour->getAnhChiTiet(); ?>
+                    <?php if(!empty($anhChiTietList)): ?>
+                    <div class="mb-3">
+                        <small class="text-muted">Ảnh hiện tại:</small>
+                        <div class="row mt-2">
+                            <?php foreach($anhChiTietList as $anh): ?>
+                            <div class="col-md-3 mb-2">
+                                <img src="<?= asset($anh['duong_dan']) ?>" alt="Ảnh chi tiết"
+                                     class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                            </div>
+                            <?php endforeach; ?>
                         </div>
-                        <?php endfor; ?>
                     </div>
-                    <div class="form-text">Để trống nếu không có ảnh. Hệ thống sẽ dùng ảnh mặc định.</div>
+                    <?php endif; ?>
+
+                    <!-- Upload ảnh mới -->
+                    <div class="mb-3">
+                        <label for="anh_chi_tiet" class="form-label">Thêm ảnh chi tiết mới <span class="text-muted">(không bắt buộc)</span></label>
+                        <input type="file" class="form-control" id="anh_chi_tiet" name="anh_chi_tiet[]"
+                               accept="image/*" multiple>
+                        <div class="form-text">
+                            Chọn thêm ảnh mới (JPG, PNG, GIF). Có thể chọn nhiều ảnh cùng lúc.<br>
+                            Mỗi ảnh tối đa 2MB. Ảnh mới sẽ được thêm vào, không xóa ảnh cũ.
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

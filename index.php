@@ -4,7 +4,7 @@
 $config = require __DIR__ . '/config/config.php';
 
 // Nạp các file chứa hàm trợ giúp
-require_once __DIR__ . '/src/helpers/helpers.php'; // Helper chứa các hàm trợ giúp (hàm xử lý view, block, asset, session, ...)
+require_once __DIR__ . '/src/helpers/helpers.php'; // Helper chứa các hàm trợ giúp (hàm xử lý view, block, asset, session, upload, ...)
 require_once __DIR__ . '/src/helpers/database.php'; // Helper kết nối database(kết nối với cơ sở dữ liệu)
 
 // Nạp các file chứa model

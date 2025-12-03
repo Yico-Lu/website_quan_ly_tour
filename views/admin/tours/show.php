@@ -47,7 +47,7 @@
 
             <div class="col-md-4 text-center">
                 <?php if(!empty($tour->anh_tour)): ?>
-                    <img src="<?= htmlspecialchars($tour->anh_tour) ?>"
+                    <img src="<?= asset($tour->anh_tour) ?>"
                          alt="Ảnh tour"
                          class="img-fluid rounded shadow"
                          style="max-height: 200px;">
@@ -191,7 +191,7 @@
             <?php foreach($anhChiTiet as $anh): ?>
             <div class="col-md-3 mb-3">
                 <div class="card">
-                    <img src="<?= htmlspecialchars($anh['duong_dan']) ?>"
+                    <img src="<?= asset($anh['duong_dan']) ?>"
                          class="card-img-top"
                          alt="Ảnh tour"
                          style="height: 150px; object-fit: cover;">
@@ -232,3 +232,5 @@ view('layouts.AdminLayout', [
     'breadcrumb' => $breadcrumb ?? [],
 ]);
 ?>
+
+
