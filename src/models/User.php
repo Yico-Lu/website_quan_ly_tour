@@ -9,6 +9,7 @@ class User
     public $email;
     public $role;
     public $status;
+    public $ngay_tao;
 
     // Constructor để khởi tạo thực thể User
     public function __construct($data = [])
@@ -20,6 +21,7 @@ class User
             $this->email = $data['email'] ?? '';
             $this->role = $data['role'] ?? 'huong_dan_vien';
             $this->status = $data['status'] ?? 1;
+            $this->ngay_tao = $data['ngay_tao'] ?? null;
         } else {
             // Nếu truyền vào string thì coi như tên (tương thích với code cũ)
             $this->name = $data;
@@ -94,6 +96,7 @@ class User
                     'email' => $row['email'],
                     'role' => $row['phan_quyen'] === 'admin' ? 'admin' : 'huong_dan_vien',
                     'status' => $row['trang_thai'] === 'hoat_dong' ? 1 : 0,
+                    'ngay_tao' => $row['ngay_tao'],
                 ]);
             }
             return $users;
@@ -115,6 +118,7 @@ class User
                 'email' => $data['email'],
                 'role' => $data['phan_quyen'] === 'admin' ? 'admin' : 'huong_dan_vien',
                 'status' => $data['trang_thai'] === 'hoat_dong' ? 1 : 0,
+                'ngay_tao' => $data['ngay_tao'],
             ]);
         }
 

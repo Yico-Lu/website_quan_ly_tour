@@ -41,7 +41,7 @@
                                         <?= $user->getStatusName() ?>
                                     </span>
                                 </td>
-                                <td>Chưa cập nhật</td>
+                                <td><?= $user->ngay_tao ? date('d/m/Y', strtotime($user->ngay_tao)) : 'Chưa cập nhật' ?></td>
                                 <td>
                                     <div class="btn-group btn-group-sm gap-1">
                                         <a href="<?= BASE_URL ?>accounts/edit/<?= $user->id ?>" class="btn btn-warning btn-sm" title="Sửa">
@@ -105,3 +105,4 @@ view('layouts.AdminLayout', [
 </script>
 <?php unset($_SESSION['error']); ?>
 <?php endif; ?>
+
