@@ -44,9 +44,9 @@
                               <button type="button" class="btn btn-info rounded-xs" title="Xem chi tiết">
                                 <i class="bi bi-eye"></i>
                               </button>
-                              <button type="button" class="btn btn-warning" title="Sửa">
+                              <a href="<?= BASE_URL ?>tours/edit/<?= $tour->id ?>" class="btn btn-warning btn-sm" title="Sửa">
                                 <i class="bi bi-pencil"></i>
-                              </button>
+                              </a>
                               <!-- <button type="button" class="btn btn-danger" title="Xóa"> -->
                               <form method="POST" action="<?= BASE_URL ?>tours/delete"  
                                     onsubmit="return confirm('Bạn có chắc chắn muốn xóa tour này không')">

@@ -133,7 +133,32 @@
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
             return $data ? new Tour($data) : null;
         }
- 
-        
+
+        //cập nhật tour
+        public static function update(Tour $tour)
+        {
+            $pdo = getDB();
+            $sql = "UPDATE tour SET
+                        danh_muc_id = ?,
+                        ten_tour = ?,
+                        mo_ta = ?,
+                        gia = ?,
+                        trang_thai = ?,
+                        anh_tour = ?,
+                        ngay_cap_nhat = NOW()
+                    WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            return $stmt->execute([
+                $tour->danh_muc_id,
+                $tour->ten_tour,
+                $tour->mo_ta,
+                $tour->gia,
+                $tour->trang_thai,
+                $tour->anh_tour,
+                $tour->id
+            ]);
+        }
+
+
     }
 ?>
