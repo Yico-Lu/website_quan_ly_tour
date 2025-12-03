@@ -49,6 +49,20 @@
       crossorigin="anonymous"
     ></script>
     <!--end::Bootstrap 5 JS-->
+    <!--begin::Auto Dismiss Alerts-->
+    <script>
+      // Tự động ẩn alert sau 5 giây
+      document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert.alert-dismissible');
+        alerts.forEach(function(alert) {
+          setTimeout(function() {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+          }, 5000); // 5 giây
+        });
+      });
+    </script>
+    <!--end::Auto Dismiss Alerts-->
     <?php if (isset($extraJs)): ?>
       <?php foreach ($extraJs as $js): ?>
         <script src="<?= asset($js) ?>"></script>

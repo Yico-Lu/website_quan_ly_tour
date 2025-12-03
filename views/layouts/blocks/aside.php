@@ -79,15 +79,28 @@
             <a href="#" class="nav-link">
               <i class="nav-icon bi bi-person-gear"></i>
               <p>
-                Quản lý Người dùng
+                Quản lý Tài khoản
                 <i class="nav-arrow bi bi-chevron-right"></i>
               </p>
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="<?= BASE_URL ?>accounts" class="nav-link">
                   <i class="nav-icon bi bi-circle"></i>
-                  <p>Danh sách Người dùng</p>
+                  <p>Tất cả tài khoản</p>
+                </a>
+              </li>
+              <li class="nav-header">Theo loại tài khoản</li>
+              <li class="nav-item">
+                <a href="<?= BASE_URL ?>accounts/admins" class="nav-link">
+                  <i class="nav-icon bi bi-shield-check text-primary"></i>
+                  <p>Quản trị viên</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="<?= BASE_URL ?>accounts?filter=hdv" class="nav-link">
+                  <i class="nav-icon bi bi-person-badge text-info"></i>
+                  <p>Hướng dẫn viên</p>
                 </a>
               </li>
             </ul>

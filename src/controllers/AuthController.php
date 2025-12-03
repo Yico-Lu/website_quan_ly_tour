@@ -61,14 +61,40 @@ class AuthController
             return;
         }
 
-        // Tạo user mẫu để đăng nhập (không kiểm tra database)
-        // Chỉ để demo giao diện
+        // Kiểm tra thông tin đăng nhập với database
+        $account = Account::findByEmail($email);
+
+        // Kiểm tra tài khoản có tồn tại không
+        if (!$account) {
+            $errors[] = 'Email hoặc mật khẩu không đúng';
+        }
+        // Kiểm tra mật khẩu
+        elseif (!$account->verifyPassword($password)) {
+            $errors[] = 'Email hoặc mật khẩu không đúng';
+        }
+        // Kiểm tra trạng thái tài khoản
+        elseif ($account->trang_thai !== 'hoat_dong') {
+            $errors[] = 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.';
+        }
+
+        // Nếu có lỗi thì quay lại form login
+        if (!empty($errors)) {
+            view('auth.login', [
+                'title' => 'Đăng nhập',
+                'errors' => $errors,
+                'email' => $email,
+                'redirect' => $redirect,
+            ]);
+            return;
+        }
+
+        // Tạo User object từ Account để tương thích với code cũ
         $user = new User([
-            'id' => 1,
-            'name' => 'Người dùng mẫu',
-            'email' => $email,
-            'role' => 'huong_dan_vien',
-            'status' => 1,
+            'id' => $account->id,
+            'name' => $account->ho_ten,
+            'email' => $account->email,
+            'role' => $account->phan_quyen,
+            'status' => ($account->trang_thai === 'hoat_dong') ? 1 : 0,
         ]);
 
         // Đăng nhập thành công: lưu vào session
