@@ -26,9 +26,9 @@
             requireAdmin();
 
             $danhMucList = Tour::getDanhMucList();
-            view('admin.tours.index', [
-                'title' => 'Thêm tour mới',
-                'pageTitle' => 'Thêm tour mới',
+            view('admin.tours.create', [
+                'title' => 'Thêm Tour Mới',
+                'pageTitle' => 'Thêm Tour Mới',
                 'danhMucList' => $danhMucList,
                 'breadcrumb' => [
                     ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
@@ -57,7 +57,7 @@
 
             //kiểm tra dữ liệu
             $errors = [];
-            if(empty($ten_tour)) $errors = "Vui lòng nhập tên tour";
+            if(empty($ten_tour)) $errors[] = 'Vui lòng nhập tên tour';
             if(empty($danh_muc_id)) $errors[] = 'Vui lòng chọn danh mục';
             if(empty($mo_ta)) $errors[] = 'Vui lòng nhập mô tả';
             if($gia <= 0) $errors[] = 'Giá tour phải lớn hơn 0';
