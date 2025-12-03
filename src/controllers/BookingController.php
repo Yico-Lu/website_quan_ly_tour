@@ -4,8 +4,8 @@ class BookingController
     // Hiển thị danh sách booking
     public function index(): void
     {
-        // Kiểm tra quyền admin hoặc hướng dẫn viên
-        requireGuideOrAdmin();
+        // Chỉ admin mới được truy cập quản lý booking
+        requireAdmin();
 
         $bookings = Booking::getAll();
 
@@ -24,7 +24,7 @@ class BookingController
     // Hiển thị chi tiết booking
     public function show($id): void
     {
-        requireGuideOrAdmin();
+        requireAdmin();
 
         $booking = Booking::find($id);
         if (!$booking) {
@@ -48,7 +48,7 @@ class BookingController
     // Hiển thị form thêm booking mới
     public function create(): void
     {
-        requireGuideOrAdmin();
+        requireAdmin();
 
         $tourList = Booking::getTourList();
         $guideList = Booking::getGuideList();
@@ -69,7 +69,8 @@ class BookingController
     // Lưu booking mới
     public function store(): void
     {
-        requireGuideOrAdmin();
+        // Chỉ admin mới được tạo booking
+        requireAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . 'bookings/create');
@@ -146,7 +147,7 @@ class BookingController
     // Hiển thị form sửa booking
     public function edit($id): void
     {
-        requireGuideOrAdmin();
+        requireAdmin();
 
         $booking = Booking::find($id);
         if (!$booking) {
@@ -175,7 +176,7 @@ class BookingController
     // Cập nhật booking
     public function update(): void
     {
-        requireGuideOrAdmin();
+        requireAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . 'bookings');
@@ -262,7 +263,7 @@ class BookingController
     // Xóa booking
     public function delete(): void
     {
-        requireGuideOrAdmin();
+        requireAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . 'bookings');
