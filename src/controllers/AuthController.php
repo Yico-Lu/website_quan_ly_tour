@@ -61,15 +61,18 @@ class AuthController
             return;
         }
 
-        // Tạo user mẫu để đăng nhập (không kiểm tra database)
-        // Chỉ để demo giao diện
-        $user = new User([
-            'id' => 1,
-            'name' => 'Người dùng mẫu',
-            'email' => $email,
-            'role' => 'huong_dan_vien',
-            'status' => 1,
-        ]);
+        //Xác thực đăng nhập
+        $user = User::authenticate($email, $password);
+        if($user === null){
+            $errors[] = 'Email hoặc mật khẩu không đúng';
+            view('auth.login', [
+                'title' => 'Đăng nhập',
+                'errors' => $errors,
+                'email' => $email,
+                'redirect' => $redirect,
+            ]);
+            return;
+        }
 
         // Đăng nhập thành công: lưu vào session
         loginUser($user);

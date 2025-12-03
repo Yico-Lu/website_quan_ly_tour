@@ -12,7 +12,7 @@ if (!defined('BASE_URL')) {
 return [
     'db' => [
         'host' => 'localhost', // Host cơ sở dữ liệu
-        'name' => 'du_an_1', // Tên cơ sở dữ liệu
+        'name' => 'website_ql_tour', // Tên cơ sở dữ liệu
         'user' => 'root', // Tên người dùng
         'pass' => '', // Mật khẩu
         'charset' => 'utf8mb4', // Mã hóa
