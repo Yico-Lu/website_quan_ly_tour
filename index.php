@@ -39,6 +39,12 @@ if (strpos($act, 'accounts/edit/') === 0) {
     exit;
 }
 
+if (strpos($act, 'accounts/show/') === 0) {
+    $id = str_replace('accounts/show/', '', $act);
+    $accountController->show($id);
+    exit;
+}
+
 // Match đảm bảo chỉ một action tương ứng được gọi
 match ($act) {
     // Trang welcome (cho người chưa đăng nhập) - mặc định khi truy cập '/'

@@ -203,6 +203,30 @@ class AccountController
         }
     }
 
+    // Hiển thị chi tiết tài khoản
+    public function show($id): void
+    {
+        requireAdmin();
+
+        $user = User::find($id);
+        if (!$user) {
+            $_SESSION['error'] = 'Tài khoản không tồn tại';
+            header('Location: ' . BASE_URL . 'accounts');
+            exit;
+        }
+
+        view('admin.accounts.show', [
+            'title' => 'Chi tiết tài khoản',
+            'pageTitle' => 'Chi tiết tài khoản: ' . htmlspecialchars($user->name),
+            'user' => $user,
+            'breadcrumb' => [
+                ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
+                ['label' => 'Quản lý tài khoản', 'url' => BASE_URL . 'accounts'],
+                ['label' => 'Chi tiết tài khoản', 'url' => BASE_URL . 'accounts/show/' . $id, 'active' => true],
+            ],
+        ]);
+    }
+
     // Xóa tài khoản
     public function delete(): void
     {

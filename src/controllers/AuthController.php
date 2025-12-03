@@ -4,6 +4,7 @@
 class AuthController
 {
     
+    
     // Hiển thị form đăng nhập
     public function login()
     {
