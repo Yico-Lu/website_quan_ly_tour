@@ -117,6 +117,7 @@ view('layouts.AdminLayout', [
     'pageTitle' => $pageTitle ?? 'Chỉnh sửa tài khoản',
     'content' => $content,
     'breadcrumb' => $breadcrumb ?? [],
+    'extraJs' => ['js/auto-hide-alerts.js'],
 ]);
 ?>
 

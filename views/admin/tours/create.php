@@ -134,5 +134,6 @@ view('layouts.AdminLayout', [
     'pageTitle' => $pageTitle ?? 'Thêm Tour Mới',
     'content' => $content,
     'breadcrumb' => $breadcrumb ?? [],
+    'extraJs' => ['js/auto-hide-alerts.js'],
 ]);
 ?>

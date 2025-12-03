@@ -78,6 +78,7 @@ view('layouts.AdminLayout', [
     'pageTitle' => $pageTitle ?? 'Thêm tài khoản mới',
     'content' => $content,
     'breadcrumb' => $breadcrumb ?? [],
+    'extraJs' => ['js/auto-hide-alerts.js'],
 ]);
 ?>
 
