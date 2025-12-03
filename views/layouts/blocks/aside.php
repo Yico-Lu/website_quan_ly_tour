@@ -60,6 +60,29 @@
         <?php if (isAdmin()): ?>
           <li class="nav-item">
             <a href="#" class="nav-link">
+              <i class="nav-icon bi bi-folder"></i>
+              <p>
+                Danh mục Tour
+                <i class="nav-arrow bi bi-chevron-right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="<?= BASE_URL . 'categories' ?>" class="nav-link">
+                  <i class="nav-icon bi bi-circle"></i>
+                  <p>Danh sách Danh mục</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="<?= BASE_URL . 'categories/create' ?>" class="nav-link">
+                  <i class="nav-icon bi bi-circle"></i>
+                  <p>Thêm Danh mục mới</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
               <i class="nav-icon bi bi-calendar-check"></i>
               <p>
                 Quản lý Booking
