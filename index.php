@@ -15,11 +15,13 @@ require_once __DIR__ . '/src/models/Tour.php';
 require_once __DIR__ . '/src/controllers/HomeController.php';
 require_once __DIR__ . '/src/controllers/AuthController.php';
 require_once __DIR__ . '/src/controllers/TourController.php';
+require_once __DIR__ . '/src/controllers/AccountController.php';
 
 // Khởi tạo các controller
 $homeController = new HomeController();
 $authController = new AuthController();
 $tourController = new TourController();
+$accountController = new AccountController();
 
 // Xác định route dựa trên tham số act (mặc định là trang chủ '/')
 $act = $_GET['act'] ?? '/';
@@ -28,6 +30,12 @@ $act = $_GET['act'] ?? '/';
 if (strpos($act, 'tours/edit/') === 0) {
     $id = str_replace('tours/edit/', '', $act);
     $tourController->edit($id);
+    exit;
+}
+
+if (strpos($act, 'accounts/edit/') === 0) {
+    $id = str_replace('accounts/edit/', '', $act);
+    $accountController->edit($id);
     exit;
 }
 
@@ -50,6 +58,13 @@ match ($act) {
     'tours/store' => $tourController->store(),
     'tours/update' => $tourController->update(),
     'tours/delete' => $tourController->delete(),
+
+    // Đường dẫn quản lý tài khoản
+    'accounts' => $accountController->index(),
+    'accounts/create' => $accountController->create(),
+    'accounts/store' => $accountController->store(),
+    'accounts/update' => $accountController->update(),
+    'accounts/delete' => $accountController->delete(),
 
     // Xử lý route có tham số
     default => match($route) {
