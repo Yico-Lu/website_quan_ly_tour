@@ -4,10 +4,10 @@
 
     <div class="card mb-4">
         <div class="card-header">
-            <h3 class="card-title">Danh sách Tour</h3>
+            <h3 class="card-title">Danh sách Danh mục Tour</h3>
             <div class="card-tools">
-                <a href="<?= BASE_URL ?>tours/create" class="btn btn-success btn-sm">
-                    <i class="bi bi-plus-circle"></i> Thêm Tour mới
+                <a href="<?= BASE_URL ?>categories/create" class="btn btn-success btn-sm">
+                    <i class="bi bi-plus-circle"></i> Thêm Danh mục mới
                 </a>
             </div>
         </div>
@@ -17,41 +17,34 @@
                     <thead>
                         <tr>
                           <th style="width: 10px">#</th>
-                          <th>Tên Tour</th>
-                          <th>Danh mục</th>
-                          <th>Giá</th>
+                          <th>Tên Danh mục</th>
+                          <th>Mô tả</th>
                           <th>Trạng thái</th>
                           <th>Ngày tạo</th>
                           <th style="width: 150px">Thao tác </th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if(!empty($tours)): ?>
-                            <?php foreach($tours as $index => $tour): ?>
+                        <?php if(!empty($categories)): ?>
+                            <?php foreach($categories as $index => $category): ?>
                         <tr class="align-middle">
                           <td><?= $index + 1 ?>.</td>
-                          <td><?= htmlspecialchars($tour->ten_tour) ?></td>
-                          <td><?= htmlspecialchars($tour->ten_danh_muc ?? 'Chưa phân loại') ?></td>
-                          <td><?= $tour->formatGia() ?></td>
+                          <td><?= htmlspecialchars($category->ten_danh_muc) ?></td>
+                          <td><?= htmlspecialchars($category->mo_ta) ?></td>
                           <td>
-                            <span class="badge <?= $tour->getTrangThaiBadgeClass() ?>">
-                              <?= $tour->getTrangThai() ?>
+                            <span class="badge <?= $category->getTrangThaiBadgeClass() ?>">
+                              <?= $category->getTrangThai() ?>
                             </span>
                           </td>
-                          <td><?= date('d/m/Y', strtotime($tour->ngay_tao)) ?></td>
+                          <td><?= date('d/m/Y', strtotime($category->ngay_tao)) ?></td>
                           <td>
                             <div class="btn-group btn-group-sm gap-1">
-                              <a href="<?= BASE_URL ?>tours/show/<?= $tour->id ?>" class="btn btn-info btn-sm" title="Xem chi tiết">
-    <i class="bi bi-eye"></i>
-</a>
-
-                              <a href="<?= BASE_URL ?>tours/edit/<?= $tour->id ?>" class="btn btn-warning btn-sm" title="Sửa">
+                              <a href="<?= BASE_URL ?>categories/edit/<?= $category->id ?>" class="btn btn-warning btn-sm" title="Sửa">
                                 <i class="bi bi-pencil"></i>
                               </a>
-                              <!-- <button type="button" class="btn btn-danger" title="Xóa"> -->
-                              <form method="POST" action="<?= BASE_URL ?>tours/delete"  
-                                    onsubmit="return confirm('Bạn có chắc chắn muốn xóa tour này không')">
-                                <input type="hidden" name="id" value="<?= $tour->id ?>">
+                              <form method="POST" action="<?= BASE_URL ?>categories/delete"
+                                    onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục này không')">
+                                <input type="hidden" name="id" value="<?= $category->id ?>">
                                 <button type="submit" class="btn btn-danger btn-sm" title="Xóa">
                                   <i class="bi bi-trash"></i>
                                 </button>
@@ -62,8 +55,8 @@
                         <?php endforeach; ?>
                         <?php else: ?>
                           <tr>
-                            <td>
-                              <h3>Chưa có tour nào trong hệ thống</h3>
+                            <td colspan="6">
+                              <h3>Chưa có danh mục nào trong hệ thống</h3>
                             </td>
                           </tr>
                         <?php endif; ?>
@@ -85,8 +78,8 @@
 <?php
   $content = ob_get_clean();
   view('layouts.AdminLayout', [
-    'title' => $title ?? 'Danh sách Tour - Quản lý Tour',
-    'pageTitle' => $pageTitle ?? 'Danh sách Tour',
+    'title' => $title ?? 'Danh sách Danh mục Tour - Quản lý Tour',
+    'pageTitle' => $pageTitle ?? 'Danh sách Danh mục Tour',
     'content' => $content,
     'breadcrumb' => $breadcrumb ?? [],
   ]);
@@ -106,4 +99,5 @@
 </script>
 <?php unset($_SESSION['error']); ?>
 <?php endif; ?>
+
 

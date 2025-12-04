@@ -10,16 +10,19 @@ require_once __DIR__ . '/src/helpers/database.php'; // Helper kết nối databa
 // Nạp các file chứa model
 require_once __DIR__ . '/src/models/User.php';
 require_once __DIR__ . '/src/models/Tour.php';
+require_once __DIR__ . '/src/models/Category.php';
 
 // Nạp các file chứa controller
 require_once __DIR__ . '/src/controllers/HomeController.php';
 require_once __DIR__ . '/src/controllers/AuthController.php';
 require_once __DIR__ . '/src/controllers/TourController.php';
+require_once __DIR__ . '/src/controllers/CategoryController.php';
 
 // Khởi tạo các controller
 $homeController = new HomeController();
 $authController = new AuthController();
 $tourController = new TourController();
+$categoryController = new CategoryController();
 
 // Xác định route dựa trên tham số act (mặc định là trang chủ '/')
 $act = $_GET['act'] ?? '/';
@@ -28,6 +31,16 @@ $act = $_GET['act'] ?? '/';
 if (strpos($act, 'tours/edit/') === 0) {
     $id = str_replace('tours/edit/', '', $act);
     $tourController->edit($id);
+    exit;
+}
+if (strpos($act, 'tours/show/') === 0) {
+    $id = str_replace('tours/show/', '', $act);
+    $tourController->show($id);
+    exit;
+}
+if (strpos($act, 'categories/edit/') === 0) {
+    $id = str_replace('categories/edit/', '', $act);
+    $categoryController->edit($id);
     exit;
 }
 
@@ -50,6 +63,13 @@ match ($act) {
     'tours/store' => $tourController->store(),
     'tours/update' => $tourController->update(),
     'tours/delete' => $tourController->delete(),
+
+    // Đường dẫn quản lý danh mục
+    'categories' => $categoryController->index(),
+    'categories/create' => $categoryController->create(),
+    'categories/store' => $categoryController->store(),
+    'categories/update' => $categoryController->update(),
+    'categories/delete' => $categoryController->delete(),
 
     // Xử lý route có tham số
     default => match($route) {
