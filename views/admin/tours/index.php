@@ -18,6 +18,7 @@
                         <tr>
                           <th style="width: 10px">#</th>
                           <th>Tên Tour</th>
+                          <th style="width: 150px">Ảnh</th>
                           <th>Danh mục</th>
                           <th>Giá</th>
                           <th>Trạng thái</th>
@@ -31,6 +32,19 @@
                         <tr class="align-middle">
                           <td><?= $index + 1 ?>.</td>
                           <td><?= htmlspecialchars($tour->ten_tour) ?></td>
+                          <td class="text-center">
+                            <?php if(!empty($tour->anh_tour)): ?>
+                              <img src="<?= asset($tour->anh_tour) ?>"
+                                   alt="Ảnh tour"
+                                   class="img-thumbnail"
+                                   style="width: 100px; height: 100px; object-fit: cover;">
+                            <?php else: ?>
+                              <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                   style="width: 100px; ">
+                                <i class="bi bi-image text-muted"></i>
+                              </div>
+                            <?php endif; ?>
+                          </td>
                           <td><?= htmlspecialchars($tour->ten_danh_muc ?? 'Chưa phân loại') ?></td>
                           <td><?= $tour->formatGia() ?></td>
                           <td>
@@ -41,9 +55,9 @@
                           <td><?= date('d/m/Y', strtotime($tour->ngay_tao)) ?></td>
                           <td>
                             <div class="btn-group btn-group-sm gap-1">
-                              <button type="button" class="btn btn-info rounded-xs" title="Xem chi tiết">
+                              <a href="<?= BASE_URL ?>tours/show/<?= $tour->id ?>" class="btn btn-info btn-sm" title="Xem chi tiết">
                                 <i class="bi bi-eye"></i>
-                              </button>
+                              </a>
                               <a href="<?= BASE_URL ?>tours/edit/<?= $tour->id ?>" class="btn btn-warning btn-sm" title="Sửa">
                                 <i class="bi bi-pencil"></i>
                               </a>
@@ -61,8 +75,11 @@
                         <?php endforeach; ?>
                         <?php else: ?>
                           <tr>
-                            <td>
-                              <h3>Chưa có tour nào trong hệ thống</h3>
+                            <td colspan="8" class="text-center py-4">
+                              <h3 class="text-muted">Chưa có tour nào trong hệ thống</h3>
+                              <a href="<?= BASE_URL ?>tours/create" class="btn btn-success mt-3">
+                                <i class="bi bi-plus-circle"></i> Thêm Tour đầu tiên
+                              </a>
                             </td>
                           </tr>
                         <?php endif; ?>
@@ -92,17 +109,12 @@
 ?>
 
 <!-- Hiển thị thông báo -->
-<?php if (isset($_SESSION['success'])): ?>
+<?php
+$flashMessages = getFlashMessages();
+foreach ($flashMessages as $message):
+?>
 <script>
-    alert('<?= addslashes($_SESSION['success']) ?>');
+    alert('<?= addslashes($message['message']) ?>');
 </script>
-<?php unset($_SESSION['success']); ?>
-<?php endif; ?>
-
-<?php if (isset($_SESSION['error'])): ?>
-<script>
-    alert('Lỗi: <?= addslashes($_SESSION['error']) ?>');
-</script>
-<?php unset($_SESSION['error']); ?>
-<?php endif; ?>
+<?php endforeach; ?>
 
