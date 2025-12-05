@@ -81,6 +81,7 @@
             }
 
             //tạo tour mới
+            // tạo mới ok
             $tour = new Tour([
                 'ten_tour' => $ten_tour,
                 'danh_muc_id' => $danh_muc_id,
