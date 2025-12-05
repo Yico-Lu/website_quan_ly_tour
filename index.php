@@ -10,19 +10,24 @@ require_once __DIR__ . '/src/helpers/database.php'; // Helper kết nối databa
 // Nạp các file chứa model
 require_once __DIR__ . '/src/models/User.php';
 require_once __DIR__ . '/src/models/Tour.php';
-require_once __DIR__ . '/src/models/Category.php';
+require_once __DIR__ . '/src/models/Booking.php';
+require_once __DIR__ . '/src/models/DanhMucTour.php';
 
 // Nạp các file chứa controller
 require_once __DIR__ . '/src/controllers/HomeController.php';
 require_once __DIR__ . '/src/controllers/AuthController.php';
 require_once __DIR__ . '/src/controllers/TourController.php';
-require_once __DIR__ . '/src/controllers/CategoryController.php';
+require_once __DIR__ . '/src/controllers/AccountController.php';
+require_once __DIR__ . '/src/controllers/BookingController.php';
+require_once __DIR__ . '/src/controllers/DanhMucTourController.php';
 
 // Khởi tạo các controller
 $homeController = new HomeController();
 $authController = new AuthController();
 $tourController = new TourController();
-$categoryController = new CategoryController();
+$accountController = new AccountController();
+$bookingController = new BookingController();
+$danhMucController = new DanhMucTourController();
 
 // Xác định route dựa trên tham số act (mặc định là trang chủ '/')
 $act = $_GET['act'] ?? '/';
@@ -33,14 +38,40 @@ if (strpos($act, 'tours/edit/') === 0) {
     $tourController->edit($id);
     exit;
 }
-if (strpos($act, 'tours/show/') === 0) {
-    $id = str_replace('tours/show/', '', $act);
-    $tourController->show($id);
+
+if (strpos($act, 'accounts/edit/') === 0) {
+    $id = str_replace('accounts/edit/', '', $act);
+    $accountController->edit($id);
     exit;
 }
+
+if (strpos($act, 'accounts/show/') === 0) {
+    $id = str_replace('accounts/show/', '', $act);
+    $accountController->show($id);
+    exit;
+}
+
 if (strpos($act, 'categories/edit/') === 0) {
     $id = str_replace('categories/edit/', '', $act);
-    $categoryController->edit($id);
+    $danhMucController->edit($id);
+    exit;
+}
+
+if (strpos($act, 'categories/show/') === 0) {
+    $id = str_replace('categories/show/', '', $act);
+    $danhMucController->show($id);
+    exit;
+}
+
+if (strpos($act, 'bookings/edit/') === 0) {
+    $id = str_replace('bookings/edit/', '', $act);
+    $bookingController->edit($id);
+    exit;
+}
+
+if (strpos($act, 'bookings/show/') === 0) {
+    $id = str_replace('bookings/show/', '', $act);
+    $bookingController->show($id);
     exit;
 }
 
@@ -64,18 +95,32 @@ match ($act) {
     'tours/update' => $tourController->update(),
     'tours/delete' => $tourController->delete(),
 
-    // Đường dẫn quản lý danh mục
-    'categories' => $categoryController->index(),
-    'categories/create' => $categoryController->create(),
-    'categories/store' => $categoryController->store(),
-    'categories/update' => $categoryController->update(),
-    'categories/delete' => $categoryController->delete(),
+    // Đường dẫn quản lý tài khoản
+    'accounts' => $accountController->index(),
+    'accounts/create' => $accountController->create(),
+    'accounts/store' => $accountController->store(),
+    'accounts/update' => $accountController->update(),
+    'accounts/delete' => $accountController->delete(),
+
+    // Đường dẫn quản lý booking
+    'bookings' => $bookingController->index(),
+    'bookings/create' => $bookingController->create(),
+    'bookings/store' => $bookingController->store(),
+    'bookings/update' => $bookingController->update(),
+    'bookings/delete' => $bookingController->delete(),
+
+    // Đường dẫn quản lý danh mục tour
+    'categories' => $danhMucController->index(),
+    'categories/create' => $danhMucController->create(),
+    'categories/store' => $danhMucController->store(),
+    'categories/update' => $danhMucController->update(),
+    'categories/delete' => $danhMucController->delete(),
 
     // Xử lý route có tham số
     default => match($route) {
         'tours' => match($param) {
-            'edit' => $tourController->edit($actParts[2] ?? null),
-            default => $homeController->notFound()
+        'edit' => $tourController->edit($actParts[2] ?? null),
+        default => $homeController->notFound()
         },
         'tours/update' => $tourController->update(),
         default => $homeController->notFound()

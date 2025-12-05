@@ -187,7 +187,7 @@
                 'mo_ta' => $mo_ta,
                 'gia' => $gia,
                 'trang_thai' => $trang_thai,
-                // 'anh_tour' => $anh_tour
+                'anh_tour' => $anh_tour
             ]);
 
             if(Tour::update($tour)){
@@ -200,28 +200,6 @@
                 exit;
             }
         }
-       public function show($id): void
-{
-    requireAdmin();
-
-    $tour = Tour::find($id);
-    if (!$tour) {
-        $_SESSION['error'] = 'Tour không tồn tại';
-        header('Location: ' . BASE_URL . 'tours');
-        exit;
-    }
-
-    view('admin.tours.detail', [  // <-- đổi từ 'show' thành 'detail'
-        'title' => 'Chi tiết Tour',
-        'pageTitle' => 'Chi tiết Tour',
-        'tour' => $tour,
-        'breadcrumb' => [
-            ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
-            ['label' => 'Danh sách tour', 'url' => BASE_URL . 'tours'],
-            ['label' => 'Chi tiết tour', 'url' => BASE_URL . 'tours/detail/' . $id, 'active' => true],
-        ],
-    ]);
-}
 
         //xoá tour
         public function delete():void
@@ -248,6 +226,4 @@
             exit;
         }
     }
-
-    
 ?>

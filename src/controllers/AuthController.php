@@ -4,6 +4,7 @@
 class AuthController
 {
     
+    
     // Hiển thị form đăng nhập
     public function login()
     {
@@ -93,4 +94,3 @@ class AuthController
         exit;
     }
 }
-
