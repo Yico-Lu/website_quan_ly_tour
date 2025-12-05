@@ -59,6 +59,29 @@
         </li>
         <li class="nav-item">
           <a href="#" class="nav-link">
+            <i class="nav-icon bi bi-tags-fill"></i>
+            <p>
+              Quản lý Danh mục
+              <i class="nav-arrow bi bi-chevron-right"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="<?= BASE_URL . 'categories' ?>" class="nav-link">
+                <i class="nav-icon bi bi-circle"></i>
+                <p>Danh sách Danh mục</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="<?= BASE_URL . 'categories/create' ?>" class="nav-link">
+                <i class="nav-icon bi bi-circle"></i>
+                <p>Thêm Danh mục mới</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
             <i class="nav-icon bi bi-people-fill"></i>
             <p>
               Quản lý Khách hàng

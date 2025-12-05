@@ -41,9 +41,10 @@
                           <td><?= date('d/m/Y', strtotime($tour->ngay_tao)) ?></td>
                           <td>
                             <div class="btn-group btn-group-sm gap-1">
-                              <button type="button" class="btn btn-info rounded-xs" title="Xem chi tiết">
-                                <i class="bi bi-eye"></i>
-                              </button>
+                              <a href="<?= BASE_URL ?>tours/show/<?= $tour->id ?>" class="btn btn-info btn-sm" title="Xem chi tiết">
+    <i class="bi bi-eye"></i>
+</a>
+
                               <a href="<?= BASE_URL ?>tours/edit/<?= $tour->id ?>" class="btn btn-warning btn-sm" title="Sửa">
                                 <i class="bi bi-pencil"></i>
                               </a>
