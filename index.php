@@ -15,11 +15,13 @@ require_once __DIR__ . '/src/models/Tour.php';
 require_once __DIR__ . '/src/controllers/HomeController.php';
 require_once __DIR__ . '/src/controllers/AuthController.php';
 require_once __DIR__ . '/src/controllers/TourController.php';
+require_once __DIR__ . '/src/controllers/GuideController.php';
 
 // Khởi tạo các controller
 $homeController = new HomeController();
 $authController = new AuthController();
 $tourController = new TourController();
+$guideController = new GuideController();
 
 // Xác định route dựa trên tham số act (mặc định là trang chủ '/')
 $act = $_GET['act'] ?? '/';
@@ -34,6 +36,12 @@ if (strpos($act, 'tours/edit/') === 0) {
 if (strpos($act, 'tours/show/') === 0) {
     $id = str_replace('tours/show/', '', $act);
     $tourController->show($id);
+    exit;
+}
+
+if (strpos($act, 'guide/show/') === 0) {
+    $id = str_replace('guide/show/', '', $act);
+    $guideController->show($id);
     exit;
 }
 
@@ -56,6 +64,10 @@ match ($act) {
     'tours/store' => $tourController->store(),
     'tours/update' => $tourController->update(),
     'tours/delete' => $tourController->delete(),
+
+    // Đường dẫn cho hướng dẫn viên
+    'guide' => $guideController->index(),
+    'guide/dashboard' => $guideController->dashboard(),
 
     // Đường dẫn không tồn tại
     default => $homeController->notFound(),
