@@ -219,6 +219,13 @@ class TourController
         if(empty($mo_ta)) $errors[] = 'Vui lòng nhập mô tả';
         if($gia <= 0) $errors[] = 'Giá tour phải lớn hơn 0';
 
+        // Lấy danh sách ảnh cần xóa
+        $delete_images = trim($_POST['delete_images'] ?? '');
+        $images_to_delete = [];
+        if (!empty($delete_images)) {
+            $images_to_delete = explode(',', $delete_images);
+        }
+
         if(!empty($errors)){
             $tour = Tour::find($id);
             $danhMucList = Tour::getDanhMucList();
@@ -277,7 +284,14 @@ class TourController
                 $pdo->prepare($sql)->execute([$id, $nha_cung_cap_ten, $nha_cung_cap_loai, $nha_cung_cap_lien_he]);
             }
 
-            // Thêm ảnh chi tiết mới (không xóa ảnh cũ)
+            // Xóa ảnh chi tiết được chọn
+            foreach($images_to_delete as $image_id){
+                if(!empty(trim($image_id))){
+                    Tour::deleteAnhChiTiet($image_id);
+                }
+            }
+
+            // Thêm ảnh chi tiết mới
             foreach($anh_chi_tiet_paths as $anh_path){
                 Tour::saveAnhChiTiet($id, $anh_path);
             }

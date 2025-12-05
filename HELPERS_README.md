@@ -2,83 +2,7 @@
 
 ## Tổng quan
 
-Các helper functions được tập trung trong file `src/helpers/helpers.php` để tái sử dụng trong toàn bộ ứng dụng. Tất cả helper đều được load tự động trong `index.php`.
-
-## 1. View & Layout Helpers
-
-### `view(string $view, array $data = []): void`
-Nạp dữ liệu và hiển thị giao diện.
-
-**Parameters:**
-- `$view`: Tên view (không có extension)
-- `$data`: Mảng dữ liệu truyền vào view
-
-**Example:**
-```php
-view('home', ['title' => 'Trang chủ', 'tours' => $tours]);
-```
-
-### `block(string $block, array $data = []): void`
-Nạp một block từ thư mục blocks (thành phần layouts).
-
-**Parameters:**
-- `$block`: Tên block
-- `$data`: Mảng dữ liệu truyền vào block
-
-### `asset(string $path): string`
-Tạo đường dẫn tới asset (css/js/images) trong thư mục public.
-
-**Parameters:**
-- `$path`: Đường dẫn asset
-
-**Return:** String - URL đầy đủ tới asset
-
-**Example:**
-```php
-echo '<link rel="stylesheet" href="' . asset('css/style.css') . '">';
-```
-
-## 2. Session & Authentication Helpers
-
-### `startSession(): void`
-Khởi động session nếu chưa khởi động.
-
-### `loginUser(User $user): void`
-Lưu thông tin user vào session sau khi đăng nhập thành công.
-
-### `logoutUser(): void`
-Đăng xuất: xóa toàn bộ thông tin user khỏi session.
-
-### `isLoggedIn(): bool`
-Kiểm tra xem user đã đăng nhập chưa.
-
-**Return:** true nếu đã đăng nhập, false nếu chưa
-
-### `getCurrentUser(): User|null`
-Lấy thông tin user hiện tại từ session.
-
-**Return:** Đối tượng User nếu đã đăng nhập, null nếu chưa
-
-### `isAdmin(): bool`
-Kiểm tra xem user hiện tại có phải là admin không.
-
-**Return:** true nếu là admin, false nếu không
-
-### `isGuide(): bool`
-Kiểm tra xem user hiện tại có phải là hướng dẫn viên không.
-
-**Return:** true nếu là hướng dẫn viên, false nếu không
-
-### `requireLogin(string $redirectUrl = null): void`
-Yêu cầu đăng nhập: nếu chưa đăng nhập thì chuyển hướng về trang login.
-
-### `requireAdmin(): void`
-Yêu cầu quyền admin: nếu không phải admin thì chuyển hướng về trang chủ.
-
-### `requireGuideOrAdmin(): void`
-Yêu cầu quyền hướng dẫn viên hoặc admin.
-
-## 3. Flash Message Helpers
+## 1. Flash Message Helpers
 
 ### `setFlashMessage(string $type, string $message): void`
 Thiết lập thông báo flash message.
@@ -106,7 +30,7 @@ foreach ($messages as $message) {
 }
 ```
 
-## 4. Upload Helpers
+## 2. Upload Helpers
 
 ### `uploadImage(array $file, string $prefix = 'file', string $uploadDir = 'uploads/general/'): string|null`
 Upload một file ảnh đơn lẻ.
