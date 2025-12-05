@@ -213,12 +213,12 @@ ob_start();
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-center gap-2">
-                        <!-- TODO: Thêm các nút chức năng vận hành tour -->
+                        <!-- Các nút chức năng vận hành tour -->
+                        <a href="<?= BASE_URL ?>guide/customers/<?= $tour->id ?>" class="btn btn-info">
+                            <i class="fas fa-users"></i> Quản lý Khách hàng
+                        </a>
                         <button class="btn btn-success" disabled>
                             <i class="fas fa-play"></i> Bắt đầu Tour
-                        </button>
-                        <button class="btn btn-info" disabled>
-                            <i class="fas fa-users"></i> Check-in Khách hàng
                         </button>
                 </div>
             </div>

@@ -45,6 +45,18 @@ if (strpos($act, 'guide/show/') === 0) {
     exit;
 }
 
+if (strpos($act, 'guide/customers/') === 0) {
+    $id = str_replace('guide/customers/', '', $act);
+    $guideController->customers($id);
+    exit;
+}
+
+if (strpos($act, 'guide/import/') === 0) {
+    $id = str_replace('guide/import/', '', $act);
+    $guideController->importCustomers($id);
+    exit;
+}
+
 // Match đảm bảo chỉ một action tương ứng được gọi
 match ($act) {
     // Trang welcome (cho người chưa đăng nhập) - mặc định khi truy cập '/'
@@ -68,6 +80,8 @@ match ($act) {
     // Đường dẫn cho hướng dẫn viên
     'guide' => $guideController->index(),
     'guide/dashboard' => $guideController->dashboard(),
+    'guide/checkin' => $guideController->checkin(),
+    'guide/process-import' => $guideController->processImport(),
 
     // Đường dẫn không tồn tại
     default => $homeController->notFound(),
