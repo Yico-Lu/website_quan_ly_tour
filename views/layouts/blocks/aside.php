@@ -102,15 +102,21 @@
             <a href="#" class="nav-link">
               <i class="nav-icon bi bi-person-gear"></i>
               <p>
-                Quản lý Người dùng
+                Quản lý Tài khoản
                 <i class="nav-arrow bi bi-chevron-right"></i>
               </p>
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="<?= BASE_URL . 'accounts' ?>" class="nav-link">
                   <i class="nav-icon bi bi-circle"></i>
-                  <p>Danh sách Người dùng</p>
+                  <p>Danh sách Tài khoản</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="<?= BASE_URL . 'accounts/create' ?>" class="nav-link">
+                  <i class="nav-icon bi bi-circle"></i>
+                  <p>Thêm Tài khoản mới</p>
                 </a>
               </li>
             </ul>
