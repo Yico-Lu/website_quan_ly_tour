@@ -146,6 +146,29 @@
               </li>
             </ul>
           </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="nav-icon bi bi-person-badge"></i>
+              <p>
+                Quản lý HDV
+                <i class="nav-arrow bi bi-chevron-right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="<?= BASE_URL . 'hdvs' ?>" class="nav-link">
+                  <i class="nav-icon bi bi-circle"></i>
+                  <p>Danh sách HDV</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="<?= BASE_URL . 'hdvs/create' ?>" class="nav-link">
+                  <i class="nav-icon bi bi-circle"></i>
+                  <p>Thêm HDV mới</p>
+                </a>
+              </li>
+            </ul>
+          </li>
         <?php endif; ?>
         <li class="nav-header">HỆ THỐNG</li>
         <li class="nav-item">

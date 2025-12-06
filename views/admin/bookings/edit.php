@@ -15,11 +15,11 @@ ob_start();
         </div>
     </div>
 
-    <form action="<?= BASE_URL ?>bookings/update" method="POST">
+    <form action="<?= BASE_URL ?>bookings/update" method="POST" id="bookingEditForm" novalidate>
         <input type="hidden" name="id" value="<?= $booking->id ?>">
         <div class="card-body">
-            <!-- Hiển thị lỗi -->
-            <?php if (isset($errors) && !empty($errors)): ?>
+            <!-- Hiển thị lỗi (chỉ hiển thị khi có lỗi từ validation sau khi submit) -->
+            <?php if (isset($errors) && is_array($errors) && !empty($errors)): ?>
                 <div class="alert alert-danger">
                     <strong>Có lỗi:</strong>
                     <ul class="mb-0 mt-2">
@@ -34,12 +34,15 @@ ob_start();
                 <!-- Tour -->
                 <div class="col-md-6 mb-3">
                     <label for="tour_id" class="form-label">Tour <span class="text-danger">*</span></label>
-                    <select class="form-select" id="tour_id" name="tour_id" required>
+                    <select class="form-select" id="tour_id" name="tour_id" data-required="true">
                         <option value="">Chọn tour</option>
-                        <?php foreach ($tourList as $tour): ?>
+                        <?php 
+                        $selectedTourId = !empty($old['tour_id']) ? $old['tour_id'] : (!empty($booking->tour_id) ? $booking->tour_id : '');
+                        foreach ($tourList as $tour): 
+                        ?>
                             <option
                                 value="<?= $tour['id'] ?>"
-                                <?= ($old['tour_id'] ?? $booking->tour_id) == $tour['id'] ? 'selected' : '' ?>
+                                <?= $selectedTourId == $tour['id'] ? 'selected' : '' ?>
                             >
                                 <?= htmlspecialchars($tour['ten_tour']) ?>
                             </option>
@@ -84,9 +87,9 @@ ob_start();
                         class="form-control"
                         id="ten_nguoi_dat"
                         name="ten_nguoi_dat"
-                        value="<?= htmlspecialchars($old['ten_nguoi_dat'] ?? $booking->ten_nguoi_dat) ?>"
+                        value="<?= htmlspecialchars(!empty($old['ten_nguoi_dat']) ? $old['ten_nguoi_dat'] : (!empty($booking->ten_nguoi_dat) ? $booking->ten_nguoi_dat : '')) ?>"
                         placeholder="Nhập tên người đặt"
-                        required
+                        data-required="true"
                     />
                 </div>
 
@@ -101,7 +104,7 @@ ob_start();
                         value="<?= htmlspecialchars($old['so_luong'] ?? $booking->so_luong) ?>"
                         placeholder="Nhập số lượng người"
                         min="1"
-                        required
+                        data-required="true"
                     />
                 </div>
             </div>
@@ -115,8 +118,8 @@ ob_start();
                         class="form-control"
                         id="thoi_gian_tour"
                         name="thoi_gian_tour"
-                        value="<?= htmlspecialchars($old['thoi_gian_tour'] ?? date('Y-m-d\TH:i', strtotime($booking->thoi_gian_tour))) ?>"
-                        required
+                        value="<?= !empty($old['thoi_gian_tour']) ? htmlspecialchars($old['thoi_gian_tour']) : (!empty($booking->thoi_gian_tour) ? date('Y-m-d\TH:i', strtotime($booking->thoi_gian_tour)) : '') ?>"
+                        data-required="true"
                     />
                 </div>
 
@@ -128,9 +131,9 @@ ob_start();
                         class="form-control"
                         id="lien_he"
                         name="lien_he"
-                        value="<?= htmlspecialchars($old['lien_he'] ?? $booking->lien_he) ?>"
+                        value="<?= htmlspecialchars(!empty($old['lien_he']) ? $old['lien_he'] : (!empty($booking->lien_he) ? $booking->lien_he : '')) ?>"
                         placeholder="Số điện thoại hoặc email"
-                        required
+                        data-required="true"
                     />
                 </div>
             </div>
@@ -195,3 +198,108 @@ view('layouts.AdminLayout', [
     'extraJs' => ['js/auto-hide-alerts.js'],
 ]);
 ?>
+
+<script>
+// Validate form bằng JavaScript thay vì HTML5 validation
+document.addEventListener('DOMContentLoaded', function() {
+    // Validate tất cả các form trong trang
+    const allForms = document.querySelectorAll('form[novalidate]');
+    allForms.forEach(function(form) {
+        validateForm(form);
+    });
+    
+    function validateForm(form) {
+        form.addEventListener('submit', function(e) {
+            // Chỉ validate form này, không validate form khác
+            e.stopPropagation();
+            
+            let isValid = true;
+            // Chỉ lấy các trường required trong form này, không lấy từ form khác
+            const requiredFields = Array.from(form.querySelectorAll('[data-required="true"]')).filter(function(field) {
+                // Đảm bảo field thuộc về form này
+                return form.contains(field);
+            });
+            
+            // Xóa các lỗi cũ trong form này
+            form.querySelectorAll('.is-invalid').forEach(function(field) {
+                field.classList.remove('is-invalid');
+            });
+            form.querySelectorAll('.invalid-feedback').forEach(function(feedback) {
+                feedback.remove();
+            });
+            
+            // Xóa lỗi trong form chính nếu đang submit form con
+            if (form.id !== 'bookingEditForm') {
+                const mainForm = document.getElementById('bookingEditForm');
+                if (mainForm) {
+                    mainForm.querySelectorAll('.is-invalid').forEach(function(field) {
+                        field.classList.remove('is-invalid');
+                    });
+                    mainForm.querySelectorAll('.invalid-feedback').forEach(function(feedback) {
+                        feedback.remove();
+                    });
+                    // Xóa cả alert lỗi nếu có
+                    const errorAlert = mainForm.querySelector('.alert-danger');
+                    if (errorAlert) {
+                        errorAlert.remove();
+                    }
+                }
+            }
+            
+            // Kiểm tra từng trường required trong form này
+            requiredFields.forEach(function(field) {
+                // Đảm bảo field thuộc về form này
+                if (!form.contains(field)) {
+                    return;
+                }
+                const value = field.value.trim();
+                if (!value) {
+                    isValid = false;
+                    field.classList.add('is-invalid');
+                    
+                    // Tạo message lỗi
+                    const feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback';
+                    
+                    // Lấy label tương ứng trong form này
+                    const label = form.querySelector('label[for="' + field.id + '"]');
+                    let labelText = 'Trường này';
+                    if (label) {
+                        labelText = label.textContent.replace(/\*/g, '').trim();
+                    }
+                    
+                    // Tùy chỉnh message theo từng trường
+                    if (field.id === 'tour_id') {
+                        feedback.textContent = 'Vui lòng chọn tour';
+                    } else if (field.id === 'ten_nguoi_dat') {
+                        feedback.textContent = 'Vui lòng nhập tên người đặt';
+                    } else if (field.id === 'thoi_gian_tour') {
+                        feedback.textContent = 'Vui lòng chọn thời gian tour';
+                    } else if (field.id === 'lien_he') {
+                        feedback.textContent = 'Vui lòng nhập thông tin liên hệ';
+                    } else if (field.id === 'ten_dich_vu' || field.name === 'ten_dich_vu') {
+                        feedback.textContent = 'Vui lòng nhập tên dịch vụ';
+                    } else if (field.id === 'hdv_id' || field.name === 'hdv_id') {
+                        feedback.textContent = 'Vui lòng chọn hướng dẫn viên';
+                    } else if (field.name === 'ho_ten') {
+                        feedback.textContent = 'Vui lòng nhập họ tên';
+                    } else if (field.id === 'excel_file') {
+                        feedback.textContent = 'Vui lòng chọn file Excel/CSV';
+                    } else {
+                        feedback.textContent = 'Vui lòng nhập ' + labelText.toLowerCase();
+                    }
+                    
+                    field.parentNode.appendChild(feedback);
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return false;
+            }
+            // Nếu hợp lệ, cho phép submit tiếp tục - không preventDefault
+        }, false); // Sử dụng bubble phase
+    }
+});
+</script>

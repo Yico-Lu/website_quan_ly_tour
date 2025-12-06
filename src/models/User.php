@@ -5,11 +5,13 @@ class User
 {
     // Các thuộc tính của User
     public $id;
-    public $name;
+    public $name; // ho_ten
     public $email;
-    public $role;
-    public $status;
+    public $sdt;
+    public $role; // phan_quyen
+    public $status; // trang_thai
     public $ngay_tao;
+    public $ngay_cap_nhat;
 
     // Constructor để khởi tạo thực thể User
     public function __construct($data = [])
@@ -17,11 +19,30 @@ class User
         // Nếu truyền vào mảng dữ liệu thì gán vào các thuộc tính
         if (is_array($data)) {
             $this->id = $data['id'] ?? null;
-            $this->name = $data['name'] ?? '';
+            $this->name = $data['name'] ?? ($data['ho_ten'] ?? '');
             $this->email = $data['email'] ?? '';
-            $this->role = $data['role'] ?? 'huong_dan_vien';
-            $this->status = $data['status'] ?? 1;
+            $this->sdt = $data['sdt'] ?? null;
+            
+            // Xử lý role/phan_quyen
+            if (isset($data['role'])) {
+                $this->role = $data['role'];
+            } elseif (isset($data['phan_quyen'])) {
+                $this->role = $data['phan_quyen'] === 'admin' ? 'admin' : 'huong_dan_vien';
+            } else {
+                $this->role = 'huong_dan_vien';
+            }
+            
+            // Xử lý status/trang_thai
+            if (isset($data['status'])) {
+                $this->status = $data['status'] ? 1 : 0;
+            } elseif (isset($data['trang_thai'])) {
+                $this->status = $data['trang_thai'] === 'hoat_dong' ? 1 : 0;
+            } else {
+                $this->status = 1;
+            }
+            
             $this->ngay_tao = $data['ngay_tao'] ?? null;
+            $this->ngay_cap_nhat = $data['ngay_cap_nhat'] ?? null;
         } else {
             // Nếu truyền vào string thì coi như tên (tương thích với code cũ)
             $this->name = $data;
@@ -92,11 +113,13 @@ class User
             foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row){
                 $users[] = new User([
                     'id' => $row['id'],
-                    'name' => $row['ho_ten'],
+                    'ho_ten' => $row['ho_ten'],
                     'email' => $row['email'],
-                    'role' => $row['phan_quyen'] === 'admin' ? 'admin' : 'huong_dan_vien',
-                    'status' => $row['trang_thai'] === 'hoat_dong' ? 1 : 0,
+                    'sdt' => $row['sdt'] ?? null,
+                    'phan_quyen' => $row['phan_quyen'],
+                    'trang_thai' => $row['trang_thai'],
                     'ngay_tao' => $row['ngay_tao'],
+                    'ngay_cap_nhat' => $row['ngay_cap_nhat'] ?? null,
                 ]);
             }
             return $users;
@@ -114,11 +137,13 @@ class User
 
             return new User([
                 'id' => $data['id'],
-                'name' => $data['ho_ten'],
+                'ho_ten' => $data['ho_ten'],
                 'email' => $data['email'],
-                'role' => $data['phan_quyen'] === 'admin' ? 'admin' : 'huong_dan_vien',
-                'status' => $data['trang_thai'] === 'hoat_dong' ? 1 : 0,
+                'sdt' => $data['sdt'] ?? null,
+                'phan_quyen' => $data['phan_quyen'],
+                'trang_thai' => $data['trang_thai'],
                 'ngay_tao' => $data['ngay_tao'],
+                'ngay_cap_nhat' => $data['ngay_cap_nhat'] ?? null,
             ]);
         }
 
@@ -135,20 +160,26 @@ class User
                 return false; // Email đã tồn tại
             }
 
-            $sql = "INSERT INTO tai_khoan (ho_ten, email, mat_khau, phan_quyen, trang_thai, ngay_tao)
-                    VALUES (?, ?, ?, ?, ?, NOW())";
+            $sql = "INSERT INTO tai_khoan (ho_ten, email, sdt, mat_khau, phan_quyen, trang_thai, ngay_tao)
+                    VALUES (?, ?, ?, ?, ?, ?, NOW())";
             $stmt = $pdo->prepare($sql);
 
             $role = $user->isAdmin() ? 'admin' : 'hdv';
             $status = $user->status ? 'hoat_dong' : 'tam_ngung';
 
-            return $stmt->execute([
+            if($stmt->execute([
                 $user->name,
                 $user->email,
+                $user->sdt ?: null,
                 password_hash($password, PASSWORD_DEFAULT),
                 $role,
                 $status
-            ]);
+            ])){
+                // Trả về ID của tài khoản vừa tạo
+                return $pdo->lastInsertId();
+            }
+            
+            return false;
         }
 
         // Cập nhật tài khoản
@@ -167,6 +198,7 @@ class User
             $sql = "UPDATE tai_khoan SET
                         ho_ten = ?,
                         email = ?,
+                        sdt = ?,
                         phan_quyen = ?,
                         trang_thai = ?,
                         ngay_cap_nhat = NOW()
@@ -176,13 +208,25 @@ class User
             $role = $user->isAdmin() ? 'admin' : 'hdv';
             $status = $user->status ? 'hoat_dong' : 'tam_ngung';
 
-            return $stmt->execute([
-                $user->name,
-                $user->email,
-                $role,
-                $status,
-                $user->id
-            ]);
+            try {
+                $result = $stmt->execute([
+                    $user->name,
+                    $user->email,
+                    $user->sdt ?: null,
+                    $role,
+                    $status,
+                    $user->id
+                ]);
+                
+                if (!$result) {
+                    error_log('User update failed: ' . implode(', ', $stmt->errorInfo()));
+                }
+                
+                return $result;
+            } catch (PDOException $e) {
+                error_log('User update error: ' . $e->getMessage());
+                return false;
+            }
         }
 
         // Cập nhật mật khẩu
