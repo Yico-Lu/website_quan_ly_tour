@@ -104,3 +104,4 @@ view('layouts.GuideLayout', [
     'currentUser' => $currentUser ?? null,
 ]);
 ?>
+

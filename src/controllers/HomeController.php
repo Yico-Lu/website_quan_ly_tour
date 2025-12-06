@@ -38,10 +38,10 @@ class HomeController
             exit;
         } elseif ($currentUser->isAdmin()) {
             // Admin ở lại trang home
-            view('home', [
-                'title' => 'Trang chủ - Website Quản Lý Tour',
-                'user' => $currentUser,
-            ]);
+        view('home', [
+            'title' => 'Trang chủ - Website Quản Lý Tour',
+            'user' => $currentUser,
+        ]);
         } else {
             // Trường hợp khác (nếu có role khác trong tương lai)
             header('Location: ' . BASE_URL . 'welcome');
