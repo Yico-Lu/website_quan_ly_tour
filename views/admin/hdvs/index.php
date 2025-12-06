@@ -38,10 +38,8 @@ ob_start();
                     <th>Ảnh đại diện</th>
                     <th>Họ tên</th>
                     <th>Email</th>
-                    <th>Ngày sinh</th>
                     <th>Nhóm</th>
                     <th>Chuyên môn</th>
-                    <th>Liên hệ</th>
                     <th>Trạng thái</th>
                     <th style="width: 180px">Thao tác</th>
                 </tr>
@@ -69,9 +67,6 @@ ob_start();
                             </td>
                             <td><?= htmlspecialchars($hdv->email) ?></td>
                             <td>
-                                <?= $hdv->ngay_sinh ? date('d/m/Y', strtotime($hdv->ngay_sinh)) : 'Chưa cập nhật' ?>
-                            </td>
-                            <td>
                                 <span class="badge <?= $hdv->getNhomBadgeClass() ?>">
                                     <?= $hdv->getNhomName() ?>
                                 </span>
@@ -82,7 +77,6 @@ ob_start();
                                     <?= strlen($hdv->chuyen_mon) > 30 ? '...' : '' ?>
                                 </small>
                             </td>
-                            <td><?= htmlspecialchars($hdv->lien_he ?? 'Chưa cập nhật') ?></td>
                             <td>
                                 <span class="badge <?= $hdv->getTrangThaiBadgeClass() ?>">
                                     <?= $hdv->getTrangThaiName() ?>
@@ -109,7 +103,7 @@ ob_start();
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="10" class="text-center py-4">
+                        <td colspan="8" class="text-center py-4">
                             <i class="bi bi-person-x text-muted" style="font-size: 2rem;"></i>
                             <p class="text-muted mt-2">Chưa có hướng dẫn viên nào</p>
                         </td>
