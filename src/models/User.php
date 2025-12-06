@@ -50,11 +50,10 @@ class User
     public static function authenticate($email, $password)
     {
         $pdo = getDB();
-        //tìm user theo email
         $sql = "SELECT * FROM tai_khoan WHERE email = ? AND trang_thai = 'hoat_dong' LIMIT 1";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$email]);
-        $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+        $userData = $stmt->fetch();
 
         // Nếu không tìm thấy user hoặc password không đúng
         if(!$userData || !password_verify($password, $userData['mat_khau'])){

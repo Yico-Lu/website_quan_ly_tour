@@ -1,7 +1,6 @@
 <?php
     class Tour
     {
-        // Các thuộc tính của tour
         public $id;
         public $danh_muc_id;
         public $ten_danh_muc;
@@ -17,10 +16,8 @@
         public $nha_cung_cap;    
         public $anh_tour_chi_tiet; 
 
-        // Constructor để khởi tạo thực thể Tour
         public function __construct($data = [])
         {
-            // Nếu truyền vào mảng dữ liệu thì gán vào các thuộc tính
             if (is_array($data)) {
                 $this->id = $data['id'] ?? null;
                 $this->danh_muc_id = $data['danh_muc_id'] ?? null;
@@ -39,18 +36,18 @@
             }
         }
 
-        //lấy danh sách danh mục tour
+        // Lấy danh sách danh mục tour
         public static function getDanhMucList()
         {
             $pdo = getDB();
             $sql = "SELECT * FROM danh_muc_tour WHERE trang_thai = 1 ORDER BY ten_danh_muc";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $stmt->fetchAll();
         }
 
 
-        //hien thi danh sach tour
+        // Lấy danh sách tất cả tour
         public static function getAll($loadRelated = false)
         {
             $pdo = getDB();
@@ -62,57 +59,52 @@
             $stmt->execute();
             $tours = [];
 
-            foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row){
+            foreach($stmt->fetchAll() as $row){
                 $tour = new Tour($row);
-
-                // Load dữ liệu liên quan nếu được yêu cầu
                 if ($loadRelated) {
                     $tour->loadRelatedData();
                 }
-
                 $tours[] = $tour;
             }
             return $tours;
         }
 
-        //  lấy tên trạng thái
+        // Lấy tên trạng thái
         public function getTrangThai()
         {
             return $this->trang_thai == 1 ? 'Hoạt động' : 'Ngưng hoạt động';
         }
 
-        // lấy badge class cho trạng thái
+        // Lấy class badge cho trạng thái
         public function getTrangThaiBadgeClass()
         {
             return $this->trang_thai == 1 ? 'text-bg-success' : 'text-bg-danger';
         }
 
-        //format gia tien
+        // Format giá tiền
         public function formatGia()
         {
             return number_format($this->gia, 0, ',', '.') . ' VND';
         }
 
-        //xoá tour theo ID
+        // Xóa tour theo ID
         public static function delete($id)
         {
             $pdo = getDB();
-            // kiểm tra xem tour có đang được đặt không
             $sqlCheckBooking = "SELECT COUNT(*) FROM booking WHERE tour_id = ?";
             $stmtCheckBooking = $pdo->prepare($sqlCheckBooking);
             $stmtCheckBooking->execute([$id]);
 
             if($stmtCheckBooking->fetchColumn() > 0){
-                return false; // Không thể xóa vì tour đang được đặt
+                return false;
             }
            
-            // kiểm tra xem tour có trong báo cáo không
             $sqlCheckBaoCao = "SELECT COUNT(*) FROM bao_cao_tong_hop_tour WHERE tour_id = ?";
             $stmtCheckBaoCao = $pdo->prepare($sqlCheckBaoCao);
             $stmtCheckBaoCao->execute([$id]);
 
             if($stmtCheckBaoCao->fetchColumn() > 0){
-                return false; // Không thể xóa vì có trong báo cáo
+                return false;
             }
 
             $sql = "DELETE FROM tour WHERE id = ?";
@@ -120,9 +112,7 @@
             return $stmt->execute([$id]);
         }
 
-        //lưu tour mới vào db
-        //Lưu ý: Chỉ lưu thông tin cơ bản của tour. Dữ liệu liên quan (chính sách, lịch trình, NCC)
-        //cần được thêm riêng bằng các phương thức addChinhSach, addLichTrinh, addNhaCungCap
+        // Lưu tour mới vào database
         public static function save(Tour $tour)
         {
             $pdo = getDB();
@@ -137,13 +127,12 @@
                 $tour->trang_thai,
                 $tour->anh_tour
             ])){
-                // Trả về ID của tour vừa tạo
                 return $pdo->lastInsertId();
             }
             return false;
         }
         
-        //lấy tour theo ID
+        // Lấy tour theo ID
         public static function find($id, $loadRelated = false)
         {
             $pdo = getDB();
@@ -153,15 +142,13 @@
                     WHERE t.id = ? LIMIT 1";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$id]);
-            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+            $data = $stmt->fetch();
 
             if (!$data) {
                 return null;
             }
 
             $tour = new Tour($data);
-
-            // Load dữ liệu liên quan nếu được yêu cầu
             if ($loadRelated) {
                 $tour->loadRelatedData();
             }
@@ -169,7 +156,7 @@
             return $tour;
         }
 
-        //cập nhật tour
+        // Cập nhật tour
         public static function update(Tour $tour)
         {
             $pdo = getDB();
@@ -194,7 +181,7 @@
             ]);
         }
 
-        //lấy danh sách chính sách của tour
+        // Lấy danh sách chính sách của tour
         public function getChinhSach()
         {
             if (!empty($this->chinh_sach)) {
@@ -205,11 +192,11 @@
             $sql = "SELECT * FROM tour_chinh_sach WHERE tour_id = ? ORDER BY ngay_tao";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$this->id]);
-            $this->chinh_sach = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->chinh_sach = $stmt->fetchAll();
             return $this->chinh_sach;
         }
 
-        //lấy lịch trình tour
+        // Lấy lịch trình tour
         public function getLichTrinh()
         {
             if (!empty($this->lich_trinh)) {
@@ -220,11 +207,11 @@
             $sql = "SELECT * FROM tour_lich_trinh WHERE tour_id = ? ORDER BY ngay ASC";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$this->id]);
-            $this->lich_trinh = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->lich_trinh = $stmt->fetchAll();
             return $this->lich_trinh;
         }
 
-        //lấy danh sách nhà cung cấp
+        // Lấy danh sách nhà cung cấp
         public function getNhaCungCap()
         {
             if (!empty($this->nha_cung_cap)) {
@@ -235,11 +222,11 @@
             $sql = "SELECT * FROM tour_nha_cung_cap WHERE tour_id = ? ORDER BY ngay_tao";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$this->id]);
-            $this->nha_cung_cap = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->nha_cung_cap = $stmt->fetchAll();
             return $this->nha_cung_cap;
         }
 
-        //lấy danh sách ảnh chi tiết
+        // Lấy danh sách ảnh chi tiết
         public function getAnhChiTiet()
         {
             if (!empty($this->anh_tour_chi_tiet)) {
@@ -250,11 +237,11 @@
             $sql = "SELECT * FROM tour_anh WHERE tour_id = ? ORDER BY ngay_tao";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$this->id]);
-            $this->anh_tour_chi_tiet = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->anh_tour_chi_tiet = $stmt->fetchAll();
             return $this->anh_tour_chi_tiet;
         }
 
-        //load tất cả dữ liệu liên quan
+        // Load tất cả dữ liệu liên quan
         public function loadRelatedData()
         {
             $this->getChinhSach();
@@ -263,13 +250,13 @@
             $this->getAnhChiTiet();
         }
 
-        //lấy tour với tất cả thông tin liên quan (JOIN tất cả bảng)
+        // Lấy tour với tất cả thông tin liên quan
         public static function getTourWithDetails($id)
         {
-            return self::find($id, true); // true = load related data
+            return self::find($id, true);
         }
 
-        //lưu lịch trình cho tour
+        // Lưu lịch trình (phương thức cũ - giữ lại để tương thích)
         public static function saveLichTrinh($tour_id, $lich_trinh_text)
         {
             if (!empty(trim($lich_trinh_text))) {
@@ -281,7 +268,76 @@
             }
         }
 
-        //lưu ảnh chi tiết cho tour
+        // Lưu nhiều chính sách cho tour
+        public static function luuNhieuChinhSach($tour_id, $chinh_sach_list)
+        {
+            if (empty($chinh_sach_list) || !is_array($chinh_sach_list)) {
+                return;
+            }
+
+            $pdo = getDB();
+            $sql = "INSERT INTO tour_chinh_sach (tour_id, ten_chinh_sach, noi_dung, ngay_tao, ngay_cap_nhat)
+                    VALUES (?, ?, ?, NOW(), NOW())";
+            $stmt = $pdo->prepare($sql);
+
+            foreach ($chinh_sach_list as $chinh_sach) {
+                $ten = trim($chinh_sach['ten'] ?? '');
+                $noi_dung = trim($chinh_sach['noi_dung'] ?? '');
+
+                if (!empty($ten) && !empty($noi_dung)) {
+                    $stmt->execute([$tour_id, $ten, $noi_dung]);
+                }
+            }
+        }
+
+        // Lưu nhiều lịch trình cho tour
+        public static function luuNhieuLichTrinh($tour_id, $lich_trinh_list)
+        {
+            if (empty($lich_trinh_list) || !is_array($lich_trinh_list)) {
+                return;
+            }
+
+            $pdo = getDB();
+            $sql = "INSERT INTO tour_lich_trinh (tour_id, ngay, diem_tham_quan, hoat_dong)
+                    VALUES (?, ?, ?, ?)";
+            $stmt = $pdo->prepare($sql);
+
+            foreach ($lich_trinh_list as $lich_trinh) {
+                $ngay = intval($lich_trinh['ngay'] ?? 1);
+                $diem_tham_quan = trim($lich_trinh['diem_tham_quan'] ?? '');
+                $hoat_dong = trim($lich_trinh['hoat_dong'] ?? '');
+
+                if (!empty($diem_tham_quan) || !empty($hoat_dong)) {
+                    $stmt->execute([$tour_id, $ngay, $diem_tham_quan, $hoat_dong]);
+                }
+            }
+        }
+
+        // Lưu nhiều nhà cung cấp cho tour
+        public static function luuNhieuNhaCungCap($tour_id, $nha_cung_cap_list)
+        {
+            if (empty($nha_cung_cap_list) || !is_array($nha_cung_cap_list)) {
+                return;
+            }
+
+            $pdo = getDB();
+            $sql = "INSERT INTO tour_nha_cung_cap (tour_id, ten_nha_cung_cap, loai, lien_he, ghi_chu, ngay_tao, ngay_cap_nhat)
+                    VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
+            $stmt = $pdo->prepare($sql);
+
+            foreach ($nha_cung_cap_list as $nha_cung_cap) {
+                $ten = trim($nha_cung_cap['ten'] ?? '');
+                $loai = trim($nha_cung_cap['loai'] ?? '');
+                $lien_he = trim($nha_cung_cap['lien_he'] ?? '');
+                $ghi_chu = trim($nha_cung_cap['ghi_chu'] ?? '');
+
+                if (!empty($ten)) {
+                    $stmt->execute([$tour_id, $ten, $loai, $lien_he, $ghi_chu]);
+                }
+            }
+        }
+
+        // Lưu ảnh chi tiết cho tour
         public static function saveAnhChiTiet($tour_id, $duong_dan)
         {
             if (!empty(trim($duong_dan))){
@@ -293,7 +349,7 @@
             }
         }
 
-        //quản lý chi tiết ảnh
+        // Thêm ảnh chi tiết
         public static function addAnhChiTiet($tour_id, $duong_dan)
         {
             $pdo = getDB();
@@ -303,6 +359,7 @@
             return $stmt->execute([$tour_id, $duong_dan]);
         }
 
+        // Xóa ảnh chi tiết
         public static function deleteAnhChiTiet($id)
         {
             $pdo = getDB();

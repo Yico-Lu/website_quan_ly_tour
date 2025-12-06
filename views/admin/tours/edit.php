@@ -12,15 +12,35 @@
         <div class="card-body">
             <!-- Hiển thị lỗi -->
             <?php if(isset($errors) && !empty($errors)): ?>
-                <div class="alert alert-danger">
-                    <strong>Có lỗi:</strong>
-                    <ul class="mb-0 mt-2">
+                <div class="alert alert-danger fade show" role="alert">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-exclamation-circle-fill me-2 fs-5"></i>
+                        <strong>Có lỗi xảy ra</strong>
+                    </div>
+                    <ul class="mb-0 ps-3">
                         <?php foreach($errors as $error): ?>
                             <li><?= htmlspecialchars($error) ?></li>
                         <?php endforeach; ?>
                     </ul>
                 </div>
             <?php endif; ?>
+
+            <!-- Hiển thị thông báo flash -->
+            <?php
+            $flashMessages = getFlashMessages();
+            foreach ($flashMessages as $message):
+                $alertClass = $message['type'] === 'success' ? 'alert-success' : 'alert-danger';
+                $icon = $message['type'] === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill';
+                $title = $message['type'] === 'success' ? 'Thành công' : 'Lỗi';
+            ?>
+                <div class="alert <?= $alertClass ?> fade show" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="bi <?= $icon ?> me-2 fs-5"></i>
+                        <strong><?= $title ?>:</strong>
+                        <span class="ms-2"><?= htmlspecialchars($message['message']) ?></span>
+                    </div>
+                </div>
+            <?php endforeach; ?>
 
             <div class="row">
                 <!-- Tên tour -->
@@ -130,93 +150,174 @@
 
             <!-- CHÍNH SÁCH TOUR -->
             <div class="card card-outline card-info mb-4">
-                <div class="card-header">
-                    <h5 class="card-title">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
                         <i class="bi bi-file-text"></i> Chính sách Tour
                     </h5>
+                    <button type="button" class="btn btn-sm btn-success" onclick="addChinhSach()">
+                        <i class="bi bi-plus-circle"></i> Thêm chính sách
+                    </button>
                 </div>
-                <div class="card-body">
+                <div class="card-body" id="chinh_sach_container">
                     <?php
                     $currentChinhSach = $tour->getChinhSach();
-                    $currentCS = !empty($currentChinhSach) ? $currentChinhSach[0] : null;
+                    $oldChinhSach = $old['chinh_sach'] ?? [];
+                    // Nếu có dữ liệu cũ từ form (khi có lỗi), dùng dữ liệu cũ, nếu không thì dùng dữ liệu từ database
+                    $chinhSachToShow = !empty($oldChinhSach) ? $oldChinhSach : $currentChinhSach;
+                    // Nếu không có dữ liệu, tạo 1 item mặc định
+                    if (empty($chinhSachToShow)) {
+                        $chinhSachToShow = [['ten_chinh_sach' => '', 'noi_dung' => '']];
+                    }
                     ?>
-                    <div class="mb-3">
-                        <label for="chinh_sach_ten" class="form-label">Tên chính sách</label>
-                        <input type="text" class="form-control" id="chinh_sach_ten"
-                               name="chinh_sach_ten" value="<?= htmlspecialchars($old['chinh_sach_ten'] ?? ($currentCS ? $currentCS['ten_chinh_sach'] : '')) ?>"
-                               placeholder="VD: Chính sách hủy tour">
+                    <?php foreach($chinhSachToShow as $index => $cs): ?>
+                    <div class="chinh-sach-item border rounded p-3 mb-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong>Chính sách #<?= $index + 1 ?></strong>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeChinhSach(this)">
+                                <i class="bi bi-trash"></i> Xóa
+                            </button>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tên chính sách</label>
+                            <input type="text" class="form-control" name="chinh_sach[<?= $index ?>][ten]"
+                                   value="<?= htmlspecialchars($oldChinhSach[$index]['ten'] ?? $cs['ten_chinh_sach'] ?? '') ?>"
+                                   placeholder="VD: Chính sách hủy tour, Chính sách đặt tour, Chính sách hoàn tiền...">
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label">Nội dung chính sách</label>
+                            <textarea class="form-control" name="chinh_sach[<?= $index ?>][noi_dung]" rows="3"
+                                      placeholder="Mô tả chi tiết chính sách..."><?= htmlspecialchars($oldChinhSach[$index]['noi_dung'] ?? $cs['noi_dung'] ?? '') ?></textarea>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="chinh_sach_noi_dung" class="form-label">Nội dung chính sách</label>
-                        <textarea class="form-control" id="chinh_sach_noi_dung"
-                                  name="chinh_sach_noi_dung" rows="3"
-                                  placeholder="Mô tả chi tiết chính sách..."><?= htmlspecialchars($old['chinh_sach_noi_dung'] ?? ($currentCS ? $currentCS['noi_dung'] : '')) ?></textarea>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
 
             <!-- LỊCH TRÌNH TOUR -->
             <div class="card card-outline card-success mb-4">
-                <div class="card-header">
-                    <h5 class="card-title">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
                         <i class="bi bi-calendar-event"></i> Lịch trình Tour
                     </h5>
+                    <button type="button" class="btn btn-sm btn-success" onclick="addLichTrinh()">
+                        <i class="bi bi-plus-circle"></i> Thêm ngày
+                    </button>
                 </div>
-                <div class="card-body">
-                    <label for="lich_trinh" class="form-label">Mô tả lịch trình <span class="text-muted">(không bắt buộc)</span></label>
+                <div class="card-body" id="lich_trinh_container">
                     <?php
-                    $lichTrinhHienTai = $tour->getLichTrinh();
-                    $lichTrinhText = !empty($lichTrinhHienTai) ? $lichTrinhHienTai[0]['hoat_dong'] : '';
+                    $currentLichTrinh = $tour->getLichTrinh();
+                    $oldLichTrinh = $old['lich_trinh'] ?? [];
+                    // Nếu có dữ liệu cũ từ form (khi có lỗi), dùng dữ liệu cũ, nếu không thì dùng dữ liệu từ database
+                    $lichTrinhToShow = !empty($oldLichTrinh) ? $oldLichTrinh : $currentLichTrinh;
+                    // Nếu không có dữ liệu, tạo 1 item mặc định
+                    if (empty($lichTrinhToShow)) {
+                        $lichTrinhToShow = [['ngay' => 1, 'diem_tham_quan' => '', 'hoat_dong' => '']];
+                    }
                     ?>
-                    <textarea
-                        class="form-control"
-                        id="lich_trinh"
-                        name="lich_trinh"
-                        rows="6"
-                        placeholder="Mô tả chi tiết lịch trình tour..."
-                    ><?= htmlspecialchars($old['lich_trinh'] ?? $lichTrinhText) ?></textarea>
-                    <div class="form-text">Mô tả chi tiết các hoạt động trong tour</div>
+                    <?php foreach($lichTrinhToShow as $index => $lt): ?>
+                    <div class="lich-trinh-item border rounded p-3 mb-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong>Ngày <?= $lt['ngay'] ?? ($index + 1) ?></strong>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeLichTrinh(this)">
+                                <i class="bi bi-trash"></i> Xóa
+                            </button>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Số ngày</label>
+                                <input type="number" class="form-control" name="lich_trinh[<?= $index ?>][ngay]" 
+                                       value="<?= htmlspecialchars($oldLichTrinh[$index]['ngay'] ?? $lt['ngay'] ?? ($index + 1)) ?>" 
+                                       min="1" required>
+                            </div>
+                            <div class="col-md-9 mb-3">
+                                <label class="form-label">Điểm tham quan</label>
+                                <input type="text" class="form-control" name="lich_trinh[<?= $index ?>][diem_tham_quan]"
+                                       value="<?= htmlspecialchars($oldLichTrinh[$index]['diem_tham_quan'] ?? $lt['diem_tham_quan'] ?? '') ?>"
+                                       placeholder="VD: Hồ Hoàn Kiếm, Lăng Bác, Vịnh Hạ Long...">
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label">Hoạt động</label>
+                            <textarea class="form-control" name="lich_trinh[<?= $index ?>][hoat_dong]" rows="3"
+                                      placeholder="Mô tả chi tiết các hoạt động trong ngày..."><?= htmlspecialchars($oldLichTrinh[$index]['hoat_dong'] ?? $lt['hoat_dong'] ?? '') ?></textarea>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
 
             <!-- NHÀ CUNG CẤP -->
             <div class="card card-outline card-warning mb-4">
-                <div class="card-header">
-                    <h5 class="card-title">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
                         <i class="bi bi-building"></i> Nhà cung cấp
                     </h5>
+                    <button type="button" class="btn btn-sm btn-success" onclick="addNhaCungCap()">
+                        <i class="bi bi-plus-circle"></i> Thêm nhà cung cấp
+                    </button>
                 </div>
-                <div class="card-body">
+                <div class="card-body" id="nha_cung_cap_container">
                     <?php
                     $currentNCC = $tour->getNhaCungCap();
-                    $currentN = !empty($currentNCC) ? $currentNCC[0] : null;
+                    $oldNCC = $old['nha_cung_cap'] ?? [];
+                    // Nếu có dữ liệu cũ từ form (khi có lỗi), dùng dữ liệu cũ, nếu không thì dùng dữ liệu từ database
+                    $nccToShow = !empty($oldNCC) ? $oldNCC : $currentNCC;
+                    // Nếu không có dữ liệu, tạo 1 item mặc định
+                    if (empty($nccToShow)) {
+                        $nccToShow = [['ten_nha_cung_cap' => '', 'loai' => '', 'lien_he' => '', 'ghi_chu' => '']];
+                    }
                     ?>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="nha_cung_cap_ten" class="form-label">Tên nhà cung cấp</label>
-                            <input type="text" class="form-control" id="nha_cung_cap_ten"
-                                   name="nha_cung_cap_ten" value="<?= htmlspecialchars($old['nha_cung_cap_ten'] ?? ($currentN ? $currentN['ten_nha_cung_cap'] : '')) ?>"
-                                   placeholder="VD: Vietnam Airlines">
+                    <?php foreach($nccToShow as $index => $ncc): ?>
+                    <div class="nha-cung-cap-item border rounded p-3 mb-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong>Nhà cung cấp #<?= $index + 1 ?></strong>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeNhaCungCap(this)">
+                                <i class="bi bi-trash"></i> Xóa
+                            </button>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="nha_cung_cap_loai" class="form-label">Loại</label>
-                            <select class="form-select" id="nha_cung_cap_loai" name="nha_cung_cap_loai">
-                                <option value="">Chọn loại</option>
-                                <option value="hang_khong" <?= (($old['nha_cung_cap_loai'] ?? ($currentN ? $currentN['loai'] : '')) == 'hang_khong') ? 'selected' : '' ?>>Hàng không</option>
-                                <option value="khach_san" <?= (($old['nha_cung_cap_loai'] ?? ($currentN ? $currentN['loai'] : '')) == 'khach_san') ? 'selected' : '' ?>>Khách sạn</option>
-                                <option value="nha_hang" <?= (($old['nha_cung_cap_loai'] ?? ($currentN ? $currentN['loai'] : '')) == 'nha_hang') ? 'selected' : '' ?>>Nhà hàng</option>
-                                <option value="phuong_tien" <?= (($old['nha_cung_cap_loai'] ?? ($currentN ? $currentN['loai'] : '')) == 'phuong_tien') ? 'selected' : '' ?>>Phương tiện</option>
-                                <option value="hdv" <?= (($old['nha_cung_cap_loai'] ?? ($currentN ? $currentN['loai'] : '')) == 'hdv') ? 'selected' : '' ?>>Hướng dẫn viên</option>
-                                <option value="khac" <?= (($old['nha_cung_cap_loai'] ?? ($currentN ? $currentN['loai'] : '')) == 'khac') ? 'selected' : '' ?>>Khác</option>
-                            </select>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Tên nhà cung cấp</label>
+                                <input type="text" class="form-control" name="nha_cung_cap[<?= $index ?>][ten]"
+                                       value="<?= htmlspecialchars($oldNCC[$index]['ten'] ?? $ncc['ten_nha_cung_cap'] ?? '') ?>"
+                                       placeholder="VD: Vietnam Airlines, Khách sạn ABC...">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Loại</label>
+                                <select class="form-select" name="nha_cung_cap[<?= $index ?>][loai]">
+                                    <option value="">Chọn loại</option>
+                                    <?php
+                                    $selectedLoai = $oldNCC[$index]['loai'] ?? $ncc['loai'] ?? '';
+                                    $loaiOptions = [
+                                        'hang_khong' => 'Hàng không',
+                                        'khach_san' => 'Khách sạn',
+                                        'nha_hang' => 'Nhà hàng',
+                                        'phuong_tien' => 'Phương tiện',
+                                        'hdv' => 'Hướng dẫn viên',
+                                        'khac' => 'Khác'
+                                    ];
+                                    foreach($loaiOptions as $value => $label):
+                                    ?>
+                                    <option value="<?= $value ?>" <?= $selectedLoai == $value ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($label) ?>
+                                    </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Liên hệ</label>
+                                <input type="text" class="form-control" name="nha_cung_cap[<?= $index ?>][lien_he]"
+                                       value="<?= htmlspecialchars($oldNCC[$index]['lien_he'] ?? $ncc['lien_he'] ?? '') ?>"
+                                       placeholder="VD: 1900 1886, 0909123456...">
+                            </div>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="nha_cung_cap_lien_he" class="form-label">Liên hệ</label>
-                            <input type="text" class="form-control" id="nha_cung_cap_lien_he"
-                                   name="nha_cung_cap_lien_he" value="<?= htmlspecialchars($old['nha_cung_cap_lien_he'] ?? ($currentN ? $currentN['lien_he'] : '')) ?>"
-                                   placeholder="VD: 1900 1886">
+                        <div class="mb-0">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea class="form-control" name="nha_cung_cap[<?= $index ?>][ghi_chu]" rows="2"
+                                      placeholder="Ghi chú về nhà cung cấp..."><?= htmlspecialchars($oldNCC[$index]['ghi_chu'] ?? $ncc['ghi_chu'] ?? '') ?></textarea>
                         </div>
                     </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
 
@@ -284,6 +385,7 @@
     </form>
 
     <script>
+        // Xử lý xóa ảnh
         let imagesToDelete = [];
 
         function deleteExistingImage(imageId) {
@@ -291,6 +393,10 @@
             document.getElementById('delete_images').value = imagesToDelete.join(',');
             event.target.closest('.col-md-3').style.display = 'none';
         }
+
+        // ============================================
+        // HÀM THÊM CHÍNH SÁCH MỚI
+        // ============================================
     </script>
 </div>
 
@@ -301,6 +407,6 @@ view('layouts.AdminLayout', [
     'pageTitle' => $pageTitle ?? 'Sửa Tour',
     'content' => $content,
     'breadcrumb' => $breadcrumb ?? [],
-    'extraJs' => ['js/tour-image-preview.js'],
+    'extraJs' => ['js/tour-image-preview.js', 'js/tour-form.js'],
 ]);
 ?>

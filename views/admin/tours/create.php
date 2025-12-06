@@ -11,15 +11,35 @@
         <div class="card-body">
             <!-- Hiển thị lỗi -->
             <?php if(isset($errors) && !empty($errors)): ?>
-                <div class="alert alert-danger">
-                    <strong>Có lỗi:</strong>
-                    <ul class="mb-0 mt-2">
+                <div class="alert alert-danger fade show" role="alert">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-exclamation-circle-fill me-2 fs-5"></i>
+                        <strong>Có lỗi xảy ra</strong>
+                    </div>
+                    <ul class="mb-0 ps-3">
                         <?php foreach($errors as $error): ?>
                             <li><?= htmlspecialchars($error) ?></li>
                         <?php endforeach; ?>
                     </ul>
                 </div>
             <?php endif; ?>
+
+            <!-- Hiển thị thông báo flash -->
+            <?php
+            $flashMessages = getFlashMessages();
+            foreach ($flashMessages as $message):
+                $alertClass = $message['type'] === 'success' ? 'alert-success' : 'alert-danger';
+                $icon = $message['type'] === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill';
+                $title = $message['type'] === 'success' ? 'Thành công' : 'Lỗi';
+            ?>
+                <div class="alert <?= $alertClass ?> fade show" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="bi <?= $icon ?> me-2 fs-5"></i>
+                        <strong><?= $title ?>:</strong>
+                        <span class="ms-2"><?= htmlspecialchars($message['message']) ?></span>
+                    </div>
+                </div>
+            <?php endforeach; ?>
 
             <div class="row">
                 <!-- Tên tour -->
@@ -118,82 +138,123 @@
 
             <!-- CHÍNH SÁCH TOUR -->
             <div class="card card-outline card-info mb-4">
-                <div class="card-header">
-                    <h5 class="card-title">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
                         <i class="bi bi-file-text"></i> Chính sách Tour
                     </h5>
+                    <button type="button" class="btn btn-sm btn-success" onclick="addChinhSach()">
+                        <i class="bi bi-plus-circle"></i> Thêm chính sách
+                    </button>
                 </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="chinh_sach_ten" class="form-label">Tên chính sách</label>
-                        <input type="text" class="form-control" id="chinh_sach_ten"
-                               name="chinh_sach_ten" value="<?= htmlspecialchars($old['chinh_sach_ten'] ?? '') ?>"
-                               placeholder="VD: Chính sách hủy tour">
-                    </div>
-                    <div class="mb-3">
-                        <label for="chinh_sach_noi_dung" class="form-label">Nội dung chính sách</label>
-                        <textarea class="form-control" id="chinh_sach_noi_dung"
-                                  name="chinh_sach_noi_dung" rows="3"
-                                  placeholder="Mô tả chi tiết chính sách..."><?= htmlspecialchars($old['chinh_sach_noi_dung'] ?? '') ?></textarea>
+                <div class="card-body" id="chinh_sach_container">
+                    <!-- Chính sách mặc định (có thể xóa) -->
+                    <div class="chinh-sach-item border rounded p-3 mb-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong>Chính sách #1</strong>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeChinhSach(this)">
+                                <i class="bi bi-trash"></i> Xóa
+                            </button>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tên chính sách</label>
+                            <input type="text" class="form-control" name="chinh_sach[0][ten]"
+                                   placeholder="VD: Chính sách hủy tour, Chính sách đặt tour, Chính sách hoàn tiền...">
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label">Nội dung chính sách</label>
+                            <textarea class="form-control" name="chinh_sach[0][noi_dung]" rows="3"
+                                      placeholder="Mô tả chi tiết chính sách..."></textarea>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- LỊCH TRÌNH TOUR -->
             <div class="card card-outline card-success mb-4">
-                <div class="card-header">
-                    <h5 class="card-title">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
                         <i class="bi bi-calendar-event"></i> Lịch trình Tour
                     </h5>
+                    <button type="button" class="btn btn-sm btn-success" onclick="addLichTrinh()">
+                        <i class="bi bi-plus-circle"></i> Thêm ngày
+                    </button>
                 </div>
-                <div class="card-body">
-                    <label for="lich_trinh" class="form-label">Mô tả lịch trình <span class="text-muted">(không bắt buộc)</span></label>
-                    <textarea
-                        class="form-control"
-                        id="lich_trinh"
-                        name="lich_trinh"
-                        rows="4"
-                        placeholder="Mô tả chi tiết lịch trình tour...
-Ví dụ:
-Ngày 1: Hà Nội - Hạ Long (Ăn sáng, khởi hành 8:00, tham quan vịnh Hạ Long)
-Ngày 2: Hạ Long - Hà Nội (Tham quan hang Sửng Sốt, về Hà Nội)"
-                    ><?= htmlspecialchars($old['lich_trinh'] ?? '') ?></textarea>
-                    <div class="form-text">Mô tả chi tiết các hoạt động trong tour</div>
+                <div class="card-body" id="lich_trinh_container">
+                    <!-- Lịch trình mặc định (có thể xóa) -->
+                    <div class="lich-trinh-item border rounded p-3 mb-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong>Ngày 1</strong>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeLichTrinh(this)">
+                                <i class="bi bi-trash"></i> Xóa
+                            </button>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Số ngày</label>
+                                <input type="number" class="form-control" name="lich_trinh[0][ngay]" value="1" min="1" required>
+                            </div>
+                            <div class="col-md-9 mb-3">
+                                <label class="form-label">Điểm tham quan</label>
+                                <input type="text" class="form-control" name="lich_trinh[0][diem_tham_quan]"
+                                       placeholder="VD: Hồ Hoàn Kiếm, Lăng Bác, Vịnh Hạ Long...">
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label">Hoạt động</label>
+                            <textarea class="form-control" name="lich_trinh[0][hoat_dong]" rows="3"
+                                      placeholder="Mô tả chi tiết các hoạt động trong ngày..."></textarea>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- NHÀ CUNG CẤP -->
             <div class="card card-outline card-warning mb-4">
-                <div class="card-header">
-                    <h5 class="card-title">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
                         <i class="bi bi-building"></i> Nhà cung cấp
                     </h5>
+                    <button type="button" class="btn btn-sm btn-success" onclick="addNhaCungCap()">
+                        <i class="bi bi-plus-circle"></i> Thêm nhà cung cấp
+                    </button>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="nha_cung_cap_ten" class="form-label">Tên nhà cung cấp</label>
-                            <input type="text" class="form-control" id="nha_cung_cap_ten"
-                                   name="nha_cung_cap_ten" value="<?= htmlspecialchars($old['nha_cung_cap_ten'] ?? '') ?>"
-                                   placeholder="VD: Vietnam Airlines">
+                <div class="card-body" id="nha_cung_cap_container">
+                    <!-- Nhà cung cấp mặc định (có thể xóa) -->
+                    <div class="nha-cung-cap-item border rounded p-3 mb-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong>Nhà cung cấp #1</strong>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeNhaCungCap(this)">
+                                <i class="bi bi-trash"></i> Xóa
+                            </button>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="nha_cung_cap_loai" class="form-label">Loại</label>
-                            <select class="form-select" id="nha_cung_cap_loai" name="nha_cung_cap_loai">
-                                <option value="">Chọn loại</option>
-                                <option value="hang_khong" <?= ($old['nha_cung_cap_loai'] ?? '') == 'hang_khong' ? 'selected' : '' ?>>Hàng không</option>
-                                <option value="khach_san" <?= ($old['nha_cung_cap_loai'] ?? '') == 'khach_san' ? 'selected' : '' ?>>Khách sạn</option>
-                                <option value="nha_hang" <?= ($old['nha_cung_cap_loai'] ?? '') == 'nha_hang' ? 'selected' : '' ?>>Nhà hàng</option>
-                                <option value="phuong_tien" <?= ($old['nha_cung_cap_loai'] ?? '') == 'phuong_tien' ? 'selected' : '' ?>>Phương tiện</option>
-                                <option value="hdv" <?= ($old['nha_cung_cap_loai'] ?? '') == 'hdv' ? 'selected' : '' ?>>Hướng dẫn viên</option>
-                                <option value="khac" <?= ($old['nha_cung_cap_loai'] ?? '') == 'khac' ? 'selected' : '' ?>>Khác</option>
-                            </select>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Tên nhà cung cấp</label>
+                                <input type="text" class="form-control" name="nha_cung_cap[0][ten]"
+                                       placeholder="VD: Vietnam Airlines, Khách sạn ABC...">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Loại</label>
+                                <select class="form-select" name="nha_cung_cap[0][loai]">
+                                    <option value="">Chọn loại</option>
+                                    <option value="hang_khong">Hàng không</option>
+                                    <option value="khach_san">Khách sạn</option>
+                                    <option value="nha_hang">Nhà hàng</option>
+                                    <option value="phuong_tien">Phương tiện</option>
+                                    <option value="hdv">Hướng dẫn viên</option>
+                                    <option value="khac">Khác</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Liên hệ</label>
+                                <input type="text" class="form-control" name="nha_cung_cap[0][lien_he]"
+                                       placeholder="VD: 1900 1886">
+                            </div>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="nha_cung_cap_lien_he" class="form-label">Liên hệ</label>
-                            <input type="text" class="form-control" id="nha_cung_cap_lien_he"
-                                   name="nha_cung_cap_lien_he" value="<?= htmlspecialchars($old['nha_cung_cap_lien_he'] ?? '') ?>"
-                                   placeholder="VD: 1900 1886">
+                        <div class="mb-0">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea class="form-control" name="nha_cung_cap[0][ghi_chu]" rows="2"
+                                      placeholder="Ghi chú về nhà cung cấp..."></textarea>
                         </div>
                     </div>
                 </div>
@@ -237,6 +298,6 @@ view('layouts.AdminLayout', [
     'pageTitle' => $pageTitle ?? 'Thêm Tour Mới',
     'content' => $content,
     'breadcrumb' => $breadcrumb ?? [],
-    'extraJs' => ['js/tour-image-preview.js'],
+    'extraJs' => ['js/tour-image-preview.js', 'js/tour-form.js'],
 ]);
 ?>
