@@ -54,12 +54,9 @@ class TourController
         $mo_ta = trim($_POST['mo_ta'] ?? '');
         $gia = trim($_POST['gia'] ?? 0);
         $trang_thai = isset($_POST['trang_thai']) ? 1 : 0;
-        $lich_trinh = trim($_POST['lich_trinh'] ?? '');
-        $chinh_sach_ten = trim($_POST['chinh_sach_ten'] ?? '');
-        $chinh_sach_noi_dung = trim($_POST['chinh_sach_noi_dung'] ?? '');
-        $nha_cung_cap_ten = trim($_POST['nha_cung_cap_ten'] ?? '');
-        $nha_cung_cap_loai = trim($_POST['nha_cung_cap_loai'] ?? '');
-        $nha_cung_cap_lien_he = trim($_POST['nha_cung_cap_lien_he'] ?? '');
+        $chinh_sach_list = $_POST['chinh_sach'] ?? [];
+        $lich_trinh_list = $_POST['lich_trinh'] ?? [];
+        $nha_cung_cap_list = $_POST['nha_cung_cap'] ?? [];
 
         // Xử lý upload ảnh tour chính
         $anh_tour_path = null;
@@ -110,24 +107,9 @@ class TourController
 
         $tourId = Tour::save($tour);
         if($tourId){
-            // Lưu chính sách
-            if(!empty($chinh_sach_ten) && !empty($chinh_sach_noi_dung)){
-                $pdo = getDB();
-                $sql = "INSERT INTO tour_chinh_sach (tour_id, ten_chinh_sach, noi_dung, ngay_tao, ngay_cap_nhat)
-                        VALUES (?, ?, ?, NOW(), NOW())";
-                $pdo->prepare($sql)->execute([$tourId, $chinh_sach_ten, $chinh_sach_noi_dung]);
-            }
-
-            // Lưu lịch trình
-            Tour::saveLichTrinh($tourId, $lich_trinh);
-
-            // Lưu nhà cung cấp
-            if(!empty($nha_cung_cap_ten) && !empty($nha_cung_cap_loai)){
-                $pdo = getDB();
-                $sql = "INSERT INTO tour_nha_cung_cap (tour_id, ten_nha_cung_cap, loai, lien_he, ngay_tao, ngay_cap_nhat)
-                        VALUES (?, ?, ?, ?, NOW(), NOW())";
-                $pdo->prepare($sql)->execute([$tourId, $nha_cung_cap_ten, $nha_cung_cap_loai, $nha_cung_cap_lien_he]);
-            }
+            Tour::luuNhieuChinhSach($tourId, $chinh_sach_list);
+            Tour::luuNhieuLichTrinh($tourId, $lich_trinh_list);
+            Tour::luuNhieuNhaCungCap($tourId, $nha_cung_cap_list);
 
             // Lưu ảnh chi tiết đã upload
             foreach($anh_chi_tiet_paths as $anh_path){
@@ -193,13 +175,11 @@ class TourController
         $mo_ta = trim($_POST['mo_ta'] ?? '');
         $gia = trim($_POST['gia'] ?? 0);
         $trang_thai = isset($_POST['trang_thai']) ? 1 : 0;
-        $lich_trinh = trim($_POST['lich_trinh'] ?? '');
-        $chinh_sach_ten = trim($_POST['chinh_sach_ten'] ?? '');
-        $chinh_sach_noi_dung = trim($_POST['chinh_sach_noi_dung'] ?? '');
-        $nha_cung_cap_ten = trim($_POST['nha_cung_cap_ten'] ?? '');
-        $nha_cung_cap_loai = trim($_POST['nha_cung_cap_loai'] ?? '');
-        $nha_cung_cap_lien_he = trim($_POST['nha_cung_cap_lien_he'] ?? '');
-
+        // Lấy dữ liệu mảng: chính sách, lịch trình, nhà cung cấp
+        $chinh_sach_list = $_POST['chinh_sach'] ?? [];
+        $lich_trinh_list = $_POST['lich_trinh'] ?? [];
+        $nha_cung_cap_list = $_POST['nha_cung_cap'] ?? [];
+        
         // Xử lý upload ảnh tour chính (nếu có upload mới)
         $anh_tour_path = null;
         if (isset($_FILES['anh_tour']) && $_FILES['anh_tour']['error'] !== UPLOAD_ERR_NO_FILE) {
@@ -266,23 +246,15 @@ class TourController
 
             // Cập nhật chính sách - xóa cũ và thêm mới
             $pdo->prepare("DELETE FROM tour_chinh_sach WHERE tour_id = ?")->execute([$id]);
-            if(!empty($chinh_sach_ten) && !empty($chinh_sach_noi_dung)){
-                $sql = "INSERT INTO tour_chinh_sach (tour_id, ten_chinh_sach, noi_dung, ngay_tao, ngay_cap_nhat)
-                        VALUES (?, ?, ?, NOW(), NOW())";
-                $pdo->prepare($sql)->execute([$id, $chinh_sach_ten, $chinh_sach_noi_dung]);
-            }
+            Tour::luuNhieuChinhSach($id, $chinh_sach_list);
 
             // Cập nhật lịch trình - xóa cũ và thêm mới
             $pdo->prepare("DELETE FROM tour_lich_trinh WHERE tour_id = ?")->execute([$id]);
-            Tour::saveLichTrinh($id, $lich_trinh);
-
+            Tour::luuNhieuLichTrinh($id, $lich_trinh_list);
+            
             // Cập nhật nhà cung cấp - xóa cũ và thêm mới
             $pdo->prepare("DELETE FROM tour_nha_cung_cap WHERE tour_id = ?")->execute([$id]);
-            if(!empty($nha_cung_cap_ten) && !empty($nha_cung_cap_loai)){
-                $sql = "INSERT INTO tour_nha_cung_cap (tour_id, ten_nha_cung_cap, loai, lien_he, ngay_tao, ngay_cap_nhat)
-                        VALUES (?, ?, ?, ?, NOW(), NOW())";
-                $pdo->prepare($sql)->execute([$id, $nha_cung_cap_ten, $nha_cung_cap_loai, $nha_cung_cap_lien_he]);
-            }
+            Tour::luuNhieuNhaCungCap($id, $nha_cung_cap_list);
 
             // Xóa ảnh chi tiết được chọn
             foreach($images_to_delete as $image_id){
