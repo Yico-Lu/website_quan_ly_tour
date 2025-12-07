@@ -150,23 +150,6 @@ function requireGuideOrAdmin()
     }
 }
 
-// Thiết lập thông báo flash message
-function setFlashMessage($type, $message)
-{
-    $_SESSION['flash_messages'][] = [
-        'type' => $type,
-        'message' => $message,
-        'timestamp' => time()
-    ];
-}
-
-// Lấy và xóa thông báo flash message
-function getFlashMessages()
-{
-    $messages = $_SESSION['flash_messages'] ?? [];
-    unset($_SESSION['flash_messages']);
-    return $messages;
-}
 
 // Upload một ảnh đơn
 function uploadImage($file, $prefix = 'file', $uploadDir = 'uploads/general/')
@@ -244,4 +227,48 @@ function uploadMultipleImages($files, $prefix = 'file', $uploadDir = 'uploads/ge
     }
 
     return $uploadedPaths;
+}
+
+// Hiển thị thông báo flash message (success/error) - tự động ẩn sau 5 giây
+function displayFlashMessages(): void
+{
+    static $alertCount = 0;
+    
+    if (isset($_SESSION['success'])) {
+        $alertId = 'flash-alert-' . $alertCount++;
+        echo '<div id="' . $alertId . '" class="alert alert-success alert-dismissible fade show" role="alert">';
+        echo '<i class="bi bi-check-circle-fill me-2"></i>';
+        echo htmlspecialchars($_SESSION['success']);
+        echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        echo '</div>';
+        echo '<script>
+            setTimeout(function() {
+                const alert = document.getElementById("' . $alertId . '");
+                if (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 2000);
+        </script>';
+        unset($_SESSION['success']);
+    }
+
+    if (isset($_SESSION['error'])) {
+        $alertId = 'flash-alert-' . $alertCount++;
+        echo '<div id="' . $alertId . '" class="alert alert-danger alert-dismissible fade show" role="alert">';
+        echo '<i class="bi bi-exclamation-circle-fill me-2"></i>';
+        echo htmlspecialchars($_SESSION['error']);
+        echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        echo '</div>';
+        echo '<script>
+            setTimeout(function() {
+                const alert = document.getElementById("' . $alertId . '");
+                if (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 2000);
+        </script>';
+        unset($_SESSION['error']);
+    }
 }

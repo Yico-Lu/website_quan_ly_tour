@@ -13,6 +13,8 @@
         </div>
                   <!-- /.card-header -->
             <div class="card-body">
+              <?php displayFlashMessages(); ?>
+
               <table class="table table-bordered text-center">
                     <thead>
                         <tr>
@@ -107,14 +109,4 @@
     'breadcrumb' => $breadcrumb ?? [],
   ]);
 ?>
-
-<!-- Hiển thị thông báo -->
-<?php
-$flashMessages = getFlashMessages();
-foreach ($flashMessages as $message):
-?>
-<script>
-    alert('<?= addslashes($message['message']) ?>');
-</script>
-<?php endforeach; ?>
 

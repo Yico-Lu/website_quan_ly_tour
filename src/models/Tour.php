@@ -127,6 +127,7 @@
                 $tour->trang_thai,
                 $tour->anh_tour
             ])){
+                //trả về id tour vừa tạo
                 return $pdo->lastInsertId();
             }
             return false;
@@ -150,6 +151,7 @@
 
             $tour = new Tour($data);
             if ($loadRelated) {
+                //load dữ liệu liên quan nếu được yêu cầu
                 $tour->loadRelatedData();
             }
 
@@ -250,10 +252,10 @@
             $this->getAnhChiTiet();
         }
 
-        // Lấy tour với tất cả thông tin liên quan
+        // Lấy tour với tất cả thông tin liên quan(join bảng)
         public static function getTourWithDetails($id)
         {
-            return self::find($id, true);
+            return self::find($id, true); //true = load reload data
         }
 
         // Lưu lịch trình (phương thức cũ - giữ lại để tương thích)

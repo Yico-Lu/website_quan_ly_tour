@@ -116,11 +116,11 @@ class TourController
                 Tour::saveAnhChiTiet($tourId, $anh_path);
             }
 
-            setFlashMessage('success', 'Thêm tour mới thành công');
+            $_SESSION['success'] = 'Thêm tour mới thành công';
             header('Location: ' . BASE_URL . 'tours');
             exit;
         }else{
-            setFlashMessage('error', 'Thêm tour mới thất bại');
+            $_SESSION['error'] = 'Thêm tour mới thất bại';
             header('Location: ' . BASE_URL . 'tours/create');
             exit;
         }
@@ -133,7 +133,7 @@ class TourController
 
         $tour = Tour::find($id, true); // Load dữ liệu liên quan
         if(!$tour){
-            setFlashMessage('error', 'Tour không tồn tại');
+            $_SESSION['error'] = 'Tour không tồn tại';
             header('Location: ' . BASE_URL . 'tours');
             exit;
         }
@@ -164,7 +164,7 @@ class TourController
 
         $id = $_POST['id'] ?? null;
         if(!$id){
-            setFlashMessage('error', 'ID không hợp lệ');
+            $_SESSION['error'] = 'ID không hợp lệ';
             header('Location: ' . BASE_URL . 'tours');
             exit;
         }
@@ -268,11 +268,11 @@ class TourController
                 Tour::saveAnhChiTiet($id, $anh_path);
             }
 
-            setFlashMessage('success', 'Cập nhật tour thành công');
+            $_SESSION['success'] = 'Cập nhật tour thành công';
             header('Location: ' . BASE_URL . 'tours');
             exit;
         }else{
-            setFlashMessage('error', 'Cập nhật tour thất bại');
+            $_SESSION['error'] = 'Cập nhật tour thất bại';
             header('Location: ' . BASE_URL . 'tours/edit/' . $id);
             exit;
         }
@@ -285,7 +285,7 @@ class TourController
 
         $tour = Tour::getTourWithDetails($id); // Lấy tour với tất cả dữ liệu
         if(!$tour){
-            setFlashMessage('error', 'Tour không tồn tại');
+            $_SESSION['error'] = 'Tour không tồn tại';
             header('Location: ' . BASE_URL . 'tours');
             exit;
         }
@@ -313,15 +313,15 @@ class TourController
 
         $id = $_POST['id'] ?? null;
         if(!$id){
-            setFlashMessage('error', 'ID không hợp lệ');
+            $_SESSION['error'] = 'ID không hợp lệ';
             header('Location: ' . BASE_URL . 'tours');
             exit;
         }
 
         if(Tour::delete($id)){
-            setFlashMessage('success', 'Xoá tour thành công');
+            $_SESSION['success'] = 'Xoá tour thành công';
         }else {
-            setFlashMessage('error', 'Không thể xóa tour này vì đang được sử dụng trong hệ thống (báo cáo hoặc đặt tour)');
+            $_SESSION['error'] = 'Không thể xóa tour này vì đang được sử dụng trong hệ thống (báo cáo hoặc đặt tour)';
         }
         header('Location: ' . BASE_URL . 'tours');
         exit;

@@ -25,22 +25,7 @@
                 </div>
             <?php endif; ?>
 
-            <!-- Hiển thị thông báo flash -->
-            <?php
-            $flashMessages = getFlashMessages();
-            foreach ($flashMessages as $message):
-                $alertClass = $message['type'] === 'success' ? 'alert-success' : 'alert-danger';
-                $icon = $message['type'] === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill';
-                $title = $message['type'] === 'success' ? 'Thành công' : 'Lỗi';
-            ?>
-                <div class="alert <?= $alertClass ?> fade show" role="alert">
-                    <div class="d-flex align-items-center">
-                        <i class="bi <?= $icon ?> me-2 fs-5"></i>
-                        <strong><?= $title ?>:</strong>
-                        <span class="ms-2"><?= htmlspecialchars($message['message']) ?></span>
-                    </div>
-                </div>
-            <?php endforeach; ?>
+            <?php displayFlashMessages(); ?>
 
             <div class="row">
                 <!-- Tên tour -->
@@ -386,9 +371,6 @@
             event.target.closest('.col-md-3').style.display = 'none';
         }
 
-        // ============================================
-        // HÀM THÊM CHÍNH SÁCH MỚI
-        // ============================================
     </script>
 </div>
 
