@@ -229,7 +229,7 @@ function uploadMultipleImages($files, $prefix = 'file', $uploadDir = 'uploads/ge
     return $uploadedPaths;
 }
 
-// Hiển thị thông báo flash message (success/error) - tự động ẩn sau 5 giây
+// Hiển thị thông báo flash message (success/error) 
 function displayFlashMessages(): void
 {
     static $alertCount = 0;

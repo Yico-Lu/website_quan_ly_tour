@@ -2,35 +2,7 @@
 
 ## Tổng quan
 
-## 1. Flash Message Helpers
-
-### `setFlashMessage(string $type, string $message): void`
-Thiết lập thông báo flash message.
-
-**Parameters:**
-- `$type`: Loại thông báo ('success', 'error', 'warning', 'info')
-- `$message`: Nội dung thông báo
-
-**Example:**
-```php
-setFlashMessage('success', 'Tour đã được tạo thành công');
-setFlashMessage('error', 'Có lỗi xảy ra');
-```
-
-### `getFlashMessages(): array`
-Lấy và xóa thông báo flash message.
-
-**Return:** Array các flash messages
-
-**Example:**
-```php
-$messages = getFlashMessages();
-foreach ($messages as $message) {
-    echo "<div class='alert alert-{$message['type']}'>{$message['message']}</div>";
-}
-```
-
-## 2. Upload Helpers
+## 1. Upload Helpers
 
 ### `uploadImage(array $file, string $prefix = 'file', string $uploadDir = 'uploads/general/'): string|null`
 Upload một file ảnh đơn lẻ.

@@ -91,22 +91,30 @@
         public static function delete($id)
         {
             $pdo = getDB();
+            
+            // Kiểm tra booking - nếu có booking thì không cho xóa
             $sqlCheckBooking = "SELECT COUNT(*) FROM booking WHERE tour_id = ?";
             $stmtCheckBooking = $pdo->prepare($sqlCheckBooking);
             $stmtCheckBooking->execute([$id]);
-
             if($stmtCheckBooking->fetchColumn() > 0){
                 return false;
             }
            
+            // Kiểm tra báo cáo - nếu có báo cáo thì không cho xóa
             $sqlCheckBaoCao = "SELECT COUNT(*) FROM bao_cao_tong_hop_tour WHERE tour_id = ?";
             $stmtCheckBaoCao = $pdo->prepare($sqlCheckBaoCao);
             $stmtCheckBaoCao->execute([$id]);
-
             if($stmtCheckBaoCao->fetchColumn() > 0){
                 return false;
             }
 
+            // Xóa các dữ liệu liên quan trước (phải xóa trước vì có foreign key)
+            $pdo->prepare("DELETE FROM tour_anh WHERE tour_id = ?")->execute([$id]);
+            $pdo->prepare("DELETE FROM tour_chinh_sach WHERE tour_id = ?")->execute([$id]);
+            $pdo->prepare("DELETE FROM tour_lich_trinh WHERE tour_id = ?")->execute([$id]);
+            $pdo->prepare("DELETE FROM tour_nha_cung_cap WHERE tour_id = ?")->execute([$id]);
+
+            // Cuối cùng mới xóa tour
             $sql = "DELETE FROM tour WHERE id = ?";
             $stmt = $pdo->prepare($sql);
             return $stmt->execute([$id]);
@@ -256,18 +264,6 @@
         public static function getTourWithDetails($id)
         {
             return self::find($id, true); //true = load reload data
-        }
-
-        // Lưu lịch trình (phương thức cũ - giữ lại để tương thích)
-        public static function saveLichTrinh($tour_id, $lich_trinh_text)
-        {
-            if (!empty(trim($lich_trinh_text))) {
-                $pdo = getDB();
-                $sql = "INSERT INTO tour_lich_trinh (tour_id, ngay, diem_tham_quan, hoat_dong)
-                        VALUES (?, 1, 'Lịch trình', ?)";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute([$tour_id, trim($lich_trinh_text)]);
-            }
         }
 
         // Lưu nhiều chính sách cho tour
