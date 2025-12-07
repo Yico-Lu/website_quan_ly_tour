@@ -132,7 +132,7 @@
                     accept="image/*"
                 />
                 <div class="form-text">
-                    Chọn ảnh cho tour .Nếu không chọn ảnh, sẽ dùng ảnh mặc định.
+                    Chọn ảnh cho tour
                 </div>
             </div>
 
@@ -188,16 +188,10 @@
                                 <i class="bi bi-trash"></i> Xóa
                             </button>
                         </div>
-                        <div class="row">
-                            <div class="col-md-3 mb-3">
-                                <label class="form-label">Số ngày</label>
-                                <input type="number" class="form-control" name="lich_trinh[0][ngay]" value="1" min="1" required>
-                            </div>
-                            <div class="col-md-9 mb-3">
-                                <label class="form-label">Điểm tham quan</label>
-                                <input type="text" class="form-control" name="lich_trinh[0][diem_tham_quan]"
-                                       placeholder="VD: Hồ Hoàn Kiếm, Lăng Bác, Vịnh Hạ Long...">
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label">Điểm tham quan</label>
+                            <input type="text" class="form-control" name="lich_trinh[0][diem_tham_quan]"
+                                   placeholder="VD: Hồ Hoàn Kiếm, Lăng Bác, Vịnh Hạ Long...">
                         </div>
                         <div class="mb-0">
                             <label class="form-label">Hoạt động</label>

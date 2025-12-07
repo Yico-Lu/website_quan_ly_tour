@@ -106,12 +106,23 @@
             foreach($lichTrinh as $lt):
         ?>
         <div class="border rounded p-3 mb-3 bg-light">
-            <h6 class="text-success mb-2">
-                <i class="bi bi-calendar-day"></i> Lịch trình chi tiết
+            <h6 class="text-success mb-3">
+                <i class="bi bi-calendar-day"></i> Ngày <?= htmlspecialchars($lt['ngay'] ?? '') ?>
             </h6>
-            <p class="mb-0 text-muted">
-                <?= nl2br(htmlspecialchars($lt['hoat_dong'])) ?>
-            </p>
+            <?php if(!empty($lt['diem_tham_quan'])): ?>
+            <div class="mb-2">
+                <strong><i class="bi bi-geo-alt"></i> Điểm tham quan:</strong><br>
+                <span class="text-muted"><?= htmlspecialchars($lt['diem_tham_quan']) ?></span>
+            </div>
+            <?php endif; ?>
+            <?php if(!empty($lt['hoat_dong'])): ?>
+            <div class="mb-0">
+                <strong><i class="bi bi-list-check"></i> Hoạt động:</strong><br>
+                <p class="text-muted mb-0">
+                    <?= nl2br(htmlspecialchars($lt['hoat_dong'])) ?>
+                </p>
+            </div>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
         <?php else: ?>

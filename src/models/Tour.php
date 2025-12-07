@@ -302,8 +302,8 @@
                     VALUES (?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
 
-            foreach ($lich_trinh_list as $lich_trinh) {
-                $ngay = intval($lich_trinh['ngay'] ?? 1);
+            foreach ($lich_trinh_list as $index => $lich_trinh) {
+                $ngay = $index + 1; // Tự động tính số ngày từ index (bắt đầu từ 1)
                 $diem_tham_quan = trim($lich_trinh['diem_tham_quan'] ?? '');
                 $hoat_dong = trim($lich_trinh['hoat_dong'] ?? '');
 

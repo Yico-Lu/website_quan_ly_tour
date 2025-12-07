@@ -67,17 +67,10 @@ function addLichTrinh() {
                     <i class="bi bi-trash"></i> Xóa
                 </button>
             </div>
-            <div class="row">
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Số ngày</label>
-                    <input type="number" class="form-control" name="lich_trinh[${newIndex}][ngay]"
-                           value="${newDayNumber}" min="1" required>
-                </div>
-                <div class="col-md-9 mb-3">
-                    <label class="form-label">Điểm tham quan</label>
-                    <input type="text" class="form-control" name="lich_trinh[${newIndex}][diem_tham_quan]"
-                           placeholder="VD: Hồ Hoàn Kiếm, Lăng Bác, Vịnh Hạ Long...">
-                </div>
+            <div class="mb-3">
+                <label class="form-label">Điểm tham quan</label>
+                <input type="text" class="form-control" name="lich_trinh[${newIndex}][diem_tham_quan]"
+                       placeholder="VD: Hồ Hoàn Kiếm, Lăng Bác, Vịnh Hạ Long...">
             </div>
             <div class="mb-0">
                 <label class="form-label">Hoạt động</label>
@@ -108,14 +101,9 @@ function removeLichTrinh(btn) {
 
         item.querySelector('strong').textContent = `Ngày ${dayNumber}`;
 
-        const ngayInput = item.querySelector('input[name*="[ngay]"]');
         const diemThamQuanInput = item.querySelector('input[name*="[diem_tham_quan]"]');
         const hoatDongTextarea = item.querySelector('textarea[name*="[hoat_dong]"]');
 
-        if (ngayInput) {
-            ngayInput.name = `lich_trinh[${index}][ngay]`;
-            ngayInput.value = dayNumber;
-        }
         if (diemThamQuanInput) diemThamQuanInput.name = `lich_trinh[${index}][diem_tham_quan]`;
         if (hoatDongTextarea) hoatDongTextarea.name = `lich_trinh[${index}][hoat_dong]`;
     });
