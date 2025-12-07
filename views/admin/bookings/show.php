@@ -44,15 +44,147 @@ ob_start();
                     </div>
                 </div>
 
+                <!-- HDV phụ trách -->
                 <div class="row mb-3">
                     <div class="col-sm-3">
                         <strong>HDV phụ trách:</strong>
                     </div>
                     <div class="col-sm-9">
-                        <span class="badge bg-info">
-                            <i class="bi bi-person-badge"></i>
-                            <?= htmlspecialchars($booking->ten_hdv ?? 'Chưa phân công') ?>
-                        </span>
+                        <?php if (!empty($hdvs)): ?>
+                            <?php foreach ($hdvs as $hdv): ?>
+                                <div class="card mb-2">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <strong>
+                                                    <i class="bi bi-person-badge"></i>
+                                                    <?= htmlspecialchars($hdv['ho_ten'] ?? 'N/A') ?>
+                                                </strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-envelope"></i>
+                                                    <?= htmlspecialchars($hdv['email'] ?? '') ?>
+                                                </small>
+                                            </div>
+                                            <span class="badge bg-primary">
+                                                <?php
+                                                $vaiTroNames = [
+                                                    'hdv' => 'HDV',
+                                                    'hdv_chinh' => 'HDV chính',
+                                                    'hdv_phu' => 'HDV phụ'
+                                                ];
+                                                echo $vaiTroNames[$hdv['vai_tro'] ?? 'hdv'] ?? 'HDV';
+                                                ?>
+                                            </span>
+                                        </div>
+                                        <?php if (!empty($hdv['chi_tiet'])): ?>
+                                            <div class="mt-2">
+                                                <small class="text-muted">
+                                                    <strong>Chi tiết:</strong> <?= nl2br(htmlspecialchars($hdv['chi_tiet'])) ?>
+                                                </small>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-person-badge"></i>
+                                Chưa phân công
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Khách đại diện đặt tour -->
+                <div class="row mb-3">
+                    <div class="col-sm-3">
+                        <strong>Khách đại diện đặt tour:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        <?php 
+                        $khachs = $booking->getKhachs();
+                        if (!empty($khachs)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>STT</th>
+                                            <th>Họ tên</th>
+                                            <th>Giới tính</th>
+                                            <th>Năm sinh</th>
+                                            <th>Số giấy tờ</th>
+                                            <th>Tình trạng thanh toán</th>
+                                            <th>Yêu cầu cá nhân</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($khachs as $index => $khach): ?>
+                                            <tr>
+                                                <td><?= $index + 1 ?></td>
+                                                <td><strong><?= htmlspecialchars($khach['ho_ten'] ?? 'N/A') ?></strong></td>
+                                                <td>
+                                                    <?php
+                                                    $gioiTinhNames = [
+                                                        'nam' => 'Nam',
+                                                        'nu' => 'Nữ',
+                                                        'khac' => 'Khác'
+                                                    ];
+                                                    echo $gioiTinhNames[$khach['gioi_tinh'] ?? ''] ?? 'N/A';
+                                                    ?>
+                                                </td>
+                                                <td><?= htmlspecialchars($khach['nam_sinh'] ?? 'N/A') ?></td>
+                                                <td><?= htmlspecialchars($khach['so_giay_to'] ?? 'N/A') ?></td>
+                                                <td>
+                                                    <span class="badge <?= Booking::getTinhTrangThanhToanBadgeClass($khach['tinh_trang_thanh_toan'] ?? 'chua_thanh_toan') ?>">
+                                                        <?= Booking::getTinhTrangThanhToanName($khach['tinh_trang_thanh_toan'] ?? 'chua_thanh_toan') ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <?php if (!empty($khach['yeu_cau_ca_nhan'])): ?>
+                                                        <small><?= nl2br(htmlspecialchars($khach['yeu_cau_ca_nhan'])) ?></small>
+                                                    <?php else: ?>
+                                                        <span class="text-muted">-</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <span class="text-muted">Chưa có thông tin khách hàng</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- File danh sách khách hàng -->
+                <div class="row mb-3">
+                    <div class="col-sm-3">
+                        <strong>Danh sách khách hàng:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        <?php
+                        // Kiểm tra xem có file danh sách khách hàng không
+                        $uploadDir = BASE_PATH . '/public/uploads/guest_lists/';
+                        $filePattern = $uploadDir . 'booking_' . $booking->id . '.*';
+                        $existingFiles = glob($filePattern);
+                        $hasFile = !empty($existingFiles) && is_file($existingFiles[0]);
+                        $filePath = $hasFile ? $existingFiles[0] : null;
+                        $fileName = $hasFile ? basename($filePath) : null;
+                        ?>
+                        
+                        <?php if ($hasFile && $fileName): ?>
+                            <a href="<?= BASE_URL ?>public/uploads/guest_lists/<?= htmlspecialchars($fileName) ?>" 
+                               class="btn btn-primary" download>
+                                <i class="bi bi-download"></i> Tải danh sách khách hàng
+                            </a>
+                            <div class="form-text mt-2">
+                                File: <strong><?= htmlspecialchars($fileName) ?></strong>
+                            </div>
+                        <?php else: ?>
+                            <span class="text-muted">Chưa có file danh sách khách hàng</span>
+                        <?php endif; ?>
                     </div>
                 </div>
 

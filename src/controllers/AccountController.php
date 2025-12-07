@@ -222,7 +222,7 @@ class AccountController
             $stmtCheck = $pdo->prepare($sqlCheck);
             $stmtCheck->execute([$email, $id]);
             if ($stmtCheck->fetchColumn() > 0) {
-                $_SESSION['error'] = 'Email đã tồn tại trong hệ thống';
+            $_SESSION['error'] = 'Email đã tồn tại trong hệ thống';
             } else {
                 $_SESSION['error'] = 'Cập nhật tài khoản thất bại. Vui lòng thử lại.';
             }

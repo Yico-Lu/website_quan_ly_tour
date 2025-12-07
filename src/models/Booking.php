@@ -20,6 +20,7 @@ class Booking
     // Thông tin liên kết
     public $ten_tour;
     public $ten_hdv;
+    public $hdv_id; // ID của HDV từ bảng hdv để tạo link
 
     // Constructor để khởi tạo thực thể Booking
     public function __construct($data = [])
@@ -44,6 +45,7 @@ class Booking
             // Thông tin liên kết
             $this->ten_tour = $data['ten_tour'] ?? '';
             $this->ten_hdv = $data['ten_hdv'] ?? '';
+            $this->hdv_id = $data['hdv_id'] ?? null;
         }
     }
 
@@ -53,10 +55,27 @@ class Booking
         $pdo = getDB();
         $sql = "SELECT b.*,
                        t.ten_tour,
-                       CONCAT(hdv.ho_ten, ' (', hdv.email, ')') as ten_hdv
+                       COALESCE(
+                           (SELECT GROUP_CONCAT(DISTINCT CONCAT(tk.ho_ten, ' (', tk.email, ')') SEPARATOR ', ')
+                            FROM booking_hdv bh2
+                            INNER JOIN hdv h2 ON bh2.hdv_id = h2.id
+                            INNER JOIN tai_khoan tk ON h2.tai_khoan_id = tk.id
+                            WHERE bh2.booking_id = b.id),
+                           tk.ho_ten,
+                           ''
+                       ) AS ten_hdv,
+                       COALESCE(
+                           (SELECT h2.id
+                            FROM booking_hdv bh2
+                            INNER JOIN hdv h2 ON bh2.hdv_id = h2.id
+                            WHERE bh2.booking_id = b.id
+                            LIMIT 1),
+                           h.id
+                       ) AS hdv_id
                 FROM booking b
                 LEFT JOIN tour t ON b.tour_id = t.id
-                LEFT JOIN tai_khoan hdv ON b.assigned_hdv_id = hdv.id
+                LEFT JOIN hdv h ON b.assigned_hdv_id = h.id
+                LEFT JOIN tai_khoan tk ON h.tai_khoan_id = tk.id
                 ORDER BY b.ngay_tao DESC";
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
@@ -73,10 +92,27 @@ class Booking
         $pdo = getDB();
         $sql = "SELECT b.*,
                        t.ten_tour,
-                       CONCAT(hdv.ho_ten, ' (', hdv.email, ')') as ten_hdv
+                       COALESCE(
+                           (SELECT GROUP_CONCAT(DISTINCT CONCAT(tk.ho_ten, ' (', tk.email, ')') SEPARATOR ', ')
+                            FROM booking_hdv bh2
+                            INNER JOIN hdv h2 ON bh2.hdv_id = h2.id
+                            INNER JOIN tai_khoan tk ON h2.tai_khoan_id = tk.id
+                            WHERE bh2.booking_id = b.id),
+                           tk.ho_ten,
+                           ''
+                       ) AS ten_hdv,
+                       COALESCE(
+                           (SELECT h2.id
+                            FROM booking_hdv bh2
+                            INNER JOIN hdv h2 ON bh2.hdv_id = h2.id
+                            WHERE bh2.booking_id = b.id
+                            LIMIT 1),
+                           h.id
+                       ) AS hdv_id
                 FROM booking b
                 LEFT JOIN tour t ON b.tour_id = t.id
-                LEFT JOIN tai_khoan hdv ON b.assigned_hdv_id = hdv.id
+                LEFT JOIN hdv h ON b.assigned_hdv_id = h.id
+                LEFT JOIN tai_khoan tk ON h.tai_khoan_id = tk.id
                 WHERE b.id = ? LIMIT 1";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$id]);
@@ -94,15 +130,15 @@ class Booking
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Lấy danh sách hướng dẫn viên
+    // Lấy danh sách hướng dẫn viên từ bảng hdv
     public static function getGuideList()
     {
         $pdo = getDB();
-        $sql = "SELECT id, ho_ten, email FROM tai_khoan 
-                WHERE phan_quyen = 'hdv' 
-                AND phan_quyen != 'admin'
-                AND trang_thai = 'hoat_dong' 
-                ORDER BY ho_ten";
+        $sql = "SELECT h.id, tk.ho_ten, tk.email 
+                FROM hdv h
+                INNER JOIN tai_khoan tk ON h.tai_khoan_id = tk.id
+                WHERE tk.trang_thai = 'hoat_dong' 
+                ORDER BY tk.ho_ten";
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -187,19 +223,26 @@ class Booking
     public static function delete($id)
     {
         $pdo = getDB();
+        if (!$pdo) {
+            error_log('Booking::delete() - Database connection failed');
+            return false;
+        }
 
         try {
             // Bắt đầu transaction để đảm bảo tính toàn vẹn dữ liệu
             $pdo->beginTransaction();
 
             // Xóa dữ liệu liên quan trước (nếu có)
-            $tables = ['booking_dich_vu', 'booking_hdv', 'booking_khach', 'booking_hoa_don', 'booking_chi_tiet']; // Các bảng có thể liên quan
+            $tables = ['booking_nhat_ky_log', 'booking_dich_vu', 'booking_hdv', 'booking_khach', 'booking_hoa_don', 'booking_chi_tiet']; // Các bảng có thể liên quan
 
             foreach ($tables as $table) {
                 try {
-                    $pdo->prepare("DELETE FROM `$table` WHERE booking_id = ?")->execute([$id]);
-                } catch (Exception $e) {
-                    // Bỏ qua nếu bảng không tồn tại
+                    $stmt = $pdo->prepare("DELETE FROM `$table` WHERE booking_id = ?");
+                    $stmt->execute([$id]);
+                } catch (PDOException $e) {
+                    // Bỏ qua nếu bảng không tồn tại hoặc có lỗi (không phải lỗi nghiêm trọng)
+                    error_log("Warning: Could not delete from $table for booking $id: " . $e->getMessage());
+                    // Tiếp tục xóa các bảng khác
                 }
             }
 
@@ -208,14 +251,21 @@ class Booking
             $stmt = $pdo->prepare($sql);
             $result = $stmt->execute([$id]);
 
+            if (!$result) {
+                throw new PDOException("Failed to delete booking with id: $id");
+            }
+
             // Commit transaction
             $pdo->commit();
 
-            return $result;
+            return true;
         } catch (PDOException $e) {
             // Rollback nếu có lỗi
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             error_log('Cannot delete booking: ' . $e->getMessage());
+            error_log('Error code: ' . $e->getCode());
             return false;
         }
     }
@@ -335,22 +385,24 @@ class Booking
                        bh.hdv_id,
                        bh.vai_tro,
                        bh.chi_tiet,
+                       h.id as hdv_table_id,
                        tk.ho_ten, 
                        tk.email,
                        tk.phan_quyen
                 FROM booking_hdv bh
-                LEFT JOIN tai_khoan tk ON bh.hdv_id = tk.id
+                LEFT JOIN hdv h ON bh.hdv_id = h.id
+                LEFT JOIN tai_khoan tk ON h.tai_khoan_id = tk.id
                 WHERE bh.booking_id = ?
                 ORDER BY bh.id ASC";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$this->id]);
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Lọc bỏ các bản ghi không có thông tin HDV hợp lệ (tránh hiển thị null hoặc admin)
+        // Lọc bỏ các bản ghi không có thông tin HDV hợp lệ
         $filteredResults = [];
         foreach ($results as $result) {
-            // Chỉ thêm vào nếu có ho_ten (tức là có thông tin từ tai_khoan)
-            if (!empty($result['ho_ten'])) {
+            // Chỉ thêm vào nếu có ho_ten (tức là có thông tin từ hdv và tai_khoan)
+            if (!empty($result['ho_ten']) && !empty($result['hdv_table_id'])) {
                 $filteredResults[] = $result;
             }
         }
@@ -363,12 +415,12 @@ class Booking
     {
         $pdo = getDB();
         try {
-            // Kiểm tra xem HDV có tồn tại trong tai_khoan không (không kiểm tra phan_quyen)
-            $checkSql = "SELECT id FROM tai_khoan WHERE id = ?";
+            // Kiểm tra xem HDV có tồn tại trong bảng hdv không
+            $checkSql = "SELECT id FROM hdv WHERE id = ?";
             $checkStmt = $pdo->prepare($checkSql);
             $checkStmt->execute([$hdv_id]);
             if (!$checkStmt->fetch()) {
-                error_log("HDV ID {$hdv_id} không tồn tại trong bảng tai_khoan");
+                error_log("HDV ID {$hdv_id} không tồn tại trong bảng hdv");
                 return false;
             }
             
@@ -407,8 +459,7 @@ class Booking
             // Nếu lỗi foreign key, có thể do constraint sai
             if ($e->getCode() == '23000') {
                 if (strpos($e->getMessage(), 'foreign key') !== false) {
-                    error_log("Foreign key constraint error: hdv_id = {$hdv_id} may not exist in tai_khoan table or constraint is wrong");
-                    error_log("Suggestion: Run fix_booking_hdv_constraint.sql to fix the foreign key constraint");
+                    error_log("Foreign key constraint error: hdv_id = {$hdv_id} may not exist in hdv table or constraint is wrong");
                 }
             }
             return false;
@@ -420,12 +471,12 @@ class Booking
     {
         $pdo = getDB();
         try {
-            // Kiểm tra xem HDV có tồn tại và là HDV hợp lệ không
-            $checkSql = "SELECT id FROM tai_khoan WHERE id = ? AND (phan_quyen = 'hdv' OR phan_quyen IS NULL)";
+            // Kiểm tra xem HDV có tồn tại trong bảng hdv không
+            $checkSql = "SELECT id FROM hdv WHERE id = ?";
             $checkStmt = $pdo->prepare($checkSql);
             $checkStmt->execute([$hdv_id]);
             if (!$checkStmt->fetch()) {
-                error_log("HDV ID {$hdv_id} không tồn tại hoặc không phải là HDV hợp lệ");
+                error_log("HDV ID {$hdv_id} không tồn tại trong bảng hdv");
                 return false;
             }
             
@@ -499,6 +550,7 @@ class Booking
     public static function updateKhach($id, $ho_ten, $gioi_tinh, $nam_sinh, $so_giay_to, $tinh_trang_thanh_toan, $yeu_cau_ca_nhan)
     {
         $pdo = getDB();
+        try {
         $sql = "UPDATE booking_khach SET
                         ho_ten = ?,
                         gioi_tinh = ?,
@@ -508,15 +560,20 @@ class Booking
                         yeu_cau_ca_nhan = ?
                 WHERE id = ?";
         $stmt = $pdo->prepare($sql);
-        return $stmt->execute([
+            $result = $stmt->execute([
             $ho_ten, 
-            $gioi_tinh, 
+                $gioi_tinh ?: null, 
             $nam_sinh ?: null, 
-            $so_giay_to, 
+                $so_giay_to ?: null, 
             $tinh_trang_thanh_toan ?: 'chua_thanh_toan',
-            $yeu_cau_ca_nhan,
+                $yeu_cau_ca_nhan ?: null,
             $id
         ]);
+            return $result;
+        } catch (PDOException $e) {
+            error_log('Error updating khach: ' . $e->getMessage());
+            return false;
+        }
     }
 
     // Xóa khách hàng

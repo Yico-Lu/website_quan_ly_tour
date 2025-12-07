@@ -210,13 +210,13 @@ class User
 
             try {
                 $result = $stmt->execute([
-                    $user->name,
-                    $user->email,
+                $user->name,
+                $user->email,
                     $user->sdt ?: null,
-                    $role,
-                    $status,
-                    $user->id
-                ]);
+                $role,
+                $status,
+                $user->id
+            ]);
                 
                 if (!$result) {
                     error_log('User update failed: ' . implode(', ', $stmt->errorInfo()));

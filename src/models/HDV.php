@@ -235,9 +235,10 @@ class HDV
     public function getSoLuongBooking()
     {
         $pdo = getDB();
-        $sql = "SELECT COUNT(*) FROM booking_hdv WHERE hdv_id = ?";
+        // Đếm số booking DISTINCT để tránh trùng lặp (một booking có thể có nhiều HDV)
+        $sql = "SELECT COUNT(DISTINCT booking_id) FROM booking_hdv WHERE hdv_id = ?";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$this->tai_khoan_id]);
+        $stmt->execute([$this->id]); // Sử dụng hdv.id thay vì tai_khoan_id
         return $stmt->fetchColumn();
     }
 }
