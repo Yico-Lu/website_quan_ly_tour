@@ -29,12 +29,9 @@
         data-accordion="false"
       >
       <li class="nav-item">
-        <a href="#" class="nav-link">
+        <a href="<?= BASE_URL . 'reports' ?>" class="nav-link">
           <i class="nav-icon bi bi-bar-chart-line"></i>
-          <p>
-            Dashboard
-            
-          </p>
+          <p>Dashboard Báo cáo</p>
         </a>
       </li>
  
@@ -86,17 +83,23 @@
         </li>
         <li class="nav-item">
           <a href="#" class="nav-link">
-            <i class="nav-icon bi bi-people-fill"></i>
+            <i class="nav-icon bi bi-journal-text"></i>
             <p>
-              Quản lý Khách hàng
+              Quản lý Booking
               <i class="nav-arrow bi bi-chevron-right"></i>
             </p>
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
-              <a href="#" class="nav-link">
+              <a href="<?= BASE_URL . 'bookings' ?>" class="nav-link">
                 <i class="nav-icon bi bi-circle"></i>
-                <p>Danh sách Khách hàng</p>
+                <p>Danh sách Booking</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="<?= BASE_URL . 'bookings/create' ?>" class="nav-link">
+                <i class="nav-icon bi bi-circle"></i>
+                <p>Thêm Booking mới</p>
               </a>
             </li>
           </ul>

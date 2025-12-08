@@ -123,3 +123,19 @@ view('layouts.AdminLayout', [
     'extraJs' => ['js/auto-hide-alerts.js'],
 ]);
 ?>
+
+<!-- Hiển thị thông báo -->
+<?php if (isset($_SESSION['success'])): ?>
+    <script>
+        alert('<?= addslashes($_SESSION['success']) ?>');
+    </script>
+    <?php unset($_SESSION['success']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['error'])): ?>
+    <script>
+        alert('Lỗi: <?= addslashes($_SESSION['error']) ?>');
+    </script>
+    <?php unset($_SESSION['error']); ?>
+<?php endif; ?>
+

@@ -214,10 +214,6 @@ match ($act) {
     'guide/diary/delete' => $guideTourController->nhatKyXoa(),
     // Đường dẫn báo cáo thống kê
     'reports' => $reportController->index(),
-    'reports/revenue' => $reportController->revenue(),
-    'reports/revenue-by-tour' => $reportController->revenueByTour(),
-    'reports/revenue-by-category' => $reportController->revenueByCategory(),
-    'reports/revenue-table' => $reportController->revenueTable(),
 
     // Xử lý route có tham số
     default => match($route) {

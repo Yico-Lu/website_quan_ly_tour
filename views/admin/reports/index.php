@@ -67,7 +67,7 @@ ob_start();
             <div class="info-box-content">
                 <span class="info-box-text">Tour hoạt động</span>
                 <span class="info-box-number">
-                    <?= number_format($stats['active_tours'] ?? 0) ?>
+<?= number_format($stats['active_tours'] ?? 0) ?>
                     <small>tour</small>
                 </span>
                 <div class="progress">
@@ -81,6 +81,44 @@ ob_start();
     </div>
 </div>
 
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Truy cập nhanh</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="<?= BASE_URL ?>reports/revenue-table" class="btn btn-primary btn-block">
+                            <i class="bi bi-table"></i>
+                            <br>Bảng Doanh thu
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="<?= BASE_URL ?>reports/revenue" class="btn btn-success btn-block">
+                            <i class="bi bi-graph-up"></i>
+                            <br>Báo cáo Doanh thu
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="<?= BASE_URL ?>reports/revenue-by-tour" class="btn btn-warning btn-block">
+                            <i class="bi bi-airplane"></i>
+                            <br>Doanh thu theo Tour
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="<?= BASE_URL ?>reports/revenue-by-category" class="btn btn-info btn-block">
+                            <i class="bi bi-tags"></i>
+                            <br>Doanh thu theo Danh mục
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <?php
@@ -91,7 +129,5 @@ view('layouts.AdminLayout', [
     'pageTitle' => $pageTitle ?? 'Dashboard Báo cáo',
     'content' => $content,
     'breadcrumb' => $breadcrumb ?? [],
-    'extraJs' => ['js/auto-hide-alerts.js'],
 ]);
 ?>
-
