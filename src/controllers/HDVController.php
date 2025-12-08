@@ -79,56 +79,17 @@ class HDVController
         $nhom = trim($_POST['nhom'] ?? '');
         $chuyen_mon = trim($_POST['chuyen_mon'] ?? '');
 
-        // Khởi tạo mảng errors trước khi xử lý upload
-        $errors = [];
-
         // Xử lý upload ảnh
         $anh_dai_dien = null;
         if (isset($_FILES['anh_dai_dien']) && $_FILES['anh_dai_dien']['error'] !== UPLOAD_ERR_NO_FILE) {
-            if ($_FILES['anh_dai_dien']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = BASE_PATH . '/public/uploads/hdvs/';
-                if (!is_dir($uploadDir)) {
-                    if (!mkdir($uploadDir, 0755, true)) {
-                        $errors[] = 'Không thể tạo thư mục upload. Vui lòng kiểm tra quyền ghi.';
-                    }
-                }
-                
-                if (empty($errors)) {
-                    $fileExtension = strtolower(pathinfo($_FILES['anh_dai_dien']['name'], PATHINFO_EXTENSION));
-                    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
-                    
-                    if (in_array($fileExtension, $allowedExtensions)) {
-                        // Kiểm tra kích thước file (tối đa 5MB)
-                        $maxSize = 5 * 1024 * 1024; // 5MB
-                        if ($_FILES['anh_dai_dien']['size'] > $maxSize) {
-                            $errors[] = 'Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 5MB.';
-                        } else {
-                            $fileName = 'hdv_' . time() . '_' . uniqid() . '.' . $fileExtension;
-                            $uploadPath = $uploadDir . $fileName;
-                            
-                            if (move_uploaded_file($_FILES['anh_dai_dien']['tmp_name'], $uploadPath)) {
-                                $anh_dai_dien = 'hdvs/' . $fileName;
-                            } else {
-                                $errors[] = 'Không thể upload ảnh. Vui lòng thử lại.';
-                            }
-                        }
-                    } else {
-                        $errors[] = 'Định dạng ảnh không hợp lệ. Chỉ chấp nhận: JPG, PNG, GIF.';
-                    }
-                }
-            } else {
-                $uploadErrors = [
-                    UPLOAD_ERR_INI_SIZE => 'Kích thước file vượt quá giới hạn upload_max_filesize trong php.ini',
-                    UPLOAD_ERR_FORM_SIZE => 'Kích thước file vượt quá giới hạn MAX_FILE_SIZE trong form',
-                    UPLOAD_ERR_PARTIAL => 'File chỉ được upload một phần',
-                    UPLOAD_ERR_NO_TMP_DIR => 'Thiếu thư mục tạm',
-                    UPLOAD_ERR_CANT_WRITE => 'Không thể ghi file vào disk',
-                    UPLOAD_ERR_EXTENSION => 'Upload bị dừng bởi extension'
-                ];
-                $errorMsg = $uploadErrors[$_FILES['anh_dai_dien']['error']] ?? 'Lỗi không xác định khi upload ảnh';
-                $errors[] = $errorMsg;
+            $uploadedPath = uploadImage($_FILES['anh_dai_dien'], 'hdv', 'uploads/hdvs/');
+            if ($uploadedPath) {
+                $anh_dai_dien = str_replace('uploads/', '', ltrim($uploadedPath, '/'));
             }
         }
+
+        // Kiểm tra dữ liệu
+        $errors = [];
 
         // Kiểm tra dữ liệu
         if (empty($tai_khoan_id)) $errors[] = 'Vui lòng chọn tài khoản';
@@ -244,59 +205,19 @@ class HDVController
         $errors = [];
 
         // Xử lý upload ảnh mới (nếu có)
-        $anh_dai_dien = $hdv->anh_dai_dien; // Giữ ảnh cũ
+        $anh_dai_dien = $hdv->anh_dai_dien;
         if (isset($_FILES['anh_dai_dien']) && $_FILES['anh_dai_dien']['error'] !== UPLOAD_ERR_NO_FILE) {
-            if ($_FILES['anh_dai_dien']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = BASE_PATH . '/public/uploads/hdvs/';
-                if (!is_dir($uploadDir)) {
-                    if (!mkdir($uploadDir, 0755, true)) {
-                        $errors[] = 'Không thể tạo thư mục upload. Vui lòng kiểm tra quyền ghi.';
-                    }
-                }
-                
-                if (empty($errors)) {
-                    $fileExtension = strtolower(pathinfo($_FILES['anh_dai_dien']['name'], PATHINFO_EXTENSION));
-                    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
-                    
-                    if (in_array($fileExtension, $allowedExtensions)) {
-                        // Kiểm tra kích thước file (tối đa 5MB)
-                        $maxSize = 5 * 1024 * 1024; // 5MB
-                        if ($_FILES['anh_dai_dien']['size'] > $maxSize) {
-                            $errors[] = 'Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 5MB.';
-                        } else {
-                            $fileName = 'hdv_' . time() . '_' . uniqid() . '.' . $fileExtension;
-                            $uploadPath = $uploadDir . $fileName;
-                            
-                            if (move_uploaded_file($_FILES['anh_dai_dien']['tmp_name'], $uploadPath)) {
-                                // Xóa ảnh cũ nếu có
+            $uploadedPath = uploadImage($_FILES['anh_dai_dien'], 'hdv', 'uploads/hdvs/');
+            if ($uploadedPath) {
                                 if ($hdv->anh_dai_dien) {
-                                    $oldImagePath = BASE_PATH . '/public/uploads/' . $hdv->anh_dai_dien;
-                                    if (file_exists($oldImagePath)) {
-                                        @unlink($oldImagePath);
-                                    }
+                    @unlink(BASE_PATH . '/public/uploads/' . $hdv->anh_dai_dien);
                                 }
-                                $anh_dai_dien = 'hdvs/' . $fileName;
-                            } else {
-                                $errors[] = 'Không thể upload ảnh. Vui lòng thử lại.';
-                            }
-                        }
-                    } else {
-                        $errors[] = 'Định dạng ảnh không hợp lệ. Chỉ chấp nhận: JPG, PNG, GIF.';
-                    }
-                }
-            } else {
-                $uploadErrors = [
-                    UPLOAD_ERR_INI_SIZE => 'Kích thước file vượt quá giới hạn upload_max_filesize trong php.ini',
-                    UPLOAD_ERR_FORM_SIZE => 'Kích thước file vượt quá giới hạn MAX_FILE_SIZE trong form',
-                    UPLOAD_ERR_PARTIAL => 'File chỉ được upload một phần',
-                    UPLOAD_ERR_NO_TMP_DIR => 'Thiếu thư mục tạm',
-                    UPLOAD_ERR_CANT_WRITE => 'Không thể ghi file vào disk',
-                    UPLOAD_ERR_EXTENSION => 'Upload bị dừng bởi extension'
-                ];
-                $errorMsg = $uploadErrors[$_FILES['anh_dai_dien']['error']] ?? 'Lỗi không xác định khi upload ảnh';
-                $errors[] = $errorMsg;
+                $anh_dai_dien = str_replace('uploads/', '', ltrim($uploadedPath, '/'));
             }
         }
+
+        // Kiểm tra dữ liệu
+        $errors = [];
 
         // Kiểm tra dữ liệu
         if (empty($nhom)) $errors[] = 'Vui lòng chọn nhóm';
