@@ -70,7 +70,7 @@
         }
 
         // Tìm kiếm và lọc tour
-        public static function search($keyword = '', $danh_muc_id = '')
+        public static function search($keyword = '', $danh_muc_id = '', $trang_thai = '')
         {
             $pdo = getDB();
             $sql = "SELECT t.*, dm.ten_danh_muc
@@ -90,6 +90,12 @@
             if (!empty($danh_muc_id)) {
                 $sql .= " AND t.danh_muc_id = ?";
                 $params[] = $danh_muc_id;
+            }
+            
+            // Lọc theo trạng thái
+            if ($trang_thai !== '') {
+                $sql .= " AND t.trang_thai = ?";
+                $params[] = $trang_thai;
             }
             
             $sql .= " ORDER BY t.ngay_tao DESC";
@@ -294,10 +300,10 @@
             $this->getAnhChiTiet();
         }
 
-        // Lấy tour với tất cả thông tin liên quan(join bảng)
         public static function getTourWithDetails($id)
         {
-            return self::find($id, true); //true = load reload data
+         // Lấy tour với tất cả thông tin liên quan(join bảng)
+           return self::find($id, true); //true = load reload data
         }
 
         // Lưu nhiều chính sách cho tour

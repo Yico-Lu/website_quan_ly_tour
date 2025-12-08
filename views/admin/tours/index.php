@@ -18,7 +18,7 @@
               <!-- Form tìm kiếm và lọc -->
               <form method="GET" action="<?= BASE_URL ?>tours" class="mb-3">
                   <div class="row g-2">
-                      <div class="col-md-6">
+                      <div class="col-md-4">
                           <label for="keyword" class="form-label">Tìm kiếm theo tên tour</label>
                           <input 
                               type="text" 
@@ -29,7 +29,7 @@
                               placeholder="Nhập tên tour cần tìm..."
                           >
                       </div>
-                      <div class="col-md-4">
+                      <div class="col-md-3">
                           <label for="danh_muc_id" class="form-label">Lọc theo danh mục</label>
                           <select class="form-select" id="danh_muc_id" name="danh_muc_id">
                               <option value="">Tất cả danh mục</option>
@@ -43,13 +43,21 @@
                               <?php endforeach; ?>
                           </select>
                       </div>
+                      <div class="col-md-3">
+                          <label for="trang_thai" class="form-label">Lọc theo trạng thái</label>
+                          <select class="form-select" id="trang_thai" name="trang_thai">
+                              <option value="">Tất cả trạng thái</option>
+                              <option value="1" <?= ($trang_thai ?? '') == '1' ? 'selected' : '' ?>>Hoạt động</option>
+                              <option value="0" <?= ($trang_thai ?? '') == '0' ? 'selected' : '' ?>>Ngưng hoạt động</option>
+                          </select>
+                      </div>
                       <div class="col-md-2 d-flex align-items-end">
                           <button type="submit" class="btn btn-primary w-100">
                               <i class="bi bi-search"></i> Tìm kiếm
                           </button>
                       </div>
                   </div>
-                  <?php if (!empty($keyword) || !empty($danh_muc_id)): ?>
+                  <?php if (!empty($keyword) || !empty($danh_muc_id) || !empty($trang_thai)): ?>
                   <div class="mt-2">
                       <a href="<?= BASE_URL ?>tours" class="btn btn-sm btn-secondary">
                           <i class="bi bi-x-circle"></i> Xóa bộ lọc
@@ -121,7 +129,7 @@
                         <?php else: ?>
                           <tr>
                             <td colspan="8" class="text-center py-4">
-                              <?php if (!empty($keyword) || !empty($danh_muc_id)): ?>
+                              <?php if (!empty($keyword) || !empty($danh_muc_id) || !empty($trang_thai)): ?>
                                 <h3 class="text-muted">Không tìm thấy tour nào</h3>
                                 <p class="text-muted">Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc</p>
                                 <a href="<?= BASE_URL ?>tours" class="btn btn-secondary mt-2">

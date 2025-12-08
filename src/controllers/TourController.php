@@ -8,10 +8,11 @@ class TourController
         // Lấy tham số tìm kiếm và lọc
         $keyword = trim($_GET['keyword'] ?? '');
         $danh_muc_id = trim($_GET['danh_muc_id'] ?? '');
+        $trang_thai = trim($_GET['trang_thai'] ?? '');
 
         // Tìm kiếm tour
-        if (!empty($keyword) || !empty($danh_muc_id)) {
-            $tours = Tour::search($keyword, $danh_muc_id);
+        if (!empty($keyword) || !empty($danh_muc_id) || !empty($trang_thai)) {
+            $tours = Tour::search($keyword, $danh_muc_id, $trang_thai);
         } else {
             $tours = Tour::getAll();
         }
@@ -27,6 +28,7 @@ class TourController
             'danhMucList' => $danhMucList,
             'keyword' => $keyword,
             'danh_muc_id' => $danh_muc_id,
+            'trang_thai' => $trang_thai,
             'breadcrumb' => [
                 ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
                 ['label' => 'Danh sách tour', 'url' => BASE_URL . 'tours', 'active' => true],
