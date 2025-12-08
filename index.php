@@ -20,6 +20,7 @@ require_once __DIR__ . '/src/controllers/TourController.php';
 require_once __DIR__ . '/src/controllers/AccountController.php';
 require_once __DIR__ . '/src/controllers/BookingController.php';
 require_once __DIR__ . '/src/controllers/DanhMucTourController.php';
+require_once __DIR__ . '/src/controllers/ReportController.php';
 
 // Khởi tạo các controller
 $homeController = new HomeController();
@@ -28,6 +29,7 @@ $tourController = new TourController();
 $accountController = new AccountController();
 $bookingController = new BookingController();
 $danhMucController = new DanhMucTourController();
+$reportController = new ReportController();
 
 // Xác định route dựa trên tham số act (mặc định là trang chủ '/')
 $act = $_GET['act'] ?? '/';
@@ -115,6 +117,13 @@ match ($act) {
     'categories/store' => $danhMucController->store(),
     'categories/update' => $danhMucController->update(),
     'categories/delete' => $danhMucController->delete(),
+
+    // Đường dẫn báo cáo thống kê
+    'reports' => $reportController->index(),
+    'reports/revenue' => $reportController->revenue(),
+    'reports/revenue-by-tour' => $reportController->revenueByTour(),
+    'reports/revenue-by-category' => $reportController->revenueByCategory(),
+    'reports/revenue-table' => $reportController->revenueTable(),
 
     // Xử lý route có tham số
     default => match($route) {
