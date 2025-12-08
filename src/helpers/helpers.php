@@ -154,61 +154,62 @@ function requireGuideOrAdmin()
 // Upload một ảnh đơn
 function uploadImage($file, $prefix = 'file', $uploadDir = 'uploads/general/')
 {
+    // Kiểm tra xem tệp có tồn tại và không có lỗi tải lên không
     if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
         return null;
     }
 
-    // Validate file type
+    // Xác thực loại tệp
     $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!in_array($file['type'], $allowedTypes)) {
-        return null; // Invalid file type
+        return null; 
     }
 
-    // Validate file size (5MB max)
+    // Xác thực kích thước tệp
     $maxSize = 5 * 1024 * 1024; // 5MB
     if ($file['size'] > $maxSize) {
-        return null; // File too large
+        return null; 
     }
 
-    // Get file extension
+    // Lấy phần mở rộng của tệp
     $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-    // Validate extension as additional security
+    // Xác thực phần mở rộng như một biện pháp bảo mật bổ sung
     $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
     if (!in_array($extension, $allowedExtensions)) {
-        return null; // Invalid extension
+        return null; 
     }
 
-    // Generate unique filename
+    // Tạo tên tệp duy nhất
     $fileName = $prefix . '_' . time() . '_' . rand(1000, 9999) . '.' . $extension;
 
-    // Full path to save file
+    // Đường dẫn đầy đủ để lưu tệp
     $fullUploadDir = __DIR__ . '/../../public/' . $uploadDir;
     $filePath = $fullUploadDir . $fileName;
 
-    // Create directory if it doesn't exist
+    // Tạo thư mục nếu nó chưa tồn tại
     if (!is_dir($fullUploadDir)) {
         mkdir($fullUploadDir, 0755, true);
     }
 
-    // Move uploaded file
+    // Di chuyển tệp đã tải lên
     if (move_uploaded_file($file['tmp_name'], $filePath)) {
-        return '/' . $uploadDir . $fileName; // Return web path
+        return '/' . $uploadDir . $fileName; 
     }
 
     return null;
 }
 
-// Upload nhiều ảnh
+// tải nhiều ảnh
 function uploadMultipleImages($files, $prefix = 'file', $uploadDir = 'uploads/general/')
 {
-    $uploadedPaths = [];
+    $uploadedPaths = []; //mảng lưu trữ đường dẫn đã tải lên
 
     if (!$files || !is_array($files['name'])) {
-        return $uploadedPaths;
+        return $uploadedPaths; //trả về mảng rỗng nếu không có tệp
     }
 
-    // Process each file
+    // Xử lý từng tệp
     foreach ($files['name'] as $key => $name) {
         if ($files['error'][$key] !== UPLOAD_ERR_NO_FILE) {
             $file = [
@@ -218,10 +219,10 @@ function uploadMultipleImages($files, $prefix = 'file', $uploadDir = 'uploads/ge
                 'error' => $files['error'][$key],
                 'size' => $files['size'][$key]
             ];
-
+            
             $path = uploadImage($file, $prefix, $uploadDir);
             if ($path) {
-                $uploadedPaths[] = $path;
+                $uploadedPaths[] = $path; //thêm đường dẫn vào mảng
             }
         }
     }

@@ -3,7 +3,6 @@ class TourController
 {
     public function index():void
     {
-        //Kiểm tra quyền admin
         requireAdmin();
 
         // Lấy tham số tìm kiếm và lọc
@@ -17,7 +16,7 @@ class TourController
             $tours = Tour::getAll();
         }
 
-        // Lấy danh sách danh mục để hiển thị trong dropdown
+        // Lấy danh sách danh mục
         $danhMucList = Tour::getDanhMucList();
 
         //hiển thị view danh sách tour
@@ -259,15 +258,13 @@ class TourController
         if(Tour::update($tour)){
             $pdo = getDB();
 
-            // Cập nhật chính sách - xóa cũ và thêm mới
+            // Cập nhật chính sách, lịch trình, nhà cc - xóa cũ và thêm mới
             $pdo->prepare("DELETE FROM tour_chinh_sach WHERE tour_id = ?")->execute([$id]);
             Tour::luuNhieuChinhSach($id, $chinh_sach_list);
 
-            // Cập nhật lịch trình - xóa cũ và thêm mới
             $pdo->prepare("DELETE FROM tour_lich_trinh WHERE tour_id = ?")->execute([$id]);
             Tour::luuNhieuLichTrinh($id, $lich_trinh_list);
             
-            // Cập nhật nhà cung cấp - xóa cũ và thêm mới
             $pdo->prepare("DELETE FROM tour_nha_cung_cap WHERE tour_id = ?")->execute([$id]);
             Tour::luuNhieuNhaCungCap($id, $nha_cung_cap_list);
 

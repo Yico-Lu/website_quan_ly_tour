@@ -95,7 +95,7 @@ function removeLichTrinh(btn) {
 
     item.remove();
 
-    // Cập nhật lại số thứ tự và name attribute
+    // Cập nhật lại số thứ tự và name
     document.querySelectorAll('.lich-trinh-item').forEach((item, index) => {
         const dayNumber = index + 1;
 
@@ -170,7 +170,7 @@ function removeNhaCungCap(btn) {
 
     item.remove();
 
-    // Cập nhật lại số thứ tự và name attribute
+    // Cập nhật lại số thứ tự và name 
     document.querySelectorAll('.nha-cung-cap-item').forEach((item, index) => {
         item.querySelector('strong').textContent = `Nhà cung cấp #${index + 1}`;
 
