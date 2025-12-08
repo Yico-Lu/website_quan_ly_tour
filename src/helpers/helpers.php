@@ -303,9 +303,115 @@ function readExcelFile($filePath, $startRow = 2)
                 error_log('Error reading Excel file: ' . $e->getMessage());
                 return null;
             }
+        } elseif ($extension === 'xlsx' && class_exists('ZipArchive')) {
+            // Fallback: Đọc file XLSX bằng cách giải nén và parse XML (không cần PhpSpreadsheet)
+            try {
+                $data = readXlsxWithoutPhpSpreadsheet($filePath, $startRow);
+                if ($data !== null) {
+                    return $data;
+                }
+            } catch (Exception $e) {
+                error_log('Error reading XLSX file (fallback method): ' . $e->getMessage());
+            }
+            // Nếu fallback không thành công, hướng dẫn user
+            throw new Exception('Để import file Excel, vui lòng cài đặt thư viện PhpSpreadsheet (chạy: composer require phpoffice/phpspreadsheet) hoặc export file sang định dạng CSV');
         } else {
-            // Nếu không có PhpSpreadsheet, hướng dẫn user export sang CSV
-            throw new Exception('Để import file Excel, vui lòng cài đặt thư viện PhpSpreadsheet hoặc export file sang định dạng CSV');
+            // Nếu không có PhpSpreadsheet và không phải XLSX hoặc không có ZipArchive
+            throw new Exception('Để import file Excel, vui lòng cài đặt thư viện PhpSpreadsheet (chạy: composer require phpoffice/phpspreadsheet) hoặc export file sang định dạng CSV');
+        }
+    }
+    
+    return $data;
+}
+
+// Đọc file XLSX không cần PhpSpreadsheet (giải nén ZIP và parse XML)
+function readXlsxWithoutPhpSpreadsheet($filePath, $startRow = 2)
+{
+    if (!class_exists('ZipArchive')) {
+        return null;
+    }
+    
+    $zip = new ZipArchive();
+    if ($zip->open($filePath) !== TRUE) {
+        return null;
+    }
+    
+    // Đọc file sharedStrings.xml để lấy danh sách chuỗi được chia sẻ
+    $sharedStrings = [];
+    if (($sharedStringsXml = $zip->getFromName('xl/sharedStrings.xml')) !== false) {
+        $xml = simplexml_load_string($sharedStringsXml);
+        if ($xml && isset($xml->si)) {
+            foreach ($xml->si as $si) {
+                $text = '';
+                if (isset($si->t)) {
+                    $text = (string)$si->t;
+                }
+                $sharedStrings[] = $text;
+            }
+        }
+    }
+    
+    // Đọc file xl/worksheets/sheet1.xml (sheet đầu tiên)
+    $sheetData = null;
+    $sheetFiles = ['xl/worksheets/sheet1.xml', 'xl/worksheets/sheet.xml'];
+    foreach ($sheetFiles as $sheetFile) {
+        if (($sheetXml = $zip->getFromName($sheetFile)) !== false) {
+            $sheetData = $sheetXml;
+            break;
+        }
+    }
+    
+    $zip->close();
+    
+    if (!$sheetData) {
+        return null;
+    }
+    
+    // Parse XML của sheet
+    $xml = simplexml_load_string($sheetData);
+    if (!$xml || !isset($xml->sheetData->row)) {
+        return null;
+    }
+    
+    $data = [];
+    $rowNum = 0;
+    
+    foreach ($xml->sheetData->row as $row) {
+        $rowNum++;
+        if ($rowNum < $startRow) continue; // Bỏ qua header
+        
+        $rowData = ['', '', '', '', '']; // 5 cột: Họ tên, Giới tính, Năm sinh, Số giấy tờ, Yêu cầu cá nhân
+        
+        if (isset($row->c)) {
+            foreach ($row->c as $cell) {
+                $cellRef = (string)$cell['r']; // Ví dụ: A1, B1, C1...
+                $col = preg_replace('/[0-9]+/', '', $cellRef); // Lấy chữ cái cột
+                $colIndex = ord($col) - ord('A'); // Chuyển thành index (A=0, B=1, ...)
+                
+                if ($colIndex < 0 || $colIndex >= 5) continue; // Chỉ đọc 5 cột đầu
+                
+                $value = '';
+                if (isset($cell->v)) {
+                    $cellValue = (string)$cell->v;
+                    
+                    // Nếu có thuộc tính t="s" thì giá trị là index trong sharedStrings
+                    if (isset($cell['t']) && (string)$cell['t'] === 's') {
+                        $stringIndex = (int)$cellValue;
+                        if (isset($sharedStrings[$stringIndex])) {
+                            $value = $sharedStrings[$stringIndex];
+                        }
+                    } else {
+                        $value = $cellValue;
+                    }
+                }
+                
+                $rowData[$colIndex] = trim($value);
+            }
+        }
+        
+        // Chỉ thêm dòng nếu có ít nhất họ tên (cột đầu tiên)
+        if (!empty($rowData[0])) {
+            $data[] = $rowData;
         }
     }
     

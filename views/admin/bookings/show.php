@@ -98,44 +98,6 @@ ob_start();
                     </div>
                 </div>
 
-                <div class="row mb-3">
-                    <div class="col-sm-3">
-                        <strong>Giờ xuất phát:</strong>
-                    </div>
-                    <div class="col-sm-9">
-                        <?= $booking->ngay_gio_xuat_phat ? date('d/m/Y H:i', strtotime($booking->ngay_gio_xuat_phat)) : '<span class="text-muted">Chưa cập nhật</span>' ?>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-sm-3">
-                        <strong>Điểm tập trung:</strong>
-                    </div>
-                    <div class="col-sm-9">
-                        <?= !empty($booking->diem_tap_trung) ? htmlspecialchars($booking->diem_tap_trung) : '<span class="text-muted">Chưa cập nhật</span>' ?>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-sm-3">
-                        <strong>Kết thúc:</strong>
-                    </div>
-                    <div class="col-sm-9">
-                        <?= $booking->thoi_gian_ket_thuc ? date('d/m/Y H:i', strtotime($booking->thoi_gian_ket_thuc)) : '<span class="text-muted">Chưa cập nhật</span>' ?>
-                    </div>
-                </div>
-
-                <?php if (!empty($booking->lich_ghi_chu)): ?>
-                <div class="row mb-3">
-                    <div class="col-sm-3">
-                        <strong>Ghi chú lịch khởi hành:</strong>
-                    </div>
-                    <div class="col-sm-9">
-                        <div class="bg-light p-2 rounded"><?= nl2br(htmlspecialchars($booking->lich_ghi_chu)) ?></div>
-                    </div>
-                </div>
-                <?php endif; ?>
-
                 <!-- HDV phụ trách -->
                 <div class="row mb-3">
                     <div class="col-sm-3">
@@ -246,36 +208,6 @@ ob_start();
                             </div>
                         <?php else: ?>
                             <span class="text-muted">Chưa có thông tin khách hàng</span>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- File danh sách khách hàng -->
-                <div class="row mb-3">
-                    <div class="col-sm-3">
-                        <strong>Danh sách khách hàng:</strong>
-                    </div>
-                    <div class="col-sm-9">
-                        <?php
-                        // Kiểm tra xem có file danh sách khách hàng không
-                        $uploadDir = BASE_PATH . '/public/uploads/guest_lists/';
-                        $filePattern = $uploadDir . 'booking_' . $booking->id . '.*';
-                        $existingFiles = glob($filePattern);
-                        $hasFile = !empty($existingFiles) && is_file($existingFiles[0]);
-                        $filePath = $hasFile ? $existingFiles[0] : null;
-                        $fileName = $hasFile ? basename($filePath) : null;
-                        ?>
-                        
-                        <?php if ($hasFile && $fileName): ?>
-                            <a href="<?= BASE_URL ?>public/uploads/guest_lists/<?= htmlspecialchars($fileName) ?>" 
-                               class="btn btn-primary" target="_blank">
-                                <i class="bi bi-eye"></i> Xem danh sách khách hàng
-                            </a>
-                            <div class="form-text mt-2">
-                                File: <strong><?= htmlspecialchars($fileName) ?></strong>
-                            </div>
-                        <?php else: ?>
-                            <span class="text-muted">Chưa có file danh sách khách hàng</span>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -414,6 +346,101 @@ ob_start();
             </div>
         </div>
 
+        <!-- Lịch khởi hành -->
+        <div class="card mb-3" id="lich-khoi-hanh">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <button class="btn btn-link text-decoration-none p-0 d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#lichKhoiHanhCollapse" aria-expanded="false" aria-controls="lichKhoiHanhCollapse">
+                    <h5 class="card-title mb-0">Lịch khởi hành</h5>
+                    <i class="bi bi-chevron-down ms-2"></i>
+                </button>
+            </div>
+            <div id="lichKhoiHanhCollapse" class="collapse">
+                <div class="card-body">
+                    <div class="d-flex justify-content-end mb-3">
+                        <button class="btn btn-sm btn-outline-primary" type="button" id="btnLkhEdit" onclick="toggleLkhEdit(true)">
+                            <i class="bi bi-pencil"></i> Sửa
+                        </button>
+                        <button class="btn btn-sm btn-secondary ms-2 d-none" type="button" id="btnLkhCancel" onclick="toggleLkhEdit(false)">
+                            Hủy
+                        </button>
+                    </div>
+                <div id="lkhView">
+                    <div class="mb-3">
+                        <strong>Giờ xuất phát:</strong><br>
+                        <?= $booking->ngay_gio_xuat_phat ? date('d/m/Y H:i', strtotime($booking->ngay_gio_xuat_phat)) : '<span class="text-muted">Chưa cập nhật</span>' ?>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Điểm tập trung:</strong><br>
+                        <?= !empty($booking->diem_tap_trung) ? htmlspecialchars($booking->diem_tap_trung) : '<span class="text-muted">Chưa cập nhật</span>' ?>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Kết thúc:</strong><br>
+                        <?= $booking->thoi_gian_ket_thuc ? date('d/m/Y H:i', strtotime($booking->thoi_gian_ket_thuc)) : '<span class="text-muted">Chưa cập nhật</span>' ?>
+                    </div>
+                    <?php if (!empty($booking->lich_ghi_chu)): ?>
+                    <div class="mb-0">
+                        <strong>Ghi chú lịch khởi hành:</strong><br>
+                        <div class="bg-light p-2 rounded"><?= nl2br(htmlspecialchars($booking->lich_ghi_chu)) ?></div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+
+                <form id="lkhForm" class="d-none mt-2" method="POST" action="<?= BASE_URL ?>bookings/update-lich-khoi-hanh">
+                    <input type="hidden" name="booking_id" value="<?= $booking->id ?>">
+                    <div class="mb-3">
+                        <label class="form-label">Giờ xuất phát</label>
+                        <input type="datetime-local" name="ngay_gio_xuat_phat" class="form-control"
+                               value="<?= $booking->ngay_gio_xuat_phat ? date('Y-m-d\TH:i', strtotime($booking->ngay_gio_xuat_phat)) : '' ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Điểm tập trung</label>
+                        <input type="text" name="diem_tap_trung" class="form-control"
+                               value="<?= htmlspecialchars($booking->diem_tap_trung ?? '') ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kết thúc</label>
+                        <input type="datetime-local" name="thoi_gian_ket_thuc" class="form-control"
+                               value="<?= $booking->thoi_gian_ket_thuc ? date('Y-m-d\TH:i', strtotime($booking->thoi_gian_ket_thuc)) : '' ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú lịch khởi hành</label>
+                        <textarea name="lich_ghi_chu" class="form-control" rows="3"><?= htmlspecialchars($booking->lich_ghi_chu ?? '') ?></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" onclick="toggleLkhEdit(false)">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách khách hàng (file) -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Danh sách khách hàng</h5>
+            </div>
+            <div class="card-body">
+                <?php
+                // Kiểm tra xem có file danh sách khách hàng không
+                $uploadDir = BASE_PATH . '/public/uploads/guest_lists/';
+                $filePattern = $uploadDir . 'booking_' . $booking->id . '.*';
+                $existingFiles = glob($filePattern);
+                $hasFile = !empty($existingFiles) && is_file($existingFiles[0]);
+                $filePath = $hasFile ? $existingFiles[0] : null;
+                $fileName = $hasFile ? basename($filePath) : null;
+                ?>
+                
+                <?php if ($hasFile && $fileName): ?>
+                    <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#khachListModal" onclick="loadKhachList(<?= $booking->id ?>)">
+                        <i class="bi bi-people"></i> Danh sách khách hàng
+                    </button>
+                <?php else: ?>
+                    <span class="text-muted">Chưa có file danh sách khách hàng</span>
+                <?php endif; ?>
+            </div>
+        </div>
+
         <!-- Thao tác nhanh -->
         <div class="card">
             <div class="card-header">
@@ -436,6 +463,120 @@ ob_start();
         </div>
     </div>
 </div>
+
+<!-- Modal hiển thị danh sách khách hàng -->
+<div class="modal fade" id="khachListModal" tabindex="-1" aria-labelledby="khachListModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="khachListModalLabel">
+                    <i class="bi bi-people"></i> Danh sách khách hàng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="khachListError" class="alert alert-danger d-none"></div>
+                <div id="khachListContent">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Họ tên</th>
+                                    <th>Giới tính</th>
+                                    <th>Năm sinh</th>
+                                    <th>Số giấy tờ</th>
+                                    <th>Yêu cầu cá nhân</th>
+                                </tr>
+                            </thead>
+                            <tbody id="khachListTableBody">
+                                <!-- Dữ liệu sẽ được load bằng JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleLkhEdit(isEdit) {
+    const view = document.getElementById('lkhView');
+    const form = document.getElementById('lkhForm');
+    const btnEdit = document.getElementById('btnLkhEdit');
+    const btnCancel = document.getElementById('btnLkhCancel');
+    if (isEdit) {
+        view.classList.add('d-none');
+        form.classList.remove('d-none');
+        btnEdit.classList.add('d-none');
+        btnCancel.classList.remove('d-none');
+    } else {
+        view.classList.remove('d-none');
+        form.classList.add('d-none');
+        btnEdit.classList.remove('d-none');
+        btnCancel.classList.add('d-none');
+    }
+}
+
+function loadKhachList(bookingId) {
+    const errorEl = document.getElementById('khachListError');
+    const contentEl = document.getElementById('khachListContent');
+    const tableBody = document.getElementById('khachListTableBody');
+    
+    // Reset UI
+    errorEl.classList.add('d-none');
+    tableBody.innerHTML = '';
+    
+    // Gọi API
+    fetch('<?= BASE_URL ?>bookings/view-khach-list/' + bookingId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                errorEl.textContent = data.error;
+                errorEl.classList.remove('d-none');
+                contentEl.style.display = 'none';
+                return;
+            }
+            
+            if (data.success && data.data && data.data.length > 0) {
+                // Render table
+                data.data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.stt}</td>
+                        <td><strong>${escapeHtml(item.ho_ten)}</strong></td>
+                        <td>${escapeHtml(item.gioi_tinh || '-')}</td>
+                        <td>${escapeHtml(item.nam_sinh || '-')}</td>
+                        <td>${escapeHtml(item.so_giay_to || '-')}</td>
+                        <td>${escapeHtml(item.yeu_cau_ca_nhan || '-')}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                contentEl.style.display = 'block';
+            } else {
+                errorEl.textContent = 'Không có dữ liệu khách hàng';
+                errorEl.classList.remove('d-none');
+                contentEl.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            errorEl.textContent = 'Lỗi khi tải dữ liệu: ' + error.message;
+            errorEl.classList.remove('d-none');
+            contentEl.style.display = 'none';
+        });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
 
 <?php
 $content = ob_get_clean();

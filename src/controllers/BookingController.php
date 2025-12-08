@@ -840,5 +840,131 @@ class BookingController
         }
         exit;
     }
+
+    // Xem danh sách khách hàng từ file Excel (trả về JSON)
+    public function viewKhachList($id): void
+    {
+        requireAdmin();
+
+        $booking = Booking::find($id);
+        if (!$booking) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Booking không tồn tại']);
+            exit;
+        }
+
+        // Tìm file Excel đã upload
+        $uploadDir = BASE_PATH . '/public/uploads/guest_lists/';
+        $filePattern = $uploadDir . 'booking_' . $booking->id . '.*';
+        $existingFiles = glob($filePattern);
+        
+        if (empty($existingFiles) || !is_file($existingFiles[0])) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Không tìm thấy file danh sách khách hàng']);
+            exit;
+        }
+
+        $filePath = $existingFiles[0];
+
+        // Đọc file Excel/CSV
+        try {
+            $data = readExcelFile($filePath, 2); // Bắt đầu từ dòng 2 (bỏ header)
+            
+            if ($data === null || empty($data)) {
+                echo json_encode(['error' => 'Không thể đọc file hoặc file trống']);
+                exit;
+            }
+
+            // Format dữ liệu để trả về
+            $result = [];
+            foreach ($data as $index => $row) {
+                $result[] = [
+                    'stt' => $index + 1,
+                    'ho_ten' => trim($row[0] ?? ''),
+                    'gioi_tinh' => trim($row[1] ?? ''),
+                    'nam_sinh' => trim($row[2] ?? ''),
+                    'so_giay_to' => trim($row[3] ?? ''),
+                    'yeu_cau_ca_nhan' => trim($row[4] ?? '')
+                ];
+            }
+
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => true, 'data' => $result], JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Lỗi đọc file: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    // Cập nhật nhanh lịch khởi hành (tại trang chi tiết)
+    public function updateLichKhoiHanh(): void
+    {
+        requireAdmin();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . 'bookings');
+            exit;
+        }
+
+        $bookingId = $_POST['booking_id'] ?? null;
+        if (!$bookingId) {
+            $_SESSION['error'] = 'ID booking không hợp lệ';
+            header('Location: ' . BASE_URL . 'bookings');
+            exit;
+        }
+
+        $booking = Booking::find($bookingId);
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại';
+            header('Location: ' . BASE_URL . 'bookings');
+            exit;
+        }
+
+        // Lấy dữ liệu hiện tại để fallback nếu user để trống
+        $latestLkh = Booking::getLatestLichKhoiHanh($bookingId);
+
+        $ngayGioXuatPhat = trim($_POST['ngay_gio_xuat_phat'] ?? '');
+        $diemTapTrung = trim($_POST['diem_tap_trung'] ?? '');
+        $thoiGianKetThuc = trim($_POST['thoi_gian_ket_thuc'] ?? '');
+        $lichGhiChu = trim($_POST['lich_ghi_chu'] ?? '');
+
+        if ($ngayGioXuatPhat !== '') {
+            $ngayGioXuatPhat = str_replace('T', ' ', $ngayGioXuatPhat);
+        } else {
+            $ngayGioXuatPhat = $latestLkh['ngay_gio_xuat_phat'] ?? null;
+        }
+
+        if ($thoiGianKetThuc !== '') {
+            $thoiGianKetThuc = str_replace('T', ' ', $thoiGianKetThuc);
+        } else {
+            $thoiGianKetThuc = $latestLkh['thoi_gian_ket_thuc'] ?? null;
+        }
+
+        if ($diemTapTrung === '' && isset($latestLkh['diem_tap_trung'])) {
+            $diemTapTrung = $latestLkh['diem_tap_trung'];
+        }
+
+        if ($lichGhiChu === '' && isset($latestLkh['ghi_chu'])) {
+            $lichGhiChu = $latestLkh['ghi_chu'];
+        }
+
+        $ok = Booking::upsertLichKhoiHanh(
+            $bookingId,
+            $ngayGioXuatPhat,
+            $diemTapTrung,
+            $thoiGianKetThuc,
+            $lichGhiChu
+        );
+
+        if ($ok) {
+            $_SESSION['success'] = 'Đã cập nhật lịch khởi hành';
+        } else {
+            $_SESSION['error'] = 'Không thể cập nhật lịch khởi hành';
+        }
+
+        header('Location: ' . BASE_URL . 'bookings/show/' . $bookingId . '#lich-khoi-hanh');
+        exit;
+    }
 }
 ?>

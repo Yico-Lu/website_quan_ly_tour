@@ -78,6 +78,17 @@ if (strpos($act, 'bookings/show/') === 0) {
     exit;
 }
 
+if (strpos($act, 'bookings/update-lich-khoi-hanh') === 0) {
+    $bookingController->updateLichKhoiHanh();
+    exit;
+}
+
+if (strpos($act, 'bookings/view-khach-list/') === 0) {
+    $id = str_replace('bookings/view-khach-list/', '', $act);
+    $bookingController->viewKhachList($id);
+    exit;
+}
+
 if (strpos($act, 'tours/show/') === 0) {
     $id = str_replace('tours/show/', '', $act);
     $tourController->show($id);
