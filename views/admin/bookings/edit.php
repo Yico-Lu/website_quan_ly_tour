@@ -42,6 +42,9 @@ ob_start();
                         ?>
                             <option
                                 value="<?= $tour['id'] ?>"
+                                data-gia="<?= htmlspecialchars($tour['gia']) ?>"
+                                data-ngay-xuat-phat="<?= htmlspecialchars($tour['ngay_xuat_phat'] ?? '') ?>"
+                                data-ngay-ket-thuc="<?= htmlspecialchars($tour['ngay_ket_thuc'] ?? '') ?>"
                                 <?= $selectedTourId == $tour['id'] ? 'selected' : '' ?>
                             >
                                 <?= htmlspecialchars($tour['ten_tour']) ?>
@@ -99,6 +102,101 @@ ob_start();
                             placeholder="Nhập chi tiết về vai trò của HDV (nếu có)"
                         ><?= htmlspecialchars($old['chi_tiet'] ?? ($currentHdv['chi_tiet'] ?? '')) ?></textarea>
                     </div>
+                </div>
+            </div>
+
+            <!-- Điểm danh khách -->
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Điểm danh khách</h5>
+                </div>
+                <div class="card-body">
+                    <?php if (!empty($diemDanh)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 140px;">Booking Khách ID</th>
+                                        <th style="width: 260px;">Trạng thái</th>
+                                        <th>Ghi chú</th>
+                                        <th style="width: 140px;">Ngày giờ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($diemDanh as $row): ?>
+                                        <?php
+                                        $status = $row['trang_thai'] ?? '';
+                                        $lkhIdRow = $row['lich_khoi_hanh_id'] ?? ($booking->lich_khoi_hanh_id ?? '');
+                                        ?>
+                                        <tr>
+                                            <td>
+                                                <input type="hidden" name="attendance[<?= $row['booking_khach_id'] ?>][booking_khach_id]" value="<?= htmlspecialchars($row['booking_khach_id']) ?>">
+                                                <input type="hidden" name="attendance[<?= $row['booking_khach_id'] ?>][lich_khoi_hanh_id]" value="<?= htmlspecialchars($lkhIdRow) ?>">
+                                                <?= htmlspecialchars($row['booking_khach_id']) ?>
+                                            </td>
+                                            <td>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" id="att_<?= $row['booking_khach_id'] ?>_den" name="attendance[<?= $row['booking_khach_id'] ?>][trang_thai]" value="da_den" <?= $status === 'da_den' ? 'checked' : '' ?>>
+                                                    <label class="form-check-label" for="att_<?= $row['booking_khach_id'] ?>_den">Đã đến</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" id="att_<?= $row['booking_khach_id'] ?>_tre" name="attendance[<?= $row['booking_khach_id'] ?>][trang_thai]" value="tre" <?= $status === 'tre' ? 'checked' : '' ?>>
+                                                    <label class="form-check-label" for="att_<?= $row['booking_khach_id'] ?>_tre">Trễ</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" id="att_<?= $row['booking_khach_id'] ?>_vang" name="attendance[<?= $row['booking_khach_id'] ?>][trang_thai]" value="vang" <?= ($status === 'vang' || $status === 'vang_mat') ? 'checked' : '' ?>>
+                                                    <label class="form-check-label" for="att_<?= $row['booking_khach_id'] ?>_vang">Vắng mặt</label>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" name="attendance[<?= $row['booking_khach_id'] ?>][ghi_chu]" value="<?= htmlspecialchars($row['ghi_chu'] ?? '') ?>" placeholder="Ghi chú (tùy chọn)">
+                                            </td>
+                                            <td><?= !empty($row['ngay_gio']) ? date('d/m/Y H:i', strtotime($row['ngay_gio'])) : '<span class="text-muted">-</span>' ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <span class="text-muted">Chưa có dữ liệu điểm danh</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="ngay_gio_xuat_phat" class="form-label">Giờ xuất phát</label>
+                    <input
+                        type="datetime-local"
+                        class="form-control"
+                        id="ngay_gio_xuat_phat"
+                        name="ngay_gio_xuat_phat"
+                        value="<?= $booking->ngay_gio_xuat_phat ? date('Y-m-d\TH:i', strtotime($booking->ngay_gio_xuat_phat)) : '' ?>"
+                    />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="thoi_gian_ket_thuc" class="form-label">Thời gian kết thúc</label>
+                    <input
+                        type="datetime-local"
+                        class="form-control"
+                        id="thoi_gian_ket_thuc"
+                        name="thoi_gian_ket_thuc"
+                        value="<?= $booking->thoi_gian_ket_thuc ? date('Y-m-d\TH:i', strtotime($booking->thoi_gian_ket_thuc)) : '' ?>"
+                    />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label for="diem_tap_trung" class="form-label">Điểm tập trung</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="diem_tap_trung"
+                        name="diem_tap_trung"
+                        value="<?= htmlspecialchars($booking->diem_tap_trung ?? '') ?>"
+                        placeholder="Nhập điểm tập trung (nếu có)"
+                    />
                 </div>
             </div>
 

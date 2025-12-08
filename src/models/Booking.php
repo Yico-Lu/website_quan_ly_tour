@@ -21,6 +21,11 @@ class Booking
     public $ten_tour;
     public $ten_hdv;
     public $hdv_id; // ID của HDV từ bảng hdv để tạo link
+    public $lich_khoi_hanh_id;
+    public $ngay_gio_xuat_phat;
+    public $diem_tap_trung;
+    public $thoi_gian_ket_thuc;
+    public $gia_tour;
 
     // Constructor để khởi tạo thực thể Booking
     public function __construct($data = [])
@@ -46,6 +51,11 @@ class Booking
             $this->ten_tour = $data['ten_tour'] ?? '';
             $this->ten_hdv = $data['ten_hdv'] ?? '';
             $this->hdv_id = $data['hdv_id'] ?? null;
+            $this->lich_khoi_hanh_id = $data['lich_khoi_hanh_id'] ?? null;
+            $this->ngay_gio_xuat_phat = $data['ngay_gio_xuat_phat'] ?? null;
+            $this->diem_tap_trung = $data['diem_tap_trung'] ?? null;
+            $this->thoi_gian_ket_thuc = $data['thoi_gian_ket_thuc'] ?? null;
+            $this->gia_tour = $data['gia_tour'] ?? null;
         }
     }
 
@@ -55,6 +65,12 @@ class Booking
         $pdo = getDB();
         $sql = "SELECT b.*,
                        t.ten_tour,
+                       t.gia AS gia_tour,
+                       /* Lấy bản ghi lịch khởi hành mới nhất của booking */
+                       (SELECT l1.id FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS lich_khoi_hanh_id,
+                       (SELECT l1.ngay_gio_xuat_phat FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS ngay_gio_xuat_phat,
+                       (SELECT l1.diem_tap_trung FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS diem_tap_trung,
+                       (SELECT l1.thoi_gian_ket_thuc FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS thoi_gian_ket_thuc,
                        COALESCE(
                            (SELECT GROUP_CONCAT(DISTINCT CONCAT(tk.ho_ten, ' (', tk.email, ')') SEPARATOR ', ')
                             FROM booking_hdv bh2
@@ -74,6 +90,7 @@ class Booking
                        ) AS hdv_id
                 FROM booking b
                 LEFT JOIN tour t ON b.tour_id = t.id
+                LEFT JOIN lich_khoi_hanh lkh ON lkh.booking_id = b.id
                 LEFT JOIN hdv h ON b.assigned_hdv_id = h.id
                 LEFT JOIN tai_khoan tk ON h.tai_khoan_id = tk.id
                 ORDER BY b.ngay_tao DESC";
@@ -92,6 +109,12 @@ class Booking
         $pdo = getDB();
         $sql = "SELECT b.*,
                        t.ten_tour,
+                       t.gia AS gia_tour,
+                       /* Lấy bản ghi lịch khởi hành mới nhất của booking */
+                       (SELECT l1.id FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS lich_khoi_hanh_id,
+                       (SELECT l1.ngay_gio_xuat_phat FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS ngay_gio_xuat_phat,
+                       (SELECT l1.diem_tap_trung FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS diem_tap_trung,
+                       (SELECT l1.thoi_gian_ket_thuc FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS thoi_gian_ket_thuc,
                        COALESCE(
                            (SELECT GROUP_CONCAT(DISTINCT CONCAT(tk.ho_ten, ' (', tk.email, ')') SEPARATOR ', ')
                             FROM booking_hdv bh2
@@ -111,6 +134,7 @@ class Booking
                        ) AS hdv_id
                 FROM booking b
                 LEFT JOIN tour t ON b.tour_id = t.id
+                LEFT JOIN lich_khoi_hanh lkh ON lkh.booking_id = b.id
                 LEFT JOIN hdv h ON b.assigned_hdv_id = h.id
                 LEFT JOIN tai_khoan tk ON h.tai_khoan_id = tk.id
                 WHERE b.id = ? LIMIT 1";
@@ -120,11 +144,17 @@ class Booking
         return $data ? new Booking($data) : null;
     }
 
-    // Lấy danh sách tour đang hoạt động
+    // Lấy danh sách tour đang hoạt động kèm giá
     public static function getTourList()
     {
         $pdo = getDB();
-        $sql = "SELECT id, ten_tour FROM tour WHERE trang_thai = 1 ORDER BY ten_tour";
+        $sql = "SELECT 
+                    t.id, 
+                    t.ten_tour,
+                    t.gia
+                FROM tour t
+                WHERE t.trang_thai = 1
+                ORDER BY t.ten_tour";
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -605,6 +635,136 @@ class Booking
             'da_coc' => 'text-bg-info'
         ];
         return $classes[$status] ?? 'text-bg-secondary';
+    }
+
+    /**
+     * Lấy lich_khoi_hanh_id theo booking_id (lấy bản ghi mới nhất nếu có nhiều).
+     */
+    public static function getLichKhoiHanhIdByBookingId($bookingId)
+    {
+        $pdo = getDB();
+        if (!$pdo) {
+            return null;
+        }
+        $stmt = $pdo->prepare("SELECT id FROM lich_khoi_hanh WHERE booking_id = ? ORDER BY id DESC LIMIT 1");
+        $stmt->execute([$bookingId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['id'] ?? null;
+    }
+
+    /**
+     * Thêm/cập nhật điểm danh cho một booking_khach và lịch khởi hành.
+     */
+    public static function upsertDiemDanh($lichKhoiHanhId, $bookingKhachId, $trangThai, $ghiChu = null)
+    {
+        $pdo = getDB();
+        if (!$pdo) {
+            return false;
+        }
+
+        // Kiểm tra đã có bản ghi chưa
+        $checkSql = "SELECT id FROM diem_danh_khach WHERE lich_khoi_hanh_id = ? AND booking_khach_id = ?";
+        $stmt = $pdo->prepare($checkSql);
+        $stmt->execute([$lichKhoiHanhId, $bookingKhachId]);
+        $existing = $stmt->fetch();
+
+        if ($existing && !empty($existing['id'])) {
+            $updateSql = "UPDATE diem_danh_khach 
+                          SET trang_thai = ?, ghi_chu = ?, ngay_gio = NOW()
+                          WHERE id = ?";
+            $updateStmt = $pdo->prepare($updateSql);
+            return $updateStmt->execute([$trangThai, $ghiChu ?: null, $existing['id']]);
+        }
+
+        $insertSql = "INSERT INTO diem_danh_khach (lich_khoi_hanh_id, booking_khach_id, trang_thai, ghi_chu, ngay_gio)
+                      VALUES (?, ?, ?, ?, NOW())";
+        $insertStmt = $pdo->prepare($insertSql);
+        return $insertStmt->execute([$lichKhoiHanhId, $bookingKhachId, $trangThai, $ghiChu ?: null]);
+    }
+
+    /**
+     * Lấy danh sách điểm danh theo booking (gộp theo từng booking_khach).
+     * Trả về các cột: id, booking_khach_id, lich_khoi_hanh_id, trang_thai, ghi_chu, ngay_gio.
+     */
+    public static function getDiemDanhByBooking($bookingId, $lichKhoiHanhId = null)
+    {
+        $pdo = getDB();
+        if (!$pdo) {
+            return [];
+        }
+
+        // Nếu chưa truyền lich_khoi_hanh_id, lấy bản ghi mới nhất theo booking
+        if ($lichKhoiHanhId === null) {
+            $lichKhoiHanhId = self::getLichKhoiHanhIdByBookingId($bookingId);
+        }
+
+        $params = [];
+        $conditionLkh = '';
+        if ($lichKhoiHanhId !== null) {
+            $conditionLkh = 'AND dd.lich_khoi_hanh_id = ?';
+            $params[] = $lichKhoiHanhId;
+        }
+        $params[] = $bookingId;
+
+        $sql = "
+            SELECT 
+                dd.id,
+                bk.id AS booking_khach_id,
+                dd.lich_khoi_hanh_id,
+                dd.trang_thai,
+                dd.ghi_chu,
+                dd.ngay_gio
+            FROM booking_khach bk
+            LEFT JOIN diem_danh_khach dd
+                ON dd.booking_khach_id = bk.id
+                {$conditionLkh}
+            WHERE bk.booking_id = ?
+            ORDER BY bk.id ASC, dd.id DESC
+        ";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Thêm hoặc cập nhật lịch khởi hành cho booking.
+     */
+    public static function upsertLichKhoiHanh($bookingId, $ngayGioXuatPhat = null, $diemTapTrung = null, $thoiGianKetThuc = null)
+    {
+        $pdo = getDB();
+        if (!$pdo) {
+            return false;
+        }
+
+        $select = $pdo->prepare("SELECT id FROM lich_khoi_hanh WHERE booking_id = ? ORDER BY id DESC LIMIT 1");
+        $select->execute([$bookingId]);
+        $row = $select->fetch(PDO::FETCH_ASSOC);
+
+        if ($row && !empty($row['id'])) {
+            $stmt = $pdo->prepare("
+                UPDATE lich_khoi_hanh
+                SET ngay_gio_xuat_phat = ?, diem_tap_trung = ?, thoi_gian_ket_thuc = ?
+                WHERE id = ?
+            ");
+            return $stmt->execute([
+                $ngayGioXuatPhat ?: null,
+                $diemTapTrung ?: null,
+                $thoiGianKetThuc ?: null,
+                $row['id']
+            ]);
+        }
+
+        $stmt = $pdo->prepare("
+            INSERT INTO lich_khoi_hanh (booking_id, ngay_gio_xuat_phat, diem_tap_trung, thoi_gian_ket_thuc)
+            VALUES (?, ?, ?, ?)
+        ");
+        return $stmt->execute([
+            $bookingId,
+            $ngayGioXuatPhat ?: null,
+            $diemTapTrung ?: null,
+            $thoiGianKetThuc ?: null
+        ]);
     }
 }
 ?>

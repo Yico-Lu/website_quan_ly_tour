@@ -1,10 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Khởi tạo khách đại diện (nếu có form)
     const khachContainer = document.getElementById('khach_container');
     const khachDataEl = document.getElementById('khach_data');
-    if (!khachContainer || !khachDataEl) return;
-
-    const oldKhachs = safeJson(khachDataEl.dataset.oldKhachs) || [];
     let khachIndex = 0;
+    const oldKhachs = safeJson(khachDataEl?.dataset.oldKhachs) || [];
 
     const escapeHtml = (text = '') => {
         const div = document.createElement('div');
@@ -69,11 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const addKhachForm = (data = {}) => {
+        if (!khachContainer) return;
         khachContainer.appendChild(createKhachForm(khachIndex, data));
         khachIndex++;
     };
 
-    addKhachForm(oldKhachs[0] || {});
+    if (khachContainer) {
+        addKhachForm(oldKhachs[0] || {});
+    }
 
     const updateTenNguoiDat = () => {
         const first = khachContainer.querySelector('.khach-card');
@@ -85,15 +87,72 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    khachContainer.addEventListener('input', (e) => {
-        if (e.target.name && e.target.name.includes('[ho_ten]') && e.target.closest('.khach-card')) {
-            updateTenNguoiDat();
-        }
-    });
+    if (khachContainer) {
+        khachContainer.addEventListener('input', (e) => {
+            if (e.target.name && e.target.name.includes('[ho_ten]') && e.target.closest('.khach-card')) {
+                updateTenNguoiDat();
+            }
+        });
 
-    const bookingForm = document.querySelector('form[action*="bookings"]');
-    if (bookingForm) {
-        bookingForm.addEventListener('submit', updateTenNguoiDat);
+        const bookingForm = document.querySelector('form[action*="bookings"]');
+        if (bookingForm) {
+            bookingForm.addEventListener('submit', updateTenNguoiDat);
+        }
+    }
+
+    // Hiển thị giá và ngày tour khi chọn tour
+    const tourSelect = document.getElementById('tour_id');
+    const priceEl = document.getElementById('tour_price_create');
+    const startInput = document.getElementById('ngay_gio_xuat_phat');
+    const endInput = document.getElementById('thoi_gian_ket_thuc');
+
+    const formatPrice = (p) => p ? Number(p).toLocaleString('vi-VN') + ' VND' : '-';
+
+    const parseDaysFromTour = () => {
+        if (!tourSelect) return null;
+        const opt = tourSelect.options[tourSelect.selectedIndex];
+        const txt = opt ? opt.textContent : '';
+        const match = txt && txt.match(/(\d+)\s*ngày/i);
+        return match ? parseInt(match[1], 10) : null;
+    };
+
+    const updateEndTimeFromStart = () => {
+        if (!startInput || !endInput) return;
+        const startVal = startInput.value;
+        if (!startVal) {
+            endInput.value = '';
+            if (endEl) endEl.textContent = '-';
+            return;
+        }
+        const days = parseDaysFromTour();
+        if (!days || Number.isNaN(days)) return;
+        const startDate = new Date(startVal);
+        if (Number.isNaN(startDate.getTime())) return;
+        const endDate = new Date(startDate.getTime());
+        endDate.setDate(endDate.getDate() + days);
+        const endStr = endDate.toISOString().slice(0, 16);
+        endInput.value = endStr;
+        if (endEl) endEl.textContent = endDate.toLocaleString('vi-VN');
+    };
+
+    const updateTourInfo = () => {
+        if (!tourSelect || !priceEl) return;
+        const opt = tourSelect.options[tourSelect.selectedIndex];
+        const gia = opt?.dataset.gia || '';
+        priceEl.textContent = formatPrice(gia);
+        updateEndTimeFromStart();
+    };
+
+    if (tourSelect) {
+        tourSelect.addEventListener('change', updateTourInfo);
+        updateTourInfo();
+    }
+
+    if (startInput) {
+        startInput.addEventListener('change', () => {
+            updateEndTimeFromStart();
+            updateTourInfo();
+        });
     }
 });
 

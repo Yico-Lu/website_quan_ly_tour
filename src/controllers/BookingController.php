@@ -43,6 +43,8 @@ class BookingController
         $hdvs = $booking->getHdvs();
         $currentHdv = !empty($hdvs) ? $hdvs[0] : null;
         $currentKhachs = $booking->getKhachs();
+        $lichKhoiHanhId = $booking->lich_khoi_hanh_id ?: Booking::getLichKhoiHanhIdByBookingId($id);
+        $diemDanh = Booking::getDiemDanhByBooking($id, $lichKhoiHanhId);
 
         view('admin.bookings.edit', [
             'title' => 'Sửa booking',
@@ -52,6 +54,7 @@ class BookingController
             'guideList' => $lists['guideList'],
             'currentHdv' => $currentHdv,
             'currentKhachs' => $currentKhachs,
+            'diemDanh' => $diemDanh,
             'errors' => $errors,
             'old' => $old,
             'breadcrumb' => [
@@ -96,6 +99,8 @@ class BookingController
 
         $hdvs = $booking->getHdvs();
         $khachs = $booking->getKhachs();
+        $lichKhoiHanhId = $booking->lich_khoi_hanh_id ?: Booking::getLichKhoiHanhIdByBookingId($id);
+        $diemDanh = Booking::getDiemDanhByBooking($id, $lichKhoiHanhId);
 
         view('admin.bookings.show', [
             'title' => 'Chi tiết Booking - ' . $booking->ten_nguoi_dat,
@@ -103,6 +108,7 @@ class BookingController
             'booking' => $booking,
             'hdvs' => $hdvs,
             'khachs' => $khachs,
+            'diemDanh' => $diemDanh,
             'breadcrumb' => [
                 ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
                 ['label' => 'Danh sách booking', 'url' => BASE_URL . 'bookings'],
@@ -155,6 +161,12 @@ class BookingController
         $yeu_cau_dac_biet = trim($_POST['yeu_cau_dac_biet'] ?? '');
         $trang_thai = trim($_POST['trang_thai'] ?? 'cho_xac_nhan');
         $ghi_chu = trim($_POST['ghi_chu'] ?? '');
+        $ngay_gio_xuat_phat = trim($_POST['ngay_gio_xuat_phat'] ?? '');
+        $diem_tap_trung = trim($_POST['diem_tap_trung'] ?? '');
+        $thoi_gian_ket_thuc = trim($_POST['thoi_gian_ket_thuc'] ?? '');
+        $ngay_gio_xuat_phat = trim($_POST['ngay_gio_xuat_phat'] ?? '');
+        $diem_tap_trung = trim($_POST['diem_tap_trung'] ?? '');
+        $thoi_gian_ket_thuc = trim($_POST['thoi_gian_ket_thuc'] ?? '');
 
         // Kiểm tra dữ liệu
         $errors = [];
@@ -217,6 +229,14 @@ class BookingController
                     );
                 }
             }
+
+            // Lưu lịch khởi hành (ngay_gio_xuat_phat, diem_tap_trung, thoi_gian_ket_thuc)
+            Booking::upsertLichKhoiHanh(
+                $bookingId,
+                $ngay_gio_xuat_phat ?: null,
+                $diem_tap_trung ?: null,
+                $thoi_gian_ket_thuc ?: null
+            );
             
             // Xử lý upload file danh sách khách hàng
             if (isset($_FILES['guest_list_file']) && $_FILES['guest_list_file']['error'] === UPLOAD_ERR_OK) {
@@ -282,6 +302,8 @@ class BookingController
 
         // Lấy khách hàng hiện tại (người đại diện)
         $currentKhachs = $booking->getKhachs();
+        $lichKhoiHanhId = $booking->lich_khoi_hanh_id ?: Booking::getLichKhoiHanhIdByBookingId($id);
+        $diemDanh = Booking::getDiemDanhByBooking($id, $lichKhoiHanhId);
 
         view('admin.bookings.edit', [
             'title' => 'Sửa Booking',
@@ -291,6 +313,7 @@ class BookingController
             'guideList' => $guideList,
             'currentHdv' => $currentHdv,
             'currentKhachs' => $currentKhachs,
+            'diemDanh' => $diemDanh,
             'errors' => [], // Đảm bảo không có lỗi khi vào trang edit lần đầu
             'old' => [], // Đảm bảo không có old data khi vào trang edit lần đầu
             'breadcrumb' => [
@@ -445,6 +468,36 @@ class BookingController
                     }
                 }
             }
+
+            // Xử lý điểm danh khách (nếu có gửi lên)
+            $lichKhoiHanhId = $oldBooking->lich_khoi_hanh_id ?: Booking::getLichKhoiHanhIdByBookingId($id);
+            if (!empty($lichKhoiHanhId) && isset($_POST['attendance']) && is_array($_POST['attendance'])) {
+                foreach ($_POST['attendance'] as $att) {
+                    $bkId = (int)($att['booking_khach_id'] ?? 0);
+                    $status = trim($att['trang_thai'] ?? '');
+                    $note = trim($att['ghi_chu'] ?? '');
+                    $lkhRow = !empty($att['lich_khoi_hanh_id']) ? (int)$att['lich_khoi_hanh_id'] : $lichKhoiHanhId;
+                    if (!$bkId) {
+                        continue;
+                    }
+                    // Chỉ nhận các trạng thái hợp lệ
+                    $allowed = ['da_den', 'vang', 'vang_mat', 'tre'];
+                    if (!in_array($status, $allowed, true)) {
+                        $status = null;
+                    }
+                    if ($status && $lkhRow) {
+                        Booking::upsertDiemDanh($lkhRow, $bkId, $status, $note ?: null);
+                    }
+                }
+            }
+
+            // Lưu/ cập nhật lịch khởi hành
+            Booking::upsertLichKhoiHanh(
+                $id,
+                $ngay_gio_xuat_phat ?: null,
+                $diem_tap_trung ?: null,
+                $thoi_gian_ket_thuc ?: null
+            );
             
             // Xử lý upload file danh sách khách hàng
             if (isset($_FILES['guest_list_file']) && $_FILES['guest_list_file']['error'] === UPLOAD_ERR_OK) {

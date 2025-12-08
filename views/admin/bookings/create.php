@@ -109,7 +109,6 @@ ob_start();
                     <h5 class="card-title mb-0">Thông tin người đại diện</h5>
                 </div>
                 <div class="card-body">
-                    <input type="hidden" id="khach_data" data-old-khachs="<?= htmlspecialchars(json_encode($old['khach'] ?? []), ENT_QUOTES, 'UTF-8') ?>">
                     <div id="khach_container">
                         <!-- Chỉ có 1 khách hàng (người đại diện) -->
                     </div>
@@ -135,6 +134,43 @@ ob_start();
                             Định dạng file: XLSX, XLS, CSV. File sẽ được lưu với tên: <strong>booking_{id}.extension</strong>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="ngay_gio_xuat_phat" class="form-label">Giờ xuất phát</label>
+                    <input
+                        type="datetime-local"
+                        class="form-control"
+                        id="ngay_gio_xuat_phat"
+                        name="ngay_gio_xuat_phat"
+                        value="<?= htmlspecialchars($old['ngay_gio_xuat_phat'] ?? '') ?>"
+                    />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="thoi_gian_ket_thuc" class="form-label">Thời gian kết thúc</label>
+                    <input
+                        type="datetime-local"
+                        class="form-control"
+                        id="thoi_gian_ket_thuc"
+                        name="thoi_gian_ket_thuc"
+                        value="<?= htmlspecialchars($old['thoi_gian_ket_thuc'] ?? '') ?>"
+                    />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label for="diem_tap_trung" class="form-label">Điểm tập trung</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="diem_tap_trung"
+                        name="diem_tap_trung"
+                        value="<?= htmlspecialchars($old['diem_tap_trung'] ?? '') ?>"
+                        placeholder="Nhập điểm tập trung (nếu có)"
+                    />
                 </div>
             </div>
 
@@ -244,9 +280,136 @@ view('layouts.AdminLayout', [
     'pageTitle' => $pageTitle ?? 'Thêm Booking Mới',
     'content' => $content,
     'breadcrumb' => $breadcrumb ?? [],
-    'extraJs' => [
-        'js/auto-hide-alerts.js',
-        'js/booking-create.js'
-    ],
+    'extraJs' => ['js/auto-hide-alerts.js'],
 ]);
 ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const khachContainer = document.getElementById('khach_container');
+    const addKhachBtn = document.getElementById('addKhachBtn');
+    let khachIndex = 0;
+    
+    // Dữ liệu cũ từ server (nếu có lỗi validation)
+    const oldKhachs = <?= json_encode($old['khach'] ?? []) ?>;
+    
+    // Tạo form khách hàng
+    function createKhachForm(index, data = {}) {
+        const card = document.createElement('div');
+        card.className = 'card mb-3 khach-card';
+        card.innerHTML = `
+            <div class="card-header bg-light">
+                <strong><span class="badge bg-primary me-2">Người đại diện</span>Thông tin người đại diện</strong>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Họ tên <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="khach[${index}][ho_ten]" 
+                               value="${escapeHtml(data.ho_ten || '')}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Giới tính</label>
+                        <select class="form-select" name="khach[${index}][gioi_tinh]">
+                            <option value="">-- Chọn --</option>
+                            <option value="nam" ${(data.gioi_tinh || '') === 'nam' ? 'selected' : ''}>Nam</option>
+                            <option value="nu" ${(data.gioi_tinh || '') === 'nu' ? 'selected' : ''}>Nữ</option>
+                            <option value="khac" ${(data.gioi_tinh || '') === 'khac' ? 'selected' : ''}>Khác</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Năm sinh</label>
+                        <input type="number" class="form-control" name="khach[${index}][nam_sinh]" 
+                               value="${escapeHtml(data.nam_sinh || '')}" min="1900" max="2100">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Số giấy tờ</label>
+                        <input type="text" class="form-control" name="khach[${index}][so_giay_to]" 
+                               value="${escapeHtml(data.so_giay_to || '')}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Tình trạng thanh toán</label>
+                        <select class="form-select" name="khach[${index}][tinh_trang_thanh_toan]">
+                            <option value="chua_thanh_toan" ${(data.tinh_trang_thanh_toan || 'chua_thanh_toan') === 'chua_thanh_toan' ? 'selected' : ''}>Chưa thanh toán</option>
+                            <option value="da_coc" ${(data.tinh_trang_thanh_toan || '') === 'da_coc' ? 'selected' : ''}>Đã cọc</option>
+                            <option value="da_thanh_toan" ${(data.tinh_trang_thanh_toan || '') === 'da_thanh_toan' ? 'selected' : ''}>Đã thanh toán</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Yêu cầu cá nhân</label>
+                    <textarea class="form-control" name="khach[${index}][yeu_cau_ca_nhan]" rows="2" 
+                              placeholder="Nhập yêu cầu cá nhân (nếu có)">${escapeHtml(data.yeu_cau_ca_nhan || '')}</textarea>
+                </div>
+            </div>
+        `;
+        return card;
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Thêm form khách hàng
+    function addKhachForm(data = {}) {
+        const form = createKhachForm(khachIndex, data);
+        khachContainer.appendChild(form);
+        khachIndex++;
+    }
+    // Không dùng nút xóa/thêm, nhưng giữ hàm trống để tránh lỗi tham chiếu
+    function updateRemoveButtons() {}
+    
+    // Không cho phép xóa hoặc thêm khách hàng - chỉ có 1 người đại diện
+    // Khởi tạo form khách hàng đầu tiên (người đại diện) nếu có dữ liệu cũ
+    if (oldKhachs.length > 0) {
+        // Chỉ lấy khách hàng đầu tiên
+        addKhachForm(oldKhachs[0]);
+    } else {
+        addKhachForm(); // Thêm form trống đầu tiên (người đại diện)
+    }
+    // Đồng bộ tên người đặt ngay sau khi khởi tạo form đầu tiên
+    updateTenNguoiDat();
+    
+    // Tự động cập nhật tên người đặt từ khách hàng đầu tiên
+    function updateTenNguoiDat() {
+        const firstKhachCard = khachContainer.querySelector('.khach-card');
+        if (firstKhachCard) {
+            const firstHoTenInput = firstKhachCard.querySelector('input[name*="[ho_ten]"]');
+            const tenNguoiDatInput = document.getElementById('ten_nguoi_dat');
+            if (firstHoTenInput && tenNguoiDatInput) {
+                tenNguoiDatInput.value = firstHoTenInput.value;
+            }
+        }
+    }
+    
+    khachContainer.addEventListener('input', (e) => {
+        if (e.target.name && e.target.name.includes('[ho_ten]')) {
+            const firstKhachCard = khachContainer.querySelector('.khach-card');
+            if (firstKhachCard && e.target.closest('.khach-card') === firstKhachCard) {
+                updateTenNguoiDat();
+            }
+        }
+    });
+    
+    // Cập nhật tên người đặt khi form submit và debug
+    const bookingForm = document.querySelector('form[action*="bookings"]');
+    if (bookingForm) {
+        bookingForm.addEventListener('submit', function(e) {
+            updateTenNguoiDat();
+            
+            // Debug: Kiểm tra tất cả các khách hàng trước khi submit
+            const allKhachInputs = khachContainer.querySelectorAll('input[name*="[ho_ten]"]');
+            console.log('Total khach forms before submit:', allKhachInputs.length);
+            allKhachInputs.forEach((input, idx) => {
+                console.log(`Khach ${idx}: name="${input.name}", value="${input.value}"`);
+            });
+        });
+    }
+});
+</script>
+

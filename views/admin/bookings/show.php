@@ -44,6 +44,87 @@ ob_start();
                     </div>
                 </div>
 
+                <div class="row mb-3">
+                    <div class="col-sm-3">
+                        <strong>Loại khách:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        <span class="badge <?= $booking->getLoaiKhachBadgeClass() ?>">
+                            <?= $booking->getLoaiKhach() ?>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-sm-3">
+                        <strong>Số lượng:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        <span class="badge bg-info fs-6"><?= (int)($booking->so_luong ?? 0) ?> người</span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-sm-3">
+                        <strong>Bảng giá:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        <?php
+                        $donGia = $booking->gia_tour ?? 0;
+                        $soLuong = $booking->so_luong ?? 0;
+                        $thanhTien = $donGia * $soLuong;
+                        $fmt = function ($n) {
+                            return number_format((float)$n, 0, ',', '.') . ' VNĐ';
+                        };
+                        ?>
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <tbody>
+                                    <tr>
+                                        <th style="width: 180px;">Đơn giá tour</th>
+                                        <td><?= $fmt($donGia) ?></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Số lượng</th>
+                                        <td><?= (int)$soLuong ?></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-uppercase text-danger">Tổng tiền</th>
+                                        <td><strong class="text-danger"><?= $fmt($thanhTien) ?></strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-sm-3">
+                        <strong>Giờ xuất phát:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        <?= $booking->ngay_gio_xuat_phat ? date('d/m/Y H:i', strtotime($booking->ngay_gio_xuat_phat)) : '<span class="text-muted">Chưa cập nhật</span>' ?>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-sm-3">
+                        <strong>Điểm tập trung:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        <?= !empty($booking->diem_tap_trung) ? htmlspecialchars($booking->diem_tap_trung) : '<span class="text-muted">Chưa cập nhật</span>' ?>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-sm-3">
+                        <strong>Kết thúc:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        <?= $booking->thoi_gian_ket_thuc ? date('d/m/Y H:i', strtotime($booking->thoi_gian_ket_thuc)) : '<span class="text-muted">Chưa cập nhật</span>' ?>
+                    </div>
+                </div>
+
                 <!-- HDV phụ trách -->
                 <div class="row mb-3">
                     <div class="col-sm-3">
@@ -57,7 +138,7 @@ ob_start();
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
                                                 <strong>
-                                                    <i class="bi bi-person-badge"></i>
+                            <i class="bi bi-person-badge"></i>
                                                     <?= htmlspecialchars($hdv['ho_ten'] ?? 'N/A') ?>
                                                 </strong>
                                                 <br>
@@ -75,7 +156,7 @@ ob_start();
                                                 ];
                                                 echo $vaiTroNames[$hdv['vai_tro'] ?? 'hdv'] ?? 'HDV';
                                                 ?>
-                                            </span>
+                        </span>
                                         </div>
                                         <?php if (!empty($hdv['chi_tiet'])): ?>
                                             <div class="mt-2">
@@ -176,8 +257,8 @@ ob_start();
                         
                         <?php if ($hasFile && $fileName): ?>
                             <a href="<?= BASE_URL ?>public/uploads/guest_lists/<?= htmlspecialchars($fileName) ?>" 
-                               class="btn btn-primary" download>
-                                <i class="bi bi-download"></i> Tải danh sách khách hàng
+                               class="btn btn-primary" target="_blank">
+                                <i class="bi bi-eye"></i> Xem danh sách khách hàng
                             </a>
                             <div class="form-text mt-2">
                                 File: <strong><?= htmlspecialchars($fileName) ?></strong>
@@ -188,23 +269,55 @@ ob_start();
                     </div>
                 </div>
 
+                <!-- Điểm danh khách -->
                 <div class="row mb-3">
                     <div class="col-sm-3">
-                        <strong>Số lượng:</strong>
+                        <strong>Điểm danh khách:</strong>
                     </div>
                     <div class="col-sm-9">
-                        <span class="badge bg-info fs-6"><?= $booking->so_luong ?> người</span>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-sm-3">
-                        <strong>Loại khách:</strong>
-                    </div>
-                    <div class="col-sm-9">
-                        <span class="badge <?= $booking->getLoaiKhachBadgeClass() ?>">
-                            <?= $booking->getLoaiKhach() ?>
-                        </span>
+                        <?php if (!empty($diemDanh)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Booking Khách ID</th>
+                                            <th>Trạng thái</th>
+                                            <th>Ghi chú</th>
+                                            <th>Ngày giờ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($diemDanh as $row): ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($row['booking_khach_id']) ?></td>
+                                                <td>
+                                                    <?php
+                                                    $status = $row['trang_thai'] ?? '';
+                                                    $statusName = [
+                                                        'da_den' => 'Đã đến',
+                                                        'vang' => 'Vắng mặt',
+                                                        'vang_mat' => 'Vắng mặt',
+                                                        'tre' => 'Trễ'
+                                                    ][$status] ?? 'Chưa điểm danh';
+                                                    $badge = match ($status) {
+                                                        'da_den' => 'badge bg-success',
+                                                        'vang', 'vang_mat' => 'badge bg-danger',
+                                                        'tre' => 'badge bg-warning text-dark',
+                                                        default => 'badge bg-secondary'
+                                                    };
+                                                    ?>
+                                                    <span class="<?= $badge ?>"><?= $statusName ?></span>
+                                                </td>
+                                                <td><?= !empty($row['ghi_chu']) ? htmlspecialchars($row['ghi_chu']) : '<span class="text-muted">-</span>' ?></td>
+                                                <td><?= !empty($row['ngay_gio']) ? date('d/m/Y H:i', strtotime($row['ngay_gio'])) : '<span class="text-muted">-</span>' ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <span class="text-muted">Chưa có dữ liệu điểm danh</span>
+                        <?php endif; ?>
                     </div>
                 </div>
 
