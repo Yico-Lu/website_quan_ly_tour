@@ -233,22 +233,11 @@
                     <?php if(!empty($anhChiTietList)): ?>
                     <div class="mb-3">
                         <small class="text-muted">Ảnh hiện tại:</small>
-                        <div class="row mt-2 g-2">
+                        <div class="row mt-2">
                             <?php foreach($anhChiTietList as $anh): ?>
-                            <div class="col-md-3 col-sm-6">
-                                <div class="card position-relative">
-                                    <img src="<?= asset($anh['duong_dan']) ?>" alt="Ảnh chi tiết"
-                                         class="card-img-top" style="height: 100px; object-fit: cover;">
-                                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1"
-                                            onclick="deleteExistingImage(<?= $anh['id'] ?>)">
-                                        ×
-                                    </button>
-                                    <div class="card-body p-2">
-                                        <small class="text-muted text-truncate d-block" title="<?= basename($anh['duong_dan']) ?>">
-                                            <?= basename($anh['duong_dan']) ?>
-                                        </small>
-                                    </div>
-                                </div>
+                            <div class="col-md-3 mb-2">
+                                <img src="<?= asset($anh['duong_dan']) ?>" alt="Ảnh chi tiết"
+                                     class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
                             </div>
                             <?php endforeach; ?>
                         </div>
@@ -261,17 +250,13 @@
                         <input type="file" class="form-control" id="anh_chi_tiet" name="anh_chi_tiet[]"
                                accept="image/*" multiple>
                         <div class="form-text">
-                            Chọn thêm ảnh mới (JPG, PNG, GIF). Nhấn Ctrl để chọn nhiều ảnh.
+                            Chọn thêm ảnh mới (JPG, PNG, GIF). Có thể chọn nhiều ảnh cùng lúc.<br>
+                            Mỗi ảnh tối đa 2MB. Ảnh mới sẽ được thêm vào, không xóa ảnh cũ.
                         </div>
-                        <!-- Container preview ảnh mới -->
-                        <div id="preview" class="mt-3"></div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Hidden inputs cho ảnh cần xóa -->
-        <input type="hidden" id="delete_images" name="delete_images" value="">
 
         <div class="card-footer">
             <button type="submit" class="btn btn-primary">
@@ -282,16 +267,6 @@
             </a>
         </div>
     </form>
-
-    <script>
-        let imagesToDelete = [];
-
-        function deleteExistingImage(imageId) {
-            imagesToDelete.push(imageId);
-            document.getElementById('delete_images').value = imagesToDelete.join(',');
-            event.target.closest('.col-md-3').style.display = 'none';
-        }
-    </script>
 </div>
 
 <?php
@@ -301,6 +276,6 @@ view('layouts.AdminLayout', [
     'pageTitle' => $pageTitle ?? 'Sửa Tour',
     'content' => $content,
     'breadcrumb' => $breadcrumb ?? [],
-    'extraJs' => ['js/tour-image-preview.js'],
+    'extraJs' => ['js/auto-hide-alerts.js'],
 ]);
 ?>

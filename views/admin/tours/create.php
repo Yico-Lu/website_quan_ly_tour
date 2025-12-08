@@ -95,7 +95,7 @@
                     class="form-control"
                     id="mo_ta"
                     name="mo_ta"
-                    rows="4"
+                    rows="2"
                     placeholder="Nhập mô tả chi tiết về tour..."
                     required
                 ><?= htmlspecialchars($old['mo_ta'] ?? '') ?></textarea>
@@ -112,7 +112,8 @@
                     accept="image/*"
                 />
                 <div class="form-text">
-                    Chọn ảnh cho tour .Nếu không chọn ảnh, sẽ dùng ảnh mặc định.
+                    Chọn ảnh cho tour (JPG, PNG, GIF). Kích thước tối đa 2MB.<br>
+                    Nếu không chọn ảnh, sẽ dùng ảnh mặc định.
                 </div>
             </div>
 
@@ -152,7 +153,7 @@
                         class="form-control"
                         id="lich_trinh"
                         name="lich_trinh"
-                        rows="4"
+                        rows="6"
                         placeholder="Mô tả chi tiết lịch trình tour...
 Ví dụ:
 Ngày 1: Hà Nội - Hạ Long (Ăn sáng, khởi hành 8:00, tham quan vịnh Hạ Long)
@@ -212,12 +213,10 @@ Ngày 2: Hạ Long - Hà Nội (Tham quan hang Sửng Sốt, về Hà Nội)"
                         <input type="file" class="form-control" id="anh_chi_tiet" name="anh_chi_tiet[]"
                                accept="image/*" multiple>
                         <div class="form-text">
-                            Chọn nhiều ảnh (JPG, PNG, GIF).
+                            Có thể chọn nhiều ảnh cùng lúc (JPG, PNG, GIF).<br>
+                            Mỗi ảnh tối đa 2MB. Để trống nếu không có ảnh.
                         </div>
                     </div>
-
-                    <!-- Container hiển thị preview ảnh -->
-                    <div id="preview" class="mt-3"></div>
                 </div>
             </div>
         </div>
@@ -237,6 +236,6 @@ view('layouts.AdminLayout', [
     'pageTitle' => $pageTitle ?? 'Thêm Tour Mới',
     'content' => $content,
     'breadcrumb' => $breadcrumb ?? [],
-    'extraJs' => ['js/tour-image-preview.js'],
+    'extraJs' => ['js/auto-hide-alerts.js'],
 ]);
 ?>
