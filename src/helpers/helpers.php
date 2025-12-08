@@ -143,9 +143,132 @@ function requireAdmin()
 function requireGuideOrAdmin()
 {
     requireLogin();
-    
+
     if (!isGuide() && !isAdmin()) {
         header('Location: ' . BASE_URL);
         exit;
+    }
+}
+
+// Upload một ảnh đơn
+function uploadImage($file, $prefix = 'file', $uploadDir = 'uploads/general/')
+{
+    // Kiểm tra xem tệp có tồn tại và không có lỗi tải lên không
+    if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
+
+    // Xác thực loại tệp
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!in_array($file['type'], $allowedTypes)) {
+        return null; 
+    }
+
+    // Xác thực kích thước tệp
+    $maxSize = 5 * 1024 * 1024; // 5MB
+    if ($file['size'] > $maxSize) {
+        return null; 
+    }
+
+    // Lấy phần mở rộng của tệp
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+    // Xác thực phần mở rộng như một biện pháp bảo mật bổ sung
+    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    if (!in_array($extension, $allowedExtensions)) {
+        return null; 
+    }
+
+    // Tạo tên tệp duy nhất
+    $fileName = $prefix . '_' . time() . '_' . rand(1000, 9999) . '.' . $extension;
+
+    // Đường dẫn đầy đủ để lưu tệp
+    $fullUploadDir = __DIR__ . '/../../public/' . $uploadDir;
+    $filePath = $fullUploadDir . $fileName;
+
+    // Tạo thư mục nếu nó chưa tồn tại
+    if (!is_dir($fullUploadDir)) {
+        mkdir($fullUploadDir, 0755, true);
+    }
+
+    // Di chuyển tệp đã tải lên
+    if (move_uploaded_file($file['tmp_name'], $filePath)) {
+        return '/' . $uploadDir . $fileName; 
+    }
+
+    return null;
+}
+
+// tải nhiều ảnh
+function uploadMultipleImages($files, $prefix = 'file', $uploadDir = 'uploads/general/')
+{
+    $uploadedPaths = []; //mảng lưu trữ đường dẫn đã tải lên
+
+    if (!$files || !is_array($files['name'])) {
+        return $uploadedPaths; //trả về mảng rỗng nếu không có tệp
+    }
+
+    // Xử lý từng tệp
+    foreach ($files['name'] as $key => $name) {
+        if ($files['error'][$key] !== UPLOAD_ERR_NO_FILE) {
+            $file = [
+                'name' => $files['name'][$key],
+                'type' => $files['type'][$key],
+                'tmp_name' => $files['tmp_name'][$key],
+                'error' => $files['error'][$key],
+                'size' => $files['size'][$key]
+            ];
+            
+            $path = uploadImage($file, $prefix, $uploadDir);
+            if ($path) {
+                $uploadedPaths[] = $path; //thêm đường dẫn vào mảng
+            }
+        }
+    }
+
+    return $uploadedPaths;
+}
+
+// Hiển thị thông báo flash message (success/error) 
+function displayFlashMessages(): void
+{
+    static $alertCount = 0;
+    
+    if (isset($_SESSION['success'])) {
+        $alertId = 'flash-alert-' . $alertCount++;
+        echo '<div id="' . $alertId . '" class="alert alert-success alert-dismissible fade show" role="alert">';
+        echo '<i class="bi bi-check-circle-fill me-2"></i>';
+        echo htmlspecialchars($_SESSION['success']);
+        echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        echo '</div>';
+        echo '<script>
+            setTimeout(function() {
+                const alert = document.getElementById("' . $alertId . '");
+                if (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 2000);
+        </script>';
+        unset($_SESSION['success']);
+    }
+
+    if (isset($_SESSION['error'])) {
+        $alertId = 'flash-alert-' . $alertCount++;
+        echo '<div id="' . $alertId . '" class="alert alert-danger alert-dismissible fade show" role="alert">';
+        echo '<i class="bi bi-exclamation-circle-fill me-2"></i>';
+        echo htmlspecialchars($_SESSION['error']);
+        echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        echo '</div>';
+        echo '<script>
+            setTimeout(function() {
+                const alert = document.getElementById("' . $alertId . '");
+                if (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 2000);
+        </script>';
+        unset($_SESSION['error']);
     }
 }

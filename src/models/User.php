@@ -48,28 +48,27 @@ class User
         return $this->role === 'huong_dan_vien';
     }
 
-        // Phương thức xác thực đăng nhập từ database
-        public static function authenticate($email, $password)
-        {
-            $pdo = getDB();
-            //tìm user theo email
-            $sql = "SELECT * FROM tai_khoan WHERE email = ? AND trang_thai = 'hoat_dong' LIMIT 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$email]);
-            $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Phương thức xác thực đăng nhập từ database
+    public static function authenticate($email, $password)
+    {
+        $pdo = getDB();
+        $sql = "SELECT * FROM tai_khoan WHERE email = ? AND trang_thai = 'hoat_dong' LIMIT 1";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$email]);
+        $userData = $stmt->fetch();
 
-            // Nếu không tìm thấy user hoặc password không đúng
-            if(!$userData || !password_verify($password, $userData['mat_khau'])){
-                return null;
-            }
+        // Nếu không tìm thấy user hoặc password không đúng
+        if(!$userData || !password_verify($password, $userData['mat_khau'])){
+            return null;
+        }
 
-            //phan quyen
+        //phan quyen
+        $role = 'huong_dan_vien';
+        if($userData['phan_quyen'] === 'admin'){
+            $role = 'admin';
+        }elseif($userData['phan_quyen'] === 'hdv'){
             $role = 'huong_dan_vien';
-            if($userData['phan_quyen'] === 'admin'){
-                $role = 'admin';
-            }elseif($userData['phan_quyen'] === 'hdv'){
-                $role = 'huong_dan_vien';
-            }
+        }
 
         // Tạo và trả về User object
         return new User([
