@@ -138,43 +138,6 @@ ob_start();
             </div>
 
             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="ngay_gio_xuat_phat" class="form-label">Giờ xuất phát</label>
-                    <input
-                        type="datetime-local"
-                        class="form-control"
-                        id="ngay_gio_xuat_phat"
-                        name="ngay_gio_xuat_phat"
-                        value="<?= htmlspecialchars($old['ngay_gio_xuat_phat'] ?? '') ?>"
-                    />
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="thoi_gian_ket_thuc" class="form-label">Thời gian kết thúc</label>
-                    <input
-                        type="datetime-local"
-                        class="form-control"
-                        id="thoi_gian_ket_thuc"
-                        name="thoi_gian_ket_thuc"
-                        value="<?= htmlspecialchars($old['thoi_gian_ket_thuc'] ?? '') ?>"
-                    />
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-12 mb-3">
-                    <label for="diem_tap_trung" class="form-label">Điểm tập trung</label>
-                    <input
-                        type="text"
-                        class="form-control"
-                        id="diem_tap_trung"
-                        name="diem_tap_trung"
-                        value="<?= htmlspecialchars($old['diem_tap_trung'] ?? '') ?>"
-                        placeholder="Nhập điểm tập trung (nếu có)"
-                    />
-                </div>
-            </div>
-
-            <div class="row">
                 <!-- Tên người đặt (ẩn, sẽ tự động lấy từ khách hàng đầu tiên) -->
                 <input type="hidden" id="ten_nguoi_dat" name="ten_nguoi_dat" value="<?= htmlspecialchars($old['ten_nguoi_dat'] ?? '') ?>">
 
@@ -360,9 +323,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const form = createKhachForm(khachIndex, data);
         khachContainer.appendChild(form);
         khachIndex++;
+        updateRemoveButtons();
     }
-    // Không dùng nút xóa/thêm, nhưng giữ hàm trống để tránh lỗi tham chiếu
-    function updateRemoveButtons() {}
     
     // Không cho phép xóa hoặc thêm khách hàng - chỉ có 1 người đại diện
     // Khởi tạo form khách hàng đầu tiên (người đại diện) nếu có dữ liệu cũ
@@ -372,8 +334,6 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         addKhachForm(); // Thêm form trống đầu tiên (người đại diện)
     }
-    // Đồng bộ tên người đặt ngay sau khi khởi tạo form đầu tiên
-    updateTenNguoiDat();
     
     // Tự động cập nhật tên người đặt từ khách hàng đầu tiên
     function updateTenNguoiDat() {

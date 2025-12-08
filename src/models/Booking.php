@@ -263,7 +263,7 @@ class Booking
             $pdo->beginTransaction();
 
             // Xóa dữ liệu liên quan trước (nếu có)
-            $tables = ['booking_nhat_ky_log', 'booking_dich_vu', 'booking_hdv', 'booking_khach', 'booking_hoa_don', 'booking_chi_tiet']; // Các bảng có thể liên quan
+            $tables = ['booking_nhat_ky_log', 'booking_dich_vu', 'booking_hdv', 'booking_hoa_don', 'booking_chi_tiet']; // Các bảng có thể liên quan
 
             foreach ($tables as $table) {
                 try {
@@ -274,6 +274,30 @@ class Booking
                     error_log("Warning: Could not delete from $table for booking $id: " . $e->getMessage());
                     // Tiếp tục xóa các bảng khác
                 }
+            }
+
+            // Xóa điểm danh khách dựa trên booking_khach
+            try {
+                $pdo->prepare("
+                    DELETE FROM diem_danh_khach
+                    WHERE booking_khach_id IN (SELECT id FROM booking_khach WHERE booking_id = ?)
+                ")->execute([$id]);
+            } catch (PDOException $e) {
+                error_log("Warning: Could not delete diem_danh_khach for booking $id: " . $e->getMessage());
+            }
+
+            // Xóa booking_khach
+            try {
+                $pdo->prepare("DELETE FROM booking_khach WHERE booking_id = ?")->execute([$id]);
+            } catch (PDOException $e) {
+                error_log("Warning: Could not delete booking_khach for booking $id: " . $e->getMessage());
+            }
+
+            // Xóa lich_khoi_hanh
+            try {
+                $pdo->prepare("DELETE FROM lich_khoi_hanh WHERE booking_id = ?")->execute([$id]);
+            } catch (PDOException $e) {
+                error_log("Warning: Could not delete lich_khoi_hanh for booking $id: " . $e->getMessage());
             }
 
             // Xóa booking chính
@@ -371,6 +395,14 @@ class Booking
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$this->id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function deleteDichVuByBooking($bookingId)
+    {
+        $pdo = getDB();
+        if (!$pdo) return false;
+        $stmt = $pdo->prepare("DELETE FROM booking_dich_vu WHERE booking_id = ?");
+        return $stmt->execute([$bookingId]);
     }
 
     // Thêm dịch vụ mới
@@ -727,10 +759,25 @@ class Booking
         return $stmt->fetchAll();
     }
 
+    public static function getLatestLichKhoiHanh($bookingId)
+    {
+        $pdo = getDB();
+        if (!$pdo) return null;
+        $stmt = $pdo->prepare("
+            SELECT id, booking_id, ngay_gio_xuat_phat, diem_tap_trung, thoi_gian_ket_thuc
+            FROM lich_khoi_hanh
+            WHERE booking_id = ?
+            ORDER BY id DESC
+            LIMIT 1
+        ");
+        $stmt->execute([$bookingId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
     /**
      * Thêm hoặc cập nhật lịch khởi hành cho booking.
      */
-    public static function upsertLichKhoiHanh($bookingId, $ngayGioXuatPhat = null, $diemTapTrung = null, $thoiGianKetThuc = null)
+    public static function upsertLichKhoiHanh($bookingId, $ngayGioXuatPhat = null, $diemTapTrung = null, $thoiGianKetThuc = null, $ghiChu = null)
     {
         $pdo = getDB();
         if (!$pdo) {
@@ -744,26 +791,28 @@ class Booking
         if ($row && !empty($row['id'])) {
             $stmt = $pdo->prepare("
                 UPDATE lich_khoi_hanh
-                SET ngay_gio_xuat_phat = ?, diem_tap_trung = ?, thoi_gian_ket_thuc = ?
+                SET ngay_gio_xuat_phat = ?, diem_tap_trung = ?, thoi_gian_ket_thuc = ?, ghi_chu = ?
                 WHERE id = ?
             ");
             return $stmt->execute([
                 $ngayGioXuatPhat ?: null,
                 $diemTapTrung ?: null,
                 $thoiGianKetThuc ?: null,
+                $ghiChu ?: null,
                 $row['id']
             ]);
         }
 
         $stmt = $pdo->prepare("
-            INSERT INTO lich_khoi_hanh (booking_id, ngay_gio_xuat_phat, diem_tap_trung, thoi_gian_ket_thuc)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO lich_khoi_hanh (booking_id, ngay_gio_xuat_phat, diem_tap_trung, thoi_gian_ket_thuc, ghi_chu)
+            VALUES (?, ?, ?, ?, ?)
         ");
         return $stmt->execute([
             $bookingId,
             $ngayGioXuatPhat ?: null,
             $diemTapTrung ?: null,
-            $thoiGianKetThuc ?: null
+            $thoiGianKetThuc ?: null,
+            $ghiChu ?: null
         ]);
     }
 }
