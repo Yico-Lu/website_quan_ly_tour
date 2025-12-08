@@ -109,7 +109,6 @@ ob_start();
                     <h5 class="card-title mb-0">Thông tin người đại diện</h5>
                 </div>
                 <div class="card-body">
-                    <input type="hidden" id="khach_data" data-old-khachs="<?= htmlspecialchars(json_encode($old['khach'] ?? []), ENT_QUOTES, 'UTF-8') ?>">
                     <div id="khach_container">
                         <!-- Chỉ có 1 khách hàng (người đại diện) -->
                     </div>
@@ -142,57 +141,7 @@ ob_start();
                 <!-- Tên người đặt (ẩn, sẽ tự động lấy từ khách hàng đầu tiên) -->
                 <input type="hidden" id="ten_nguoi_dat" name="ten_nguoi_dat" value="<?= htmlspecialchars($old['ten_nguoi_dat'] ?? '') ?>">
 
-                <div class="col-md-6 mb-3">
-                    <label for="ngay_gio_xuat_phat" class="form-label">Giờ xuất phát</label>
-                    <input
-                        type="datetime-local"
-                        class="form-control"
-                        id="ngay_gio_xuat_phat"
-                        name="ngay_gio_xuat_phat"
-                        value="<?= htmlspecialchars($old['ngay_gio_xuat_phat'] ?? '') ?>"
-                    />
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="thoi_gian_ket_thuc" class="form-label">Thời gian kết thúc</label>
-                    <input
-                        type="datetime-local"
-                        class="form-control"
-                        id="thoi_gian_ket_thuc"
-                        name="thoi_gian_ket_thuc"
-                        value="<?= htmlspecialchars($old['thoi_gian_ket_thuc'] ?? '') ?>"
-                    />
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-12 mb-3">
-                    <label for="diem_tap_trung" class="form-label">Điểm tập trung</label>
-                    <input
-                        type="text"
-                        class="form-control"
-                        id="diem_tap_trung"
-                        name="diem_tap_trung"
-                        value="<?= htmlspecialchars($old['diem_tap_trung'] ?? '') ?>"
-                        placeholder="Nhập điểm tập trung (nếu có)"
-                    />
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-12 mb-3">
-                    <label for="lich_ghi_chu" class="form-label">Ghi chú lịch khởi hành</label>
-                    <textarea
-                        class="form-control"
-                        id="lich_ghi_chu"
-                        name="lich_ghi_chu"
-                        rows="2"
-                        placeholder="Nhập ghi chú cho lịch khởi hành (nếu có)"
-                    ><?= htmlspecialchars($old['lich_ghi_chu'] ?? '') ?></textarea>
-                </div>
-            </div>
-
-            <!-- Số lượng -->
-            <div class="row">
+                <!-- Số lượng -->
                 <div class="col-md-6 mb-3">
                     <label for="so_luong" class="form-label">Số lượng <span class="text-danger">*</span></label>
                     <input
@@ -294,10 +243,11 @@ view('layouts.AdminLayout', [
     'pageTitle' => $pageTitle ?? 'Thêm Booking Mới',
     'content' => $content,
     'breadcrumb' => $breadcrumb ?? [],
-    'extraJs' => [
-        'js/auto-hide-alerts.js',
-        'js/booking-create.js'
-    ],
+    'extraJs' => ['js/auto-hide-alerts.js', 'js/booking-create.js'],
 ]);
 ?>
+<script>
+    // Truyền dữ liệu khách hàng cũ cho JS
+    window.OLD_KHACH_DATA = <?= json_encode($old['khach'] ?? []) ?>;
+</script>
 

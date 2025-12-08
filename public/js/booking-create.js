@@ -1,9 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Khởi tạo khách đại diện (nếu có form)
     const khachContainer = document.getElementById('khach_container');
-    const khachDataEl = document.getElementById('khach_data');
     let khachIndex = 0;
-    const oldKhachs = safeJson(khachDataEl?.dataset.oldKhachs) || [];
+    const oldKhachs = (typeof window.OLD_KHACH_DATA !== 'undefined' && Array.isArray(window.OLD_KHACH_DATA)) 
+        ? window.OLD_KHACH_DATA 
+        : [];
 
     const escapeHtml = (text = '') => {
         const div = document.createElement('div');
