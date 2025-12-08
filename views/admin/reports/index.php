@@ -120,6 +120,93 @@ ob_start();
     </div>
 </div>
 
+<!-- Recent Activities -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Hoạt động gần đây</h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Tour Phú Quốc 3 ngày 2 đêm</h6>
+                            <small>Hôm nay</small>
+                        </div>
+                        <p class="mb-1">Có 5 đơn đặt mới</p>
+                        <small class="text-muted">Doanh thu: 75.000.000 VND</small>
+                    </a>
+<a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Tour Sapa mùa hoa đào</h6>
+                            <small>Hôm qua</small>
+                        </div>
+                        <p class="mb-1">Có 3 đơn đặt mới</p>
+                        <small class="text-muted">Doanh thu: 45.000.000 VND</small>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Tour Đà Lạt city tour</h6>
+                            <small>3 ngày trước</small>
+                        </div>
+                        <p class="mb-1">Có 2 đơn đặt mới</p>
+                        <small class="text-muted">Doanh thu: 20.000.000 VND</small>
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="<?= BASE_URL ?>bookings" class="btn btn-sm btn-outline-primary">
+                    Xem tất cả <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Top Tour bán chạy</h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Tour Phú Quốc 3 ngày 2 đêm</h6>
+                                <small class="text-muted">45 đơn đặt</small>
+                            </div>
+                            <span class="badge bg-success">150.000.000 VND</span>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Tour Sapa mùa hoa đào</h6>
+                                <small class="text-muted">32 đơn đặt</small>
+                            </div>
+                            <span class="badge bg-success">96.000.000 VND</span>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Tour Đà Lạt city tour</h6>
+                                <small class="text-muted">28 đơn đặt</small>
+                            </div>
+<span class="badge bg-success">70.000.000 VND</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="<?= BASE_URL ?>tours" class="btn btn-sm btn-outline-primary">
+                    Xem tất cả tour <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php
 $content = ob_get_clean();
