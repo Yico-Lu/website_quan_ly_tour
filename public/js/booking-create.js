@@ -1,13 +1,18 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
     const khachContainer = document.getElementById('khach_container');
     const khachDataEl = document.getElementById('khach_data');
-
     if (!khachContainer || !khachDataEl) return;
 
+    const oldKhachs = safeJson(khachDataEl.dataset.oldKhachs) || [];
     let khachIndex = 0;
-    const oldKhachs = parseJsonSafe(khachDataEl.dataset.oldKhachs) || [];
 
-    function createKhachForm(index, data = {}) {
+    const escapeHtml = (text = '') => {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    };
+
+    const createKhachForm = (index, data = {}) => {
         const card = document.createElement('div');
         card.className = 'card mb-3 khach-card';
         card.innerHTML = `
@@ -19,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Họ tên <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="khach[${index}][ho_ten]"
-                               value="${escapeHtml(data.ho_ten || '')}" required>
+                               value="${escapeHtml(data.ho_ten)}" required>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Giới tính</label>
@@ -35,12 +40,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Năm sinh</label>
                         <input type="number" class="form-control" name="khach[${index}][nam_sinh]"
-                               value="${escapeHtml(data.nam_sinh || '')}" min="1900" max="2100">
+                               value="${escapeHtml(data.nam_sinh)}" min="1900" max="2100">
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Số giấy tờ</label>
                         <input type="text" class="form-control" name="khach[${index}][so_giay_to]"
-                               value="${escapeHtml(data.so_giay_to || '')}">
+                               value="${escapeHtml(data.so_giay_to)}">
                     </div>
                 </div>
                 <div class="row">
@@ -56,65 +61,47 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="mb-3">
                     <label class="form-label">Yêu cầu cá nhân</label>
                     <textarea class="form-control" name="khach[${index}][yeu_cau_ca_nhan]" rows="2"
-                              placeholder="Nhập yêu cầu cá nhân (nếu có)">${escapeHtml(data.yeu_cau_ca_nhan || '')}</textarea>
+                              placeholder="Nhập yêu cầu cá nhân (nếu có)">${escapeHtml(data.yeu_cau_ca_nhan)}</textarea>
                 </div>
             </div>
         `;
         return card;
-    }
+    };
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    function parseJsonSafe(value) {
-        try {
-            return value ? JSON.parse(value) : null;
-        } catch (e) {
-            console.error('Parse JSON error:', e);
-            return null;
-        }
-    }
-
-    function addKhachForm(data = {}) {
-        const form = createKhachForm(khachIndex, data);
-        khachContainer.appendChild(form);
+    const addKhachForm = (data = {}) => {
+        khachContainer.appendChild(createKhachForm(khachIndex, data));
         khachIndex++;
-    }
+    };
 
-    if (oldKhachs.length > 0) {
-        addKhachForm(oldKhachs[0]);
-    } else {
-        addKhachForm();
-    }
+    addKhachForm(oldKhachs[0] || {});
 
-    function updateTenNguoiDat() {
-        const firstKhachCard = khachContainer.querySelector('.khach-card');
-        if (firstKhachCard) {
-            const firstHoTenInput = firstKhachCard.querySelector('input[name*="[ho_ten]"]');
-            const tenNguoiDatInput = document.getElementById('ten_nguoi_dat');
-            if (firstHoTenInput && tenNguoiDatInput) {
-                tenNguoiDatInput.value = firstHoTenInput.value;
-            }
+    const updateTenNguoiDat = () => {
+        const first = khachContainer.querySelector('.khach-card');
+        if (!first) return;
+        const hoTenInput = first.querySelector('input[name*="[ho_ten]"]');
+        const tenNguoiDatInput = document.getElementById('ten_nguoi_dat');
+        if (hoTenInput && tenNguoiDatInput) {
+            tenNguoiDatInput.value = hoTenInput.value;
         }
-    }
+    };
 
     khachContainer.addEventListener('input', (e) => {
-        if (e.target.name && e.target.name.includes('[ho_ten]')) {
-            const firstKhachCard = khachContainer.querySelector('.khach-card');
-            if (firstKhachCard && e.target.closest('.khach-card') === firstKhachCard) {
-                updateTenNguoiDat();
-            }
+        if (e.target.name && e.target.name.includes('[ho_ten]') && e.target.closest('.khach-card')) {
+            updateTenNguoiDat();
         }
     });
 
     const bookingForm = document.querySelector('form[action*="bookings"]');
     if (bookingForm) {
-        bookingForm.addEventListener('submit', function () {
-            updateTenNguoiDat();
-        });
+        bookingForm.addEventListener('submit', updateTenNguoiDat);
     }
 });
+
+function safeJson(value) {
+    try {
+        return value ? JSON.parse(value) : null;
+    } catch {
+        return null;
+    }
+}
 
