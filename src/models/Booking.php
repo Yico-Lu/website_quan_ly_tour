@@ -25,6 +25,7 @@ class Booking
     public $ngay_gio_xuat_phat;
     public $diem_tap_trung;
     public $thoi_gian_ket_thuc;
+    public $lich_ghi_chu;
     public $gia_tour;
 
     // Constructor để khởi tạo thực thể Booking
@@ -55,6 +56,7 @@ class Booking
             $this->ngay_gio_xuat_phat = $data['ngay_gio_xuat_phat'] ?? null;
             $this->diem_tap_trung = $data['diem_tap_trung'] ?? null;
             $this->thoi_gian_ket_thuc = $data['thoi_gian_ket_thuc'] ?? null;
+            $this->lich_ghi_chu = $data['lich_ghi_chu'] ?? null;
             $this->gia_tour = $data['gia_tour'] ?? null;
         }
     }
@@ -764,7 +766,7 @@ class Booking
         $pdo = getDB();
         if (!$pdo) return null;
         $stmt = $pdo->prepare("
-            SELECT id, booking_id, ngay_gio_xuat_phat, diem_tap_trung, thoi_gian_ket_thuc
+            SELECT id, booking_id, ngay_gio_xuat_phat, diem_tap_trung, thoi_gian_ket_thuc, ghi_chu AS lich_ghi_chu
             FROM lich_khoi_hanh
             WHERE booking_id = ?
             ORDER BY id DESC

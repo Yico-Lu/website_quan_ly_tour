@@ -237,6 +237,7 @@ class BookingController
             $booking->ngay_gio_xuat_phat = $latestLkh['ngay_gio_xuat_phat'];
             $booking->diem_tap_trung = $latestLkh['diem_tap_trung'];
             $booking->thoi_gian_ket_thuc = $latestLkh['thoi_gian_ket_thuc'];
+            $booking->lich_ghi_chu = $latestLkh['lich_ghi_chu'] ?? null;
         }
 
         $lists = $this->getFormLists();
@@ -304,6 +305,7 @@ class BookingController
             $booking->ngay_gio_xuat_phat = $latestLkh['ngay_gio_xuat_phat'];
             $booking->diem_tap_trung = $latestLkh['diem_tap_trung'];
             $booking->thoi_gian_ket_thuc = $latestLkh['thoi_gian_ket_thuc'];
+            $booking->lich_ghi_chu = $latestLkh['lich_ghi_chu'] ?? null;
         }
 
         $hdvs = $booking->getHdvs();
@@ -361,6 +363,10 @@ class BookingController
         // Lấy dữ liệu từ form
         $tai_khoan_id = null; // Không cần khách hàng từ database
         $data = $this->getBookingDataFromRequest();
+        // Nếu tên người đặt trống, lấy từ khách đại diện đầu tiên
+        if (empty($data['ten_nguoi_dat']) && isset($_POST['khach'][0]['ho_ten'])) {
+            $data['ten_nguoi_dat'] = trim($_POST['khach'][0]['ho_ten']);
+        }
 
         // Kiểm tra dữ liệu
         $errors = $this->validateBookingData($data);
@@ -512,6 +518,9 @@ class BookingController
 
         $data = $this->getBookingDataFromRequest();
         $data['tai_khoan_id'] = null;
+        if (empty($data['ten_nguoi_dat']) && isset($_POST['khach'][0]['ho_ten'])) {
+            $data['ten_nguoi_dat'] = trim($_POST['khach'][0]['ho_ten']);
+        }
         $errors = $this->validateBookingData($data);
         if (!empty($errors)) {
             $this->renderEditWithErrors($id, $errors, $_POST);

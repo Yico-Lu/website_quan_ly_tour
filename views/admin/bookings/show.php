@@ -125,6 +125,17 @@ ob_start();
                     </div>
                 </div>
 
+                <?php if (!empty($booking->lich_ghi_chu)): ?>
+                <div class="row mb-3">
+                    <div class="col-sm-3">
+                        <strong>Ghi chú lịch khởi hành:</strong>
+                    </div>
+                    <div class="col-sm-9">
+                        <div class="bg-light p-2 rounded"><?= nl2br(htmlspecialchars($booking->lich_ghi_chu)) ?></div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <!-- HDV phụ trách -->
                 <div class="row mb-3">
                     <div class="col-sm-3">

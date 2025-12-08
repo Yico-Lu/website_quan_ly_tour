@@ -201,6 +201,19 @@ ob_start();
             </div>
 
             <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label for="lich_ghi_chu" class="form-label">Ghi chú lịch khởi hành</label>
+                    <textarea
+                        class="form-control"
+                        id="lich_ghi_chu"
+                        name="lich_ghi_chu"
+                        rows="2"
+                        placeholder="Nhập ghi chú cho lịch khởi hành (nếu có)"
+                    ><?= htmlspecialchars($old['lich_ghi_chu'] ?? ($booking->lich_ghi_chu ?? '')) ?></textarea>
+                </div>
+            </div>
+
+            <div class="row">
                 <!-- Loại khách -->
                 <div class="col-md-6 mb-3">
                     <label for="loai_khach" class="form-label">Loại khách <span class="text-danger">*</span></label>
