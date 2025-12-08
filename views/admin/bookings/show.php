@@ -212,58 +212,6 @@ ob_start();
                     </div>
                 </div>
 
-                <!-- Điểm danh khách -->
-                <div class="row mb-3">
-                    <div class="col-sm-3">
-                        <strong>Điểm danh khách:</strong>
-                    </div>
-                    <div class="col-sm-9">
-                        <?php if (!empty($diemDanh)): ?>
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-sm mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Booking Khách ID</th>
-                                            <th>Trạng thái</th>
-                                            <th>Ghi chú</th>
-                                            <th>Ngày giờ</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($diemDanh as $row): ?>
-                                            <tr>
-                                                <td><?= htmlspecialchars($row['booking_khach_id']) ?></td>
-                                                <td>
-                                                    <?php
-                                                    $status = $row['trang_thai'] ?? '';
-                                                    $statusName = [
-                                                        'da_den' => 'Đã đến',
-                                                        'vang' => 'Vắng mặt',
-                                                        'vang_mat' => 'Vắng mặt',
-                                                        'tre' => 'Trễ'
-                                                    ][$status] ?? 'Chưa điểm danh';
-                                                    $badge = match ($status) {
-                                                        'da_den' => 'badge bg-success',
-                                                        'vang', 'vang_mat' => 'badge bg-danger',
-                                                        'tre' => 'badge bg-warning text-dark',
-                                                        default => 'badge bg-secondary'
-                                                    };
-                                                    ?>
-                                                    <span class="<?= $badge ?>"><?= $statusName ?></span>
-                                                </td>
-                                                <td><?= !empty($row['ghi_chu']) ? htmlspecialchars($row['ghi_chu']) : '<span class="text-muted">-</span>' ?></td>
-                                                <td><?= !empty($row['ngay_gio']) ? date('d/m/Y H:i', strtotime($row['ngay_gio'])) : '<span class="text-muted">-</span>' ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php else: ?>
-                            <span class="text-muted">Chưa có dữ liệu điểm danh</span>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
                 <div class="row mb-3">
                     <div class="col-sm-3">
                         <strong>Thời gian tour:</strong>
@@ -272,6 +220,7 @@ ob_start();
                         <?= $booking->thoi_gian_tour ? date('d/m/Y H:i', strtotime($booking->thoi_gian_tour)) : 'Chưa xác định' ?>
                     </div>
                 </div>
+
 
                 <div class="row mb-3">
                     <div class="col-sm-3">
@@ -342,6 +291,81 @@ ob_start();
                         <i class="bi bi-calendar-check"></i>
                         <?= date('d/m/Y H:i', strtotime($booking->ngay_cap_nhat)) ?>
                     </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dịch vụ booking -->
+        <div class="card mb-3" id="dich-vu-booking">
+            <div class="card-header">
+                <button class="btn btn-link text-decoration-none p-0 d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#dichVuCollapse" aria-expanded="false" aria-controls="dichVuCollapse">
+                    <h5 class="card-title mb-0">Dịch vụ booking</h5>
+                    <i class="bi bi-chevron-down ms-2"></i>
+                </button>
+            </div>
+            <div id="dichVuCollapse" class="collapse">
+                <div class="card-body">
+                    <div class="d-flex justify-content-end mb-3 gap-2">
+                        <button class="btn btn-sm btn-outline-primary" type="button" id="btnDichVuAdd" onclick="toggleDichVuForm(true)">
+                            <i class="bi bi-plus"></i> Thêm dịch vụ
+                        </button>
+                        <button class="btn btn-sm btn-secondary d-none" type="button" id="btnDichVuCancel" onclick="toggleDichVuForm(false)">
+                            Hủy
+                        </button>
+                    </div>
+
+                    <form id="dichVuForm" class="d-none mb-3" method="POST" action="<?= BASE_URL ?>bookings/update-dich-vu">
+                        <input type="hidden" name="booking_id" value="<?= $booking->id ?>">
+                        <input type="hidden" name="dich_vu_id" id="dich_vu_id" value="">
+                        <div class="mb-3">
+                            <label class="form-label">Tên dịch vụ <span class="text-danger">*</span></label>
+                            <input type="text" name="ten_dich_vu" id="ten_dich_vu" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Chi tiết</label>
+                            <textarea name="chi_tiet" id="chi_tiet" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-secondary" onclick="toggleDichVuForm(false)">Hủy</button>
+                            <button type="submit" class="btn btn-primary">Lưu</button>
+                        </div>
+                    </form>
+
+                    <?php if (!empty($dichVus)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tên dịch vụ</th>
+                                        <th>Chi tiết</th>
+                                        <th>Ngày tạo</th>
+                                        <th style="width: 90px;">Sửa</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($dichVus as $dv): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($dv['ten_dich_vu'] ?? '') ?></td>
+                                            <td><?= !empty($dv['chi_tiet']) ? nl2br(htmlspecialchars($dv['chi_tiet'])) : '<span class="text-muted">-</span>' ?></td>
+                                            <td><?= !empty($dv['ngay_tao']) ? date('d/m/Y H:i', strtotime($dv['ngay_tao'])) : '<span class="text-muted">-</span>' ?></td>
+                                            <td class="text-center">
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-secondary"
+                                                        data-id="<?= htmlspecialchars($dv['id'] ?? '') ?>"
+                                                        data-ten="<?= htmlspecialchars($dv['ten_dich_vu'] ?? '', ENT_QUOTES) ?>"
+                                                        data-chitiet="<?= htmlspecialchars($dv['chi_tiet'] ?? '', ENT_QUOTES) ?>"
+                                                        onclick="onEditDichVu(this)">
+                                                    Sửa
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <span class="text-muted">Chưa có dịch vụ</span>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -487,6 +511,7 @@ ob_start();
                                     <th>Năm sinh</th>
                                     <th>Số giấy tờ</th>
                                     <th>Yêu cầu cá nhân</th>
+                                    <th class="text-center">Điểm danh</th>
                                 </tr>
                             </thead>
                             <tbody id="khachListTableBody">
@@ -498,84 +523,17 @@ ob_start();
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="saveAttendance(<?= $booking->id ?>)">
+                    <i class="bi bi-save"></i> Lưu
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-function toggleLkhEdit(isEdit) {
-    const view = document.getElementById('lkhView');
-    const form = document.getElementById('lkhForm');
-    const btnEdit = document.getElementById('btnLkhEdit');
-    const btnCancel = document.getElementById('btnLkhCancel');
-    if (isEdit) {
-        view.classList.add('d-none');
-        form.classList.remove('d-none');
-        btnEdit.classList.add('d-none');
-        btnCancel.classList.remove('d-none');
-    } else {
-        view.classList.remove('d-none');
-        form.classList.add('d-none');
-        btnEdit.classList.remove('d-none');
-        btnCancel.classList.add('d-none');
-    }
-}
-
-function loadKhachList(bookingId) {
-    const errorEl = document.getElementById('khachListError');
-    const contentEl = document.getElementById('khachListContent');
-    const tableBody = document.getElementById('khachListTableBody');
-    
-    // Reset UI
-    errorEl.classList.add('d-none');
-    tableBody.innerHTML = '';
-    
-    // Gọi API
-    fetch('<?= BASE_URL ?>bookings/view-khach-list/' + bookingId)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                errorEl.textContent = data.error;
-                errorEl.classList.remove('d-none');
-                contentEl.style.display = 'none';
-                return;
-            }
-            
-            if (data.success && data.data && data.data.length > 0) {
-                // Render table
-                data.data.forEach(item => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${item.stt}</td>
-                        <td><strong>${escapeHtml(item.ho_ten)}</strong></td>
-                        <td>${escapeHtml(item.gioi_tinh || '-')}</td>
-                        <td>${escapeHtml(item.nam_sinh || '-')}</td>
-                        <td>${escapeHtml(item.so_giay_to || '-')}</td>
-                        <td>${escapeHtml(item.yeu_cau_ca_nhan || '-')}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-                
-                contentEl.style.display = 'block';
-            } else {
-                errorEl.textContent = 'Không có dữ liệu khách hàng';
-                errorEl.classList.remove('d-none');
-                contentEl.style.display = 'none';
-            }
-        })
-        .catch(error => {
-            errorEl.textContent = 'Lỗi khi tải dữ liệu: ' + error.message;
-            errorEl.classList.remove('d-none');
-            contentEl.style.display = 'none';
-        });
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+// Set BASE_URL for booking-show.js
+window.BASE_URL = '<?= BASE_URL ?>';
 </script>
 
 <?php
@@ -587,6 +545,6 @@ view('layouts.AdminLayout', [
     'pageTitle' => $pageTitle ?? 'Chi tiết Booking',
     'content' => $content,
     'breadcrumb' => $breadcrumb ?? [],
-    'extraJs' => ['js/auto-hide-alerts.js'],
+    'extraJs' => ['js/auto-hide-alerts.js', 'js/booking-show.js'],
 ]);
 ?>

@@ -105,16 +105,15 @@
     'pageTitle' => $pageTitle ?? 'Danh sách Tour',
     'content' => $content,
     'breadcrumb' => $breadcrumb ?? [],
+    'extraJs' => ['js/flash-messages.js'],
   ]);
 ?>
 
 <!-- Hiển thị thông báo -->
 <?php
 $flashMessages = getFlashMessages();
-foreach ($flashMessages as $message):
+if (!empty($flashMessages)):
 ?>
-<script>
-    alert('<?= addslashes($message['message']) ?>');
-</script>
-<?php endforeach; ?>
+<script id="flash-messages-data" type="application/json"><?= json_encode($flashMessages, JSON_UNESCAPED_UNICODE | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
+<?php endif; ?>
 

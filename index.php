@@ -89,6 +89,16 @@ if (strpos($act, 'bookings/view-khach-list/') === 0) {
     exit;
 }
 
+if ($act === 'bookings/save-attendance-excel') {
+    $bookingController->saveAttendanceExcel();
+    exit;
+}
+
+if (strpos($act, 'bookings/update-dich-vu') === 0) {
+    $bookingController->updateDichVu();
+    exit;
+}
+
 if (strpos($act, 'tours/show/') === 0) {
     $id = str_replace('tours/show/', '', $act);
     $tourController->show($id);

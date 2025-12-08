@@ -15,9 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = document.createElement('div');
         card.className = 'card mb-3 khach-card';
         card.innerHTML = `
-            <div class="card-header bg-light">
-                <strong><span class="badge bg-primary me-2">Người đại diện</span>Thông tin người đại diện</strong>
-            </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6 mb-3">

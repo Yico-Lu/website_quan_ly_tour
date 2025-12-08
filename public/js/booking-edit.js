@@ -160,44 +160,18 @@ function safeJson(value) {
 
 function initTourInfo() {
     const tourSelect = document.getElementById('tour_id');
-    const startInput = document.getElementById('ngay_gio_xuat_phat');
-    const endInput = document.getElementById('thoi_gian_ket_thuc');
     if (!tourSelect) return;
 
     const formatPrice = (p) => p ? Number(p).toLocaleString('vi-VN') + ' VND' : '-';
-    const parseDaysFromTour = () => {
-        const opt = tourSelect.options[tourSelect.selectedIndex];
-        const txt = opt ? opt.textContent : '';
-        const match = txt && txt.match(/(\d+)\s*ngày/i);
-        return match ? parseInt(match[1], 10) : null;
-    };
-
-    const updateEndTimeFromStart = () => {
-        if (!startInput || !endInput) return;
-        const startVal = startInput.value;
-        if (!startVal) return;
-        const days = parseDaysFromTour();
-        if (!days || Number.isNaN(days)) return;
-        const startDate = new Date(startVal);
-        if (Number.isNaN(startDate.getTime())) return;
-        const endDate = new Date(startDate.getTime());
-        endDate.setDate(endDate.getDate() + days);
-        endInput.value = endDate.toISOString().slice(0, 16);
-    };
 
     const updateTourInfo = () => {
         const opt = tourSelect.options[tourSelect.selectedIndex];
         const gia = opt?.dataset.gia || '';
         const priceEl = document.getElementById('tour_price_edit');
         if (priceEl) priceEl.textContent = formatPrice(gia);
-        updateEndTimeFromStart();
     };
 
     tourSelect.addEventListener('change', updateTourInfo);
     updateTourInfo();
-
-    if (startInput) {
-        startInput.addEventListener('change', updateEndTimeFromStart);
-    }
 }
 

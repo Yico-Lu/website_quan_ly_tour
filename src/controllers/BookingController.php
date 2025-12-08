@@ -312,6 +312,7 @@ class BookingController
         $khachs = $booking->getKhachs();
         $lichKhoiHanhId = $booking->lich_khoi_hanh_id ?: Booking::getLichKhoiHanhIdByBookingId($id);
         $diemDanh = Booking::getDiemDanhByBooking($id, $lichKhoiHanhId);
+        $dichVus = $booking->getDichVus();
 
         view('admin.bookings.show', [
             'title' => 'Chi tiết Booking - ' . $booking->ten_nguoi_dat,
@@ -320,6 +321,7 @@ class BookingController
             'hdvs' => $hdvs,
             'khachs' => $khachs,
             'diemDanh' => $diemDanh,
+            'dichVus' => $dichVus,
             'breadcrumb' => [
                 ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
                 ['label' => 'Danh sách booking', 'url' => BASE_URL . 'bookings'],
@@ -352,34 +354,24 @@ class BookingController
     // Lưu booking mới
     public function store(): void
     {
-        // Chỉ admin mới được tạo booking
         requireAdmin();
-
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . 'bookings/create');
             exit;
         }
 
-        // Lấy dữ liệu từ form
-        $tai_khoan_id = null; // Không cần khách hàng từ database
         $data = $this->getBookingDataFromRequest();
-        // Nếu tên người đặt trống, lấy từ khách đại diện đầu tiên
-        if (empty($data['ten_nguoi_dat']) && isset($_POST['khach'][0]['ho_ten'])) {
-            $data['ten_nguoi_dat'] = trim($_POST['khach'][0]['ho_ten']);
-        }
+        empty($data['ten_nguoi_dat']) && isset($_POST['khach'][0]['ho_ten']) && ($data['ten_nguoi_dat'] = trim($_POST['khach'][0]['ho_ten']));
 
-        // Kiểm tra dữ liệu
         $errors = $this->validateBookingData($data);
-
         if (!empty($errors)) {
             $this->renderCreateWithErrors($errors, $_POST);
             return;
         }
 
-        // Tạo booking mới
         $booking = new Booking([
-            'tai_khoan_id' => $tai_khoan_id,
-            'assigned_hdv_id' => !empty($data['assigned_hdv_id']) ? $data['assigned_hdv_id'] : null,
+            'tai_khoan_id' => null,
+            'assigned_hdv_id' => $data['assigned_hdv_id'] ?: null,
             'tour_id' => $data['tour_id'],
             'loai_khach' => $data['loai_khach'],
             'ten_nguoi_dat' => $data['ten_nguoi_dat'],
@@ -392,57 +384,22 @@ class BookingController
         ]);
 
         $bookingId = Booking::create($booking);
-        if ($bookingId) {
-            $booking->id = $bookingId;
-            $this->syncHDV($booking, $_POST);
-            $this->syncKhach($booking, $_POST);
-            Booking::upsertLichKhoiHanh(
-                $bookingId,
-                $data['ngay_gio_xuat_phat'] ?: null,
-                $data['diem_tap_trung'] ?: null,
-                $data['thoi_gian_ket_thuc'] ?: null,
-                $data['lich_ghi_chu'] ?: null
-            );
-            $this->syncDichVuFromNotes($booking, $bookingId, $data, false);
-            
-            // Xử lý upload file danh sách khách hàng
-            if (isset($_FILES['guest_list_file']) && $_FILES['guest_list_file']['error'] === UPLOAD_ERR_OK) {
-                $file = $_FILES['guest_list_file'];
-                $allowedExtensions = ['xlsx', 'xls', 'csv'];
-                $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-                
-                if (in_array($extension, $allowedExtensions)) {
-                    $uploadDir = BASE_PATH . '/public/uploads/guest_lists/';
-                    if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0755, true);
-                    }
-                    
-                    // Xóa file cũ nếu có (booking_{id}.*)
-                    $oldFiles = glob($uploadDir . 'booking_' . $bookingId . '.*');
-                    foreach ($oldFiles as $oldFile) {
-                        if (is_file($oldFile)) {
-                            unlink($oldFile);
-                        }
-                    }
-                    
-                    // Đổi tên file thành booking_{id}.extension
-                    $newFileName = 'booking_' . $bookingId . '.' . $extension;
-                    $filePath = $uploadDir . $newFileName;
-                    
-                    if (move_uploaded_file($file['tmp_name'], $filePath)) {
-                        // File uploaded successfully
-                    }
-                }
-            }
-            
-            $_SESSION['success'] = 'Thêm booking mới thành công';
-            header('Location: ' . BASE_URL . 'bookings');
-            exit;
-        } else {
+        if (!$bookingId) {
             $_SESSION['error'] = 'Thêm booking mới thất bại';
             header('Location: ' . BASE_URL . 'bookings/create');
             exit;
         }
+
+        $booking->id = $bookingId;
+        $this->syncHDV($booking, $_POST);
+        $this->syncKhach($booking, $_POST);
+        Booking::upsertLichKhoiHanh($bookingId, $data['ngay_gio_xuat_phat'] ?: null, $data['diem_tap_trung'] ?: null, $data['thoi_gian_ket_thuc'] ?: null, $data['lich_ghi_chu'] ?: null);
+        $this->syncDichVuFromNotes($booking, $bookingId, $data, false);
+        $this->handleFileUpload($bookingId);
+
+        $_SESSION['success'] = 'Thêm booking mới thành công';
+        header('Location: ' . BASE_URL . 'bookings');
+        exit;
     }
 
     // Hiển thị form sửa booking
@@ -495,7 +452,6 @@ class BookingController
     public function update(): void
     {
         requireAdmin();
-
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . 'bookings');
             exit;
@@ -508,7 +464,6 @@ class BookingController
             exit;
         }
 
-        // Lấy dữ liệu cũ trước khi update (để so sánh và ghi log)
         $oldBooking = Booking::find($id);
         if (!$oldBooking) {
             $_SESSION['error'] = 'Booking không tồn tại';
@@ -518,21 +473,19 @@ class BookingController
 
         $data = $this->getBookingDataFromRequest();
         $data['tai_khoan_id'] = null;
-        if (empty($data['ten_nguoi_dat']) && isset($_POST['khach'][0]['ho_ten'])) {
-            $data['ten_nguoi_dat'] = trim($_POST['khach'][0]['ho_ten']);
-        }
+        empty($data['ten_nguoi_dat']) && isset($_POST['khach'][0]['ho_ten']) && ($data['ten_nguoi_dat'] = trim($_POST['khach'][0]['ho_ten']));
+
         $errors = $this->validateBookingData($data);
         if (!empty($errors)) {
             $this->renderEditWithErrors($id, $errors, $_POST);
             return;
         }
 
-        // Tạo booking để cập nhật
         $booking = new Booking([
             'id' => $id,
             'tai_khoan_id' => $data['tai_khoan_id'],
-            'assigned_hdv_id' => !empty($data['assigned_hdv_id']) ? (int)$data['assigned_hdv_id'] : null,
-            'tour_id' => !empty($data['tour_id']) ? (int)$data['tour_id'] : null,
+            'assigned_hdv_id' => $data['assigned_hdv_id'] ? (int)$data['assigned_hdv_id'] : null,
+            'tour_id' => $data['tour_id'] ? (int)$data['tour_id'] : null,
             'loai_khach' => $data['loai_khach'],
             'ten_nguoi_dat' => $data['ten_nguoi_dat'],
             'so_luong' => $data['so_luong'],
@@ -543,151 +496,24 @@ class BookingController
             'ghi_chu' => $data['ghi_chu']
         ]);
 
-        $result = Booking::update($booking);
-        if ($result) {
-            // Xử lý cập nhật HDV trong booking_hdv
-            $hdv_id = trim($_POST['hdv_id'] ?? '');
-            $vai_tro = trim($_POST['vai_tro'] ?? 'hdv');
-            $chi_tiet = trim($_POST['chi_tiet'] ?? '');
-            
-            // Lấy danh sách HDV hiện tại
-            $existingHdvs = $booking->getHdvs();
-            
-            if (!empty($hdv_id)) {
-                // Nếu có HDV mới được chọn
-                if (!empty($existingHdvs) && isset($existingHdvs[0]['hdv_id']) && $existingHdvs[0]['hdv_id'] == $hdv_id) {
-                    // Cùng HDV, chỉ cập nhật vai_tro và chi_tiet
-                    if (!empty($existingHdvs[0]['id'])) {
-                        Booking::updateHdv($existingHdvs[0]['id'], $hdv_id, $vai_tro, $chi_tiet);
-                    }
-                } else {
-                    // HDV khác hoặc chưa có, xóa cũ và thêm mới
-                    foreach ($existingHdvs as $existingHdv) {
-                        if (!empty($existingHdv['id'])) {
-                            Booking::deleteHdv($existingHdv['id']);
-                        }
-                    }
-                    $booking->addHdv($hdv_id, $vai_tro, $chi_tiet);
-                }
-            } else {
-                // Không chọn HDV, xóa tất cả
-                foreach ($existingHdvs as $existingHdv) {
-                    if (!empty($existingHdv['id'])) {
-                        Booking::deleteHdv($existingHdv['id']);
-                    }
-                }
-            }
-            
-            // Xử lý cập nhật thông tin khách hàng (người đại diện)
-            if (isset($_POST['khach']) && is_array($_POST['khach'])) {
-                $khachs = $_POST['khach'];
-                $existingKhachs = $booking->getKhachs();
-                
-                // Lấy khách hàng đầu tiên (người đại diện)
-                if (!empty($khachs)) {
-                    $khachData = $khachs[0];
-                    $khach_id = $khachData['id'] ?? null;
-                    $ho_ten = trim($khachData['ho_ten'] ?? '');
-                    $gioi_tinh = trim($khachData['gioi_tinh'] ?? '');
-                    $nam_sinh = !empty($khachData['nam_sinh']) ? (int)$khachData['nam_sinh'] : null;
-                    $so_giay_to = trim($khachData['so_giay_to'] ?? '');
-                    $tinh_trang_thanh_toan = trim($khachData['tinh_trang_thanh_toan'] ?? 'chua_thanh_toan');
-                    $yeu_cau_ca_nhan = trim($khachData['yeu_cau_ca_nhan'] ?? '');
-                    
-                    if (!empty($ho_ten)) {
-                        if ($khach_id && !empty($existingKhachs)) {
-                            // Cập nhật khách hàng hiện có
-                            Booking::updateKhach(
-                                $khach_id,
-                                $ho_ten,
-                                $gioi_tinh ?: null,
-                                $nam_sinh,
-                                $so_giay_to ?: null,
-                                $tinh_trang_thanh_toan,
-                                $yeu_cau_ca_nhan ?: null
-                            );
-                        } else {
-                            // Thêm mới nếu chưa có
-                            $booking->addKhach(
-                                $ho_ten,
-                                $gioi_tinh ?: null,
-                                $nam_sinh,
-                                $so_giay_to ?: null,
-                                $tinh_trang_thanh_toan,
-                                $yeu_cau_ca_nhan ?: null
-                            );
-                        }
-                    }
-                }
-            }
-
-            // Xử lý điểm danh khách (nếu có gửi lên)
-            $this->syncAttendance($id, $oldBooking, $_POST);
-
-            // Lưu/ cập nhật lịch khởi hành (giữ giá trị cũ nếu form bỏ trống)
-            Booking::upsertLichKhoiHanh(
-                $id,
-                $data['ngay_gio_xuat_phat'] !== '' ? $data['ngay_gio_xuat_phat'] : ($oldBooking->ngay_gio_xuat_phat ?? null),
-                $data['diem_tap_trung'] !== '' ? $data['diem_tap_trung'] : ($oldBooking->diem_tap_trung ?? null),
-                $data['thoi_gian_ket_thuc'] !== '' ? $data['thoi_gian_ket_thuc'] : ($oldBooking->thoi_gian_ket_thuc ?? null),
-                $data['lich_ghi_chu'] !== '' ? $data['lich_ghi_chu'] : ($oldBooking->lich_ghi_chu ?? null)
-            );
-
-            // Cập nhật booking_dich_vu từ yêu cầu đặc biệt / ghi chú
-            Booking::deleteDichVuByBooking($id);
-            if (!empty($yeu_cau_dac_biet) || !empty($ghi_chu)) {
-                $booking->id = $id;
-                $tenDichVu = !empty($yeu_cau_dac_biet) ? $yeu_cau_dac_biet : 'Ghi chú';
-                $chiTiet = !empty($ghi_chu) ? $ghi_chu : null;
-                $booking->addDichVu($tenDichVu, $chiTiet);
-            }
-            
-            // Xử lý upload file danh sách khách hàng
-            if (isset($_FILES['guest_list_file']) && $_FILES['guest_list_file']['error'] === UPLOAD_ERR_OK) {
-                $file = $_FILES['guest_list_file'];
-                $allowedExtensions = ['xlsx', 'xls', 'csv'];
-                $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-                
-                if (in_array($extension, $allowedExtensions)) {
-                    $uploadDir = BASE_PATH . '/public/uploads/guest_lists/';
-                    if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0755, true);
-                    }
-                    
-                    // Xóa file cũ nếu có (booking_{id}.*)
-                    $oldFiles = glob($uploadDir . 'booking_' . $id . '.*');
-                    foreach ($oldFiles as $oldFile) {
-                        if (is_file($oldFile)) {
-                            unlink($oldFile);
-                        }
-                    }
-                    
-                    // Đổi tên file thành booking_{id}.extension
-                    $newFileName = 'booking_' . $id . '.' . $extension;
-                    $filePath = $uploadDir . $newFileName;
-                    
-                    if (move_uploaded_file($file['tmp_name'], $filePath)) {
-                        // File uploaded successfully
-                    }
-                }
-            }
-            
-            $_SESSION['success'] = 'Cập nhật booking thành công';
-            // Đảm bảo không có output trước header
-            if (ob_get_level()) {
-                ob_end_clean();
-            }
-            header('Location: ' . BASE_URL . 'bookings');
-            exit();
-        } else {
+        if (!Booking::update($booking)) {
             $_SESSION['error'] = 'Cập nhật booking thất bại. Vui lòng kiểm tra lại dữ liệu.';
-            // Đảm bảo không có output trước header
-            if (ob_get_level()) {
-                ob_end_clean();
-            }
+            if (ob_get_level()) ob_end_clean();
             header('Location: ' . BASE_URL . 'bookings/edit/' . $id);
-            exit();
+            exit;
         }
+
+        $this->syncHDV($booking, $_POST);
+        $this->syncKhach($booking, $_POST);
+        $this->syncAttendance($id, $oldBooking, $_POST);
+        Booking::upsertLichKhoiHanh($id, $data['ngay_gio_xuat_phat'] !== '' ? $data['ngay_gio_xuat_phat'] : ($oldBooking->ngay_gio_xuat_phat ?? null), $data['diem_tap_trung'] !== '' ? $data['diem_tap_trung'] : ($oldBooking->diem_tap_trung ?? null), $data['thoi_gian_ket_thuc'] !== '' ? $data['thoi_gian_ket_thuc'] : ($oldBooking->thoi_gian_ket_thuc ?? null), $data['lich_ghi_chu'] !== '' ? $data['lich_ghi_chu'] : ($oldBooking->lich_ghi_chu ?? null));
+        $this->syncDichVuFromNotes($booking, $id, $data, true);
+        $this->handleFileUpload($id);
+
+        $_SESSION['success'] = 'Cập nhật booking thành công';
+        if (ob_get_level()) ob_end_clean();
+        header('Location: ' . BASE_URL . 'bookings');
+        exit;
     }
 
     // Xóa booking
@@ -875,21 +701,43 @@ class BookingController
                 exit;
             }
 
+            // Lấy lich_khoi_hanh_id
+            $lichKhoiHanhId = Booking::getLichKhoiHanhIdByBookingId($id);
+            
+            // Lấy danh sách điểm danh hiện có (nếu có)
+            $existingAttendance = [];
+            if ($lichKhoiHanhId) {
+                $diemDanh = Booking::getDiemDanhByBooking($id, $lichKhoiHanhId);
+                $khachs = $booking->getKhachs();
+                $khachMap = [];
+                foreach ($khachs as $khach) {
+                    $khachMap[$khach['id']] = $khach['ho_ten'];
+                }
+                foreach ($diemDanh as $dd) {
+                    $hoTen = $khachMap[$dd['booking_khach_id']] ?? null;
+                    if ($hoTen) {
+                        $existingAttendance[$hoTen] = $dd['trang_thai'];
+                    }
+                }
+            }
+
             // Format dữ liệu để trả về
             $result = [];
             foreach ($data as $index => $row) {
+                $hoTen = trim($row[0] ?? '');
                 $result[] = [
                     'stt' => $index + 1,
-                    'ho_ten' => trim($row[0] ?? ''),
+                    'ho_ten' => $hoTen,
                     'gioi_tinh' => trim($row[1] ?? ''),
                     'nam_sinh' => trim($row[2] ?? ''),
                     'so_giay_to' => trim($row[3] ?? ''),
-                    'yeu_cau_ca_nhan' => trim($row[4] ?? '')
+                    'yeu_cau_ca_nhan' => trim($row[4] ?? ''),
+                    'trang_thai' => $existingAttendance[$hoTen] ?? null
                 ];
             }
 
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['success' => true, 'data' => $result], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['success' => true, 'data' => $result, 'lich_khoi_hanh_id' => $lichKhoiHanhId], JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Lỗi đọc file: ' . $e->getMessage()]);
@@ -964,6 +812,136 @@ class BookingController
         }
 
         header('Location: ' . BASE_URL . 'bookings/show/' . $bookingId . '#lich-khoi-hanh');
+        exit;
+    }
+
+    // Thêm/Sửa nhanh dịch vụ booking (tại trang chi tiết)
+    public function updateDichVu(): void
+    {
+        requireAdmin();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . 'bookings');
+            exit;
+        }
+
+        $bookingId = $_POST['booking_id'] ?? null;
+        $dichVuId = $_POST['dich_vu_id'] ?? null;
+        $tenDichVu = trim($_POST['ten_dich_vu'] ?? '');
+        $chiTiet = trim($_POST['chi_tiet'] ?? '');
+
+        if (!$bookingId) {
+            $_SESSION['error'] = 'ID booking không hợp lệ';
+            header('Location: ' . BASE_URL . 'bookings');
+            exit;
+        }
+
+        if ($tenDichVu === '') {
+            $_SESSION['error'] = 'Vui lòng nhập tên dịch vụ';
+            header('Location: ' . BASE_URL . 'bookings/show/' . $bookingId . '#dich-vu-booking');
+            exit;
+        }
+
+        $booking = Booking::find($bookingId);
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại';
+            header('Location: ' . BASE_URL . 'bookings');
+            exit;
+        }
+
+        $ok = false;
+        if (!empty($dichVuId)) {
+            $ok = Booking::updateDichVu((int)$dichVuId, $tenDichVu, $chiTiet ?: null);
+        } else {
+            $booking->id = $bookingId;
+            $ok = $booking->addDichVu($tenDichVu, $chiTiet ?: null);
+        }
+
+        $_SESSION[$ok ? 'success' : 'error'] = $ok ? 'Đã lưu dịch vụ' : 'Không thể lưu dịch vụ';
+        header('Location: ' . BASE_URL . 'bookings/show/' . $bookingId . '#dich-vu-booking');
+        exit;
+    }
+
+    // Lưu điểm danh từ Excel (map theo họ tên)
+    public function saveAttendanceExcel(): void
+    {
+        requireAdmin();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method not allowed']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $bookingId = $input['booking_id'] ?? null;
+        $lichKhoiHanhId = $input['lich_khoi_hanh_id'] ?? null;
+        $attendanceData = $input['attendance'] ?? [];
+
+        if (!$bookingId || !$lichKhoiHanhId || empty($attendanceData)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Thiếu dữ liệu']);
+            exit;
+        }
+
+        $booking = Booking::find($bookingId);
+        if (!$booking) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Booking không tồn tại']);
+            exit;
+        }
+
+        $successCount = 0;
+        foreach ($attendanceData as $att) {
+            $hoTen = trim($att['ho_ten'] ?? '');
+            if (empty($hoTen)) continue;
+
+            // Tìm hoặc tạo booking_khach
+            $khachs = $booking->getKhachs();
+            $bookingKhachId = null;
+            
+            // Tìm theo họ tên
+            foreach ($khachs as $khach) {
+                if (trim($khach['ho_ten']) === $hoTen) {
+                    $bookingKhachId = $khach['id'];
+                    break;
+                }
+            }
+
+            // Nếu không tìm thấy, tạo mới
+            if (!$bookingKhachId) {
+                $booking->addKhach(
+                    $hoTen,
+                    $att['gioi_tinh'] ?: null,
+                    !empty($att['nam_sinh']) ? (int)$att['nam_sinh'] : null,
+                    $att['so_giay_to'] ?: null,
+                    'chua_thanh_toan',
+                    null
+                );
+                // Lấy lại danh sách để lấy ID mới
+                $khachs = $booking->getKhachs();
+                foreach ($khachs as $khach) {
+                    if (trim($khach['ho_ten']) === $hoTen) {
+                        $bookingKhachId = $khach['id'];
+                        break;
+                    }
+                }
+            }
+
+            if ($bookingKhachId) {
+                $trangThai = trim($att['trang_thai'] ?? '');
+                if (in_array($trangThai, ['da_den', 'vang', 'vang_mat', 'tre'], true)) {
+                    Booking::upsertDiemDanh($lichKhoiHanhId, $bookingKhachId, $trangThai, null);
+                    $successCount++;
+                }
+            }
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => true,
+            'message' => "Đã lưu điểm danh cho {$successCount} khách hàng"
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 }
