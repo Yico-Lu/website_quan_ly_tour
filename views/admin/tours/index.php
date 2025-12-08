@@ -15,6 +15,49 @@
             <div class="card-body">
               <?php displayFlashMessages(); ?>
 
+              <!-- Form tìm kiếm và lọc -->
+              <form method="GET" action="<?= BASE_URL ?>tours" class="mb-3">
+                  <div class="row g-2">
+                      <div class="col-md-6">
+                          <label for="keyword" class="form-label">Tìm kiếm theo tên tour</label>
+                          <input 
+                              type="text" 
+                              class="form-control" 
+                              id="keyword" 
+                              name="keyword" 
+                              value="<?= htmlspecialchars($keyword ?? '') ?>"
+                              placeholder="Nhập tên tour cần tìm..."
+                          >
+                      </div>
+                      <div class="col-md-4">
+                          <label for="danh_muc_id" class="form-label">Lọc theo danh mục</label>
+                          <select class="form-select" id="danh_muc_id" name="danh_muc_id">
+                              <option value="">Tất cả danh mục</option>
+                              <?php foreach($danhMucList as $danhMuc): ?>
+                                  <option 
+                                      value="<?= $danhMuc['id'] ?>"
+                                      <?= ($danh_muc_id ?? '') == $danhMuc['id'] ? 'selected' : '' ?>
+                                  >
+                                      <?= htmlspecialchars($danhMuc['ten_danh_muc']) ?>
+                                  </option>
+                              <?php endforeach; ?>
+                          </select>
+                      </div>
+                      <div class="col-md-2 d-flex align-items-end">
+                          <button type="submit" class="btn btn-primary w-100">
+                              <i class="bi bi-search"></i> Tìm kiếm
+                          </button>
+                      </div>
+                  </div>
+                  <?php if (!empty($keyword) || !empty($danh_muc_id)): ?>
+                  <div class="mt-2">
+                      <a href="<?= BASE_URL ?>tours" class="btn btn-sm btn-secondary">
+                          <i class="bi bi-x-circle"></i> Xóa bộ lọc
+                      </a>
+                  </div>
+                  <?php endif; ?>
+              </form>
+
               <table class="table table-bordered text-center">
                     <thead>
                         <tr>
@@ -78,10 +121,18 @@
                         <?php else: ?>
                           <tr>
                             <td colspan="8" class="text-center py-4">
-                              <h3 class="text-muted">Chưa có tour nào trong hệ thống</h3>
-                              <a href="<?= BASE_URL ?>tours/create" class="btn btn-success mt-3">
-                                <i class="bi bi-plus-circle"></i> Thêm Tour đầu tiên
-                              </a>
+                              <?php if (!empty($keyword) || !empty($danh_muc_id)): ?>
+                                <h3 class="text-muted">Không tìm thấy tour nào</h3>
+                                <p class="text-muted">Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc</p>
+                                <a href="<?= BASE_URL ?>tours" class="btn btn-secondary mt-2">
+                                  <i class="bi bi-arrow-left"></i> Xem tất cả tour
+                                </a>
+                              <?php else: ?>
+                                <h3 class="text-muted">Chưa có tour nào trong hệ thống</h3>
+                                <a href="<?= BASE_URL ?>tours/create" class="btn btn-success mt-3">
+                                  <i class="bi bi-plus-circle"></i> Thêm Tour đầu tiên
+                                </a>
+                              <?php endif; ?>
                             </td>
                           </tr>
                         <?php endif; ?>

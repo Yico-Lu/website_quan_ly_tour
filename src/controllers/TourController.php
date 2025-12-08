@@ -6,13 +6,28 @@ class TourController
         //Kiểm tra quyền admin
         requireAdmin();
 
-        $tours = Tour::getAll();
+        // Lấy tham số tìm kiếm và lọc
+        $keyword = trim($_GET['keyword'] ?? '');
+        $danh_muc_id = trim($_GET['danh_muc_id'] ?? '');
+
+        // Tìm kiếm tour
+        if (!empty($keyword) || !empty($danh_muc_id)) {
+            $tours = Tour::search($keyword, $danh_muc_id);
+        } else {
+            $tours = Tour::getAll();
+        }
+
+        // Lấy danh sách danh mục để hiển thị trong dropdown
+        $danhMucList = Tour::getDanhMucList();
 
         //hiển thị view danh sách tour
         view('admin.tours.index', [
             'title' => $title ?? 'Danh sách Tour - Quản lý Tour',
             'pageTitle' => $pageTitle ?? 'Danh sách Tour',
             'tours' => $tours,
+            'danhMucList' => $danhMucList,
+            'keyword' => $keyword,
+            'danh_muc_id' => $danh_muc_id,
             'breadcrumb' => [
                 ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
                 ['label' => 'Danh sách tour', 'url' => BASE_URL . 'tours', 'active' => true],

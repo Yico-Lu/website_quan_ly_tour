@@ -69,6 +69,40 @@
             return $tours;
         }
 
+        // Tìm kiếm và lọc tour
+        public static function search($keyword = '', $danh_muc_id = '')
+        {
+            $pdo = getDB();
+            $sql = "SELECT t.*, dm.ten_danh_muc
+                    FROM tour t
+                    LEFT JOIN danh_muc_tour dm ON t.danh_muc_id = dm.id
+                    WHERE 1=1";
+            
+            $params = [];
+            
+            // Tìm kiếm theo tên tour
+            if (!empty($keyword)) {
+                $sql .= " AND t.ten_tour LIKE ?";
+                $params[] = '%' . $keyword . '%';
+            }
+            
+            // Lọc theo danh mục
+            if (!empty($danh_muc_id)) {
+                $sql .= " AND t.danh_muc_id = ?";
+                $params[] = $danh_muc_id;
+            }
+            
+            $sql .= " ORDER BY t.ngay_tao DESC";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $tours = [];
+
+            foreach($stmt->fetchAll() as $row){
+                $tours[] = new Tour($row);
+            }
+            return $tours;
+        }
+
         // Lấy tên trạng thái
         public function getTrangThai()
         {
