@@ -1,6 +1,67 @@
 <?php
 class BookingController
 {
+    /**
+     * Lấy danh sách tour và HDV dùng chung cho form
+     */
+    private function getFormLists(): array
+    {
+        return [
+            'tourList' => Booking::getTourList(),
+            'guideList' => Booking::getGuideList(),
+        ];
+    }
+
+    private function renderCreateWithErrors(array $errors, array $old = []): void
+    {
+        $lists = $this->getFormLists();
+        view('admin.bookings.create', [
+            'title' => 'Thêm booking mới',
+            'pageTitle' => 'Thêm booking mới',
+            'tourList' => $lists['tourList'],
+            'guideList' => $lists['guideList'],
+            'errors' => $errors,
+            'old' => $old,
+            'breadcrumb' => [
+                ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
+                ['label' => 'Danh sách booking', 'url' => BASE_URL . 'bookings'],
+                ['label' => 'Thêm booking mới', 'url' => BASE_URL . 'bookings/create', 'active' => true],
+            ],
+        ]);
+    }
+
+    private function renderEditWithErrors($id, array $errors, array $old): void
+    {
+        $booking = Booking::find($id);
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại';
+            header('Location: ' . BASE_URL . 'bookings');
+            exit;
+        }
+
+        $lists = $this->getFormLists();
+        $hdvs = $booking->getHdvs();
+        $currentHdv = !empty($hdvs) ? $hdvs[0] : null;
+        $currentKhachs = $booking->getKhachs();
+
+        view('admin.bookings.edit', [
+            'title' => 'Sửa booking',
+            'pageTitle' => 'Sửa booking',
+            'booking' => $booking,
+            'tourList' => $lists['tourList'],
+            'guideList' => $lists['guideList'],
+            'currentHdv' => $currentHdv,
+            'currentKhachs' => $currentKhachs,
+            'errors' => $errors,
+            'old' => $old,
+            'breadcrumb' => [
+                ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
+                ['label' => 'Danh sách booking', 'url' => BASE_URL . 'bookings'],
+                ['label' => 'Sửa booking', 'url' => BASE_URL . 'bookings/edit/' . $id, 'active' => true],
+            ],
+        ]);
+    }
+
     // Hiển thị danh sách booking
     public function index(): void
     {
@@ -104,22 +165,7 @@ class BookingController
         if (empty($lien_he)) $errors[] = 'Vui lòng nhập thông tin liên hệ';
 
         if (!empty($errors)) {
-            $tourList = Booking::getTourList();
-            $guideList = Booking::getGuideList();
-
-            view('admin.bookings.create', [
-                'title' => 'Thêm booking mới',
-                'pageTitle' => 'Thêm booking mới',
-                'tourList' => $tourList,
-                'guideList' => $guideList,
-                'errors' => $errors,
-                'old' => $_POST,
-                'breadcrumb' => [
-                    ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
-                    ['label' => 'Danh sách booking', 'url' => BASE_URL . 'bookings'],
-                    ['label' => 'Thêm booking mới', 'url' => BASE_URL . 'bookings/create', 'active' => true],
-                ],
-            ]);
+            $this->renderCreateWithErrors($errors, $_POST);
             return;
         }
 
@@ -302,36 +348,7 @@ class BookingController
         if (empty($lien_he)) $errors[] = 'Vui lòng nhập thông tin liên hệ';
 
         if (!empty($errors)) {
-            $booking = Booking::find($id);
-            $tourList = Booking::getTourList();
-            $guideList = Booking::getGuideList();
-
-            // Lấy HDV hiện tại (nếu có)
-            $currentHdv = null;
-            $hdvs = $booking->getHdvs();
-            if (!empty($hdvs)) {
-                $currentHdv = $hdvs[0]; // Lấy HDV đầu tiên
-            }
-
-            // Lấy khách hàng hiện tại (người đại diện)
-            $currentKhachs = $booking->getKhachs();
-
-            view('admin.bookings.edit', [
-                'title' => 'Sửa booking',
-                'pageTitle' => 'Sửa booking',
-                'booking' => $booking,
-                'tourList' => $tourList,
-                'guideList' => $guideList,
-                'currentHdv' => $currentHdv,
-                'currentKhachs' => $currentKhachs,
-                'errors' => $errors,
-                'old' => $_POST,
-                'breadcrumb' => [
-                    ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
-                    ['label' => 'Danh sách booking', 'url' => BASE_URL . 'bookings'],
-                    ['label' => 'Sửa booking', 'url' => BASE_URL . 'bookings/edit/' . $id, 'active' => true],
-                ],
-            ]);
+            $this->renderEditWithErrors($id, $errors, $_POST);
             return;
         }
 
