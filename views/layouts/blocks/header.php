@@ -17,27 +17,38 @@
       <li class="nav-item dropdown">
         <a class="nav-link" data-bs-toggle="dropdown" href="#">
           <i class="bi bi-bell-fill"></i>
-          <span class="navbar-badge badge text-bg-warning">15</span>
+          <span class="navbar-badge badge text-bg-warning"><?= isGuide() ? '5' : '15' ?></span>
         </a>
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-          <span class="dropdown-item dropdown-header">15 Thông báo</span>
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item">
-            <i class="bi bi-envelope me-2"></i> 4 tin nhắn mới
-            <span class="float-end text-secondary fs-7">3 mins</span>
-          </a>
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item">
-            <i class="bi bi-people-fill me-2"></i> 8 Liên hệ mới
-            <span class="float-end text-secondary fs-7">12 hours</span>
-          </a>
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item">
-            <i class="bi bi-file-earmark-fill me-2"></i> 3 báo cáo mới
-            <span class="float-end text-secondary fs-7">2 days</span>
-          </a>
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item dropdown-footer"> Xem tất cả thông báo </a>
+          <?php if (isGuide()): ?>
+            <span class="dropdown-item dropdown-header">Thông báo Tour</span>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item">
+              <i class="bi bi-calendar-event me-2"></i> Tour khởi hành hôm nay
+              <span class="float-end text-secondary fs-7">2 giờ</span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item dropdown-footer"> Xem tất cả thông báo </a>
+          <?php else: ?>
+            <span class="dropdown-item dropdown-header">15 Thông báo</span>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item">
+              <i class="bi bi-envelope me-2"></i> 4 tin nhắn mới
+              <span class="float-end text-secondary fs-7">3 mins</span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item">
+              <i class="bi bi-people-fill me-2"></i> 8 Liên hệ mới
+              <span class="float-end text-secondary fs-7">12 hours</span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item">
+              <i class="bi bi-file-earmark-fill me-2"></i> 3 báo cáo mới
+              <span class="float-end text-secondary fs-7">2 days</span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item dropdown-footer"> Xem tất cả thông báo </a>
+          <?php endif; ?>
         </div>
       </li>
       <!--end::Notifications Dropdown Menu-->
@@ -63,7 +74,7 @@
           </a>
           <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
             <!--begin::User Image-->
-            <li class="user-header text-bg-primary">
+            <li class="user-header <?= isGuide() ? 'text-bg-success' : 'text-bg-primary' ?>">
               <img
                 src="<?= asset('dist/assets/img/user2-160x160.jpg') ?>"
                 class="rounded-circle shadow"
@@ -71,16 +82,27 @@
               />
               <p>
                 <?= $currentUser->name ?> - <?= $currentUser->isAdmin() ? 'Quản trị viên' : 'Hướng dẫn viên' ?>
-                <small><?= date('M. Y') ?></small>
+                <small><?= isGuide() ? 'Đang hoạt động' : date('M. Y') ?></small>
               </p>
             </li>
             <!--end::User Image-->
             <!--begin::Menu Body-->
-            
+            <?php if (isGuide()): ?>
+              <li class="user-body">
+                <div class="row">
+                  <div class="col-6 text-center">
+                    <a href="#">Tour đang dẫn</a>
+                  </div>
+                  <div class="col-6 text-center">
+                    <a href="#">Lịch sử</a>
+                  </div>
+                </div>
+              </li>
+            <?php endif; ?>
             <!--end::Menu Body-->
             <!--begin::Menu Footer-->
             <li class="user-footer">
-              <a href="#" class="btn btn-default btn-flat">Tài khoản</a>
+              <a href="#" class="btn btn-default btn-flat"><?= isGuide() ? 'Thông tin cá nhân' : 'Tài khoản' ?></a>
               <a href="<?= BASE_URL . 'logout' ?>" class="btn btn-default btn-flat float-end">Đăng xuất</a>
             </li>
             <!--end::Menu Footer-->

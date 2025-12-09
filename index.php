@@ -121,26 +121,26 @@ if (strpos($act, 'hdvs/show/') === 0) {
 }
 
 // Routes cho HDV vận hành tour
-if (strpos($act, 'guide-tours/booking/') === 0) {
-    $id = str_replace('guide-tours/booking/', '', $act);
+if (strpos($act, 'guide/booking/') === 0) {
+    $id = str_replace('guide/booking/', '', $act);
     $guideTourController->viewBooking($id);
     exit;
 }
 
-if (strpos($act, 'guide-tours/diary/') === 0) {
+if (strpos($act, 'guide/diary/') === 0) {
     $parts = explode('/', $act);
     if (isset($parts[3]) && $parts[3] === 'create') {
         $bookingId = $parts[2] ?? null;
-        $guideTourController->diaryCreate($bookingId);
+        $guideTourController->nhatKyTao($bookingId);
         exit;
     }
     if (isset($parts[3]) && $parts[3] === 'edit') {
         $id = $parts[4] ?? null;
-        $guideTourController->diaryEdit($id);
+        $guideTourController->nhatKySua($id);
         exit;
     }
     $bookingId = $parts[2] ?? null;
-    $guideTourController->diaryList($bookingId);
+    $guideTourController->nhatKyDanhSach($bookingId);
     exit;
 }
 
@@ -194,11 +194,13 @@ match ($act) {
     'hdvs/delete' => $hdvController->delete(),
 
     // Đường dẫn vận hành tour của HDV
-    'guide-tours/my-bookings' => $guideTourController->myBookings(),
-    'guide-tours/check-in' => $guideTourController->checkIn(),
-    'guide-tours/diary/store' => $guideTourController->diaryStore(),
-    'guide-tours/diary/update' => $guideTourController->diaryUpdate(),
-    'guide-tours/diary/delete' => $guideTourController->diaryDelete(),
+    'guide/my-bookings' => $guideTourController->myBookings(),
+    'guide/check-in' => $guideTourController->checkIn(),
+    'guide/update-yeu-cau' => $guideTourController->updateYeuCau(),
+    'guide/update-yeu-cau-doan' => $guideTourController->updateYeuCauDoan(),
+    'guide/diary/store' => $guideTourController->nhatKyLuu(),
+    'guide/diary/update' => $guideTourController->nhatKyCapNhat(),
+    'guide/diary/delete' => $guideTourController->nhatKyXoa(),
 
     // Đường dẫn không tồn tại
     default => $homeController->notFound(),

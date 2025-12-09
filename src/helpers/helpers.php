@@ -181,6 +181,46 @@ function getFlashMessages()
     return $messages;
 }
 
+// Hiển thị thông báo flash message (success/error) 
+function displayFlashMessages(): void
+{
+    if (isset($_SESSION['success'])) {
+        echo '<div class="alert alert-success alert-dismissible fade show" role="alert">';
+        echo '<i class="bi bi-check-circle-fill me-2"></i>';
+        echo htmlspecialchars($_SESSION['success']);
+        echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        echo '</div>';
+        echo '<script>
+            setTimeout(function() {
+                const alert = document.querySelector(".alert-success");
+                if (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 2000);
+        </script>';
+        unset($_SESSION['success']);
+    }
+
+    if (isset($_SESSION['error'])) {
+        echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
+        echo '<i class="bi bi-exclamation-circle-fill me-2"></i>';
+        echo htmlspecialchars($_SESSION['error']);
+        echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        echo '</div>';
+        echo '<script>
+            setTimeout(function() {
+                const alert = document.querySelector(".alert-danger");
+                if (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 2000);
+        </script>';
+        unset($_SESSION['error']);
+    }
+}
+
 // Upload một ảnh đơn
 function uploadImage($file, $prefix = 'file', $uploadDir = 'uploads/general/')
 {

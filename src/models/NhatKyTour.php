@@ -7,6 +7,7 @@ class NhatKyTour
     public $noi_dung;
     public $danh_gia_hdv;
 
+    // Khởi tạo
     public function __construct($data = [])
     {
         if (is_array($data)) {
@@ -88,16 +89,6 @@ class NhatKyTour
         $sql = "DELETE FROM nhat_ky_tour WHERE id = ?";
         $stmt = $pdo->prepare($sql);
         return $stmt->execute([$id]);
-    }
-
-    // Kiểm tra nhật ký có thuộc về booking không
-    public static function belongsToBooking($nhatKyId, $bookingId)
-    {
-        $pdo = getDB();
-        $sql = "SELECT COUNT(*) FROM nhat_ky_tour WHERE id = ? AND booking_id = ?";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$nhatKyId, $bookingId]);
-        return $stmt->fetchColumn() > 0;
     }
 }
 ?>

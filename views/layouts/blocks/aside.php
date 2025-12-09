@@ -3,7 +3,7 @@
   <!--begin::Sidebar Brand-->
   <div class="sidebar-brand">
     <!--begin::Brand Link-->
-    <a href="<?= BASE_URL . 'home' ?>" class="brand-link">
+    <a href="<?= BASE_URL . (isGuide() ? 'guide/my-bookings' : 'home') ?>" class="brand-link">
       <!--begin::Brand Image-->
       <img
         src="<?= asset('dist/assets/img/AdminLTELogo.png') ?>"
@@ -12,7 +12,7 @@
       />
       <!--end::Brand Image-->
       <!--begin::Brand Text-->
-      <span class="brand-text fw-light">Quản Lý Tour</span>
+      <span class="brand-text fw-light"><?= isGuide() ? 'HDV - Quản Lý Tour' : 'Quản Lý Tour' ?></span>
       <!--end::Brand Text-->
     </a>
     <!--end::Brand Link-->
@@ -28,35 +28,61 @@
         role="menu"
         data-accordion="false"
       >
-        <li class="nav-item">
-          <a href="<?= BASE_URL . 'home' ?>" class="nav-link">
-            <i class="nav-icon bi bi-speedometer"></i>
-            <p>Dashboard</p>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link">
-            <i class="nav-icon bi bi-airplane-engines"></i>
-            <p>
-              Quản lý Tour
-              <i class="nav-arrow bi bi-chevron-right"></i>
-            </p>
-          </a>
-          <ul class="nav nav-treeview">
-            <li class="nav-item">
-              <a href="<?= BASE_URL . 'tours' ?>" class="nav-link">
-                <i class="nav-icon bi bi-circle"></i>
-                <p>Danh sách Tour</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="<?= BASE_URL . 'tours/create' ?>" class="nav-link">
-                <i class="nav-icon bi bi-circle"></i>
-                <p>Thêm Tour mới</p>
-              </a>
-            </li>
-          </ul>
-        </li>
+        <?php if (isGuide()): ?>
+          <li class="nav-item">
+            <a href="<?= BASE_URL . 'guide/my-bookings' ?>" class="nav-link">
+              <i class="nav-icon bi bi-house-door"></i>
+              <p>Trang chủ HDV</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="nav-icon bi bi-map"></i>
+              <p>
+                Tour được phân công
+                <i class="nav-arrow bi bi-chevron-right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="<?= BASE_URL . 'guide/my-bookings' ?>" class="nav-link">
+                  <i class="nav-icon bi bi-circle"></i>
+                  <p>Danh sách Tour</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          <?php else: ?>
+          <li class="nav-item">
+            <a href="<?= BASE_URL . 'home' ?>" class="nav-link">
+              <i class="nav-icon bi bi-speedometer"></i>
+              <p>Dashboard</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="nav-icon bi bi-airplane-engines"></i>
+              <p>
+                Quản lý Tour
+                <i class="nav-arrow bi bi-chevron-right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="<?= BASE_URL . 'tours' ?>" class="nav-link">
+                  <i class="nav-icon bi bi-circle"></i>
+                  <p>Danh sách Tour</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="<?= BASE_URL . 'tours/create' ?>" class="nav-link">
+                  <i class="nav-icon bi bi-circle"></i>
+                  <p>Thêm Tour mới</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+        <?php endif; ?>
         <?php if (isAdmin()): ?>
           <li class="nav-item">
             <a href="#" class="nav-link">
@@ -105,23 +131,6 @@
             </ul>
           </li>
         <?php endif; ?>
-        <li class="nav-item">
-          <a href="#" class="nav-link">
-            <i class="nav-icon bi bi-people-fill"></i>
-            <p>
-              Quản lý Khách hàng
-              <i class="nav-arrow bi bi-chevron-right"></i>
-            </p>
-          </a>
-          <ul class="nav nav-treeview">
-            <li class="nav-item">
-              <a href="#" class="nav-link">
-                <i class="nav-icon bi bi-circle"></i>
-                <p>Danh sách Khách hàng</p>
-              </a>
-            </li>
-          </ul>
-        </li>
         <?php if (isAdmin()): ?>
           <li class="nav-item">
             <a href="#" class="nav-link">

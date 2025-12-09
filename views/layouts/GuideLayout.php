@@ -44,9 +44,9 @@
   <body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
     <!--begin::App Wrapper-->
     <div class="app-wrapper">
-      <?php block('guide_header'); ?>
+      <?php block('header'); ?>
 
-      <?php block('guide_aside'); ?>
+      <?php block('aside'); ?>
 
       <!--begin::App Main-->
       <main class="app-main">
@@ -59,7 +59,7 @@
               <div class="col-sm-6"><h3 class="mb-0"><?= $pageTitle ?? 'Trang chủ' ?></h3></div>
               <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-end">
-                  <li class="breadcrumb-item"><a href="<?= BASE_URL ?>guide">Trang chủ</a></li>
+                  <li class="breadcrumb-item"><a href="<?= BASE_URL ?>guide/my-bookings">Trang chủ</a></li>
                   <?php if (isset($breadcrumb)): ?>
                     <?php foreach ($breadcrumb as $item): ?>
                       <li class="breadcrumb-item <?= $item['active'] ?? false ? 'active' : '' ?>" <?= $item['active'] ?? false ? 'aria-current="page"' : '' ?>>

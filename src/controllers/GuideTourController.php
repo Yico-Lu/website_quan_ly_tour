@@ -6,32 +6,58 @@ class GuideTourController
     {
         requireGuideOrAdmin();
 
-        $hdvId = getCurrentHDVId();
-        if (!$hdvId) {
+        // Lấy user hiện tại
+        $user = getCurrentUser();
+        if (!$user || !isGuide()) {
             $_SESSION['error'] = 'Không tìm thấy thông tin hướng dẫn viên';
             header('Location: ' . BASE_URL . 'home');
             exit;
         }
 
-        $pdo = getDB();
         // Lấy danh sách booking được gán cho HDV này
-        // Bao gồm các trạng thái: cho_xac_nhan, da_coc, da_thanh_toan, da_huy, da_hoan_thanh
-        $sql = "SELECT b.*,
-                       t.ten_tour,
-                       t.gia AS gia_tour,
-                       (SELECT l1.id FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS lich_khoi_hanh_id,
-                       (SELECT l1.ngay_gio_xuat_phat FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS ngay_gio_xuat_phat,
-                       (SELECT l1.diem_tap_trung FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS diem_tap_trung
-                FROM booking b
-                LEFT JOIN tour t ON b.tour_id = t.id
-                WHERE b.assigned_hdv_id = ?
-                AND b.trang_thai IN ('cho_xac_nhan', 'da_coc', 'da_thanh_toan', 'da_huy', 'da_hoan_thanh')
-                ORDER BY b.ngay_tao DESC";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$hdvId]);
+        $pdo = getDB();
+        
+        // Lấy HDV id từ tai_khoan_id để kiểm tra booking_hdv
+        require_once __DIR__ . '/../models/HDV.php';
+        $hdv = HDV::findByTaiKhoanId($user->id);
+        $hdvId = $hdv ? $hdv->id : null;
+        
+        // Lấy booking từ assigned_hdv_id  HOẶC từ booking_hdv 
+        if ($hdvId) {
+            $sql = "SELECT DISTINCT b.*, t.ten_tour, t.gia AS gia_tour
+                    FROM booking b
+                    LEFT JOIN tour t ON b.tour_id = t.id
+                    LEFT JOIN booking_hdv bh ON b.id = bh.booking_id
+                    WHERE (b.assigned_hdv_id = ? OR bh.hdv_id = ?)
+                    AND b.trang_thai IN ('cho_xac_nhan', 'da_coc', 'da_thanh_toan', 'da_huy', 'hoan_thanh')
+                    ORDER BY b.ngay_tao DESC";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$user->id, $hdvId]);
+        } else {
+            // Nếu không tìm thấy HDV, chỉ lấy theo assigned_hdv_id
+            $sql = "SELECT DISTINCT b.*, t.ten_tour, t.gia AS gia_tour
+                    FROM booking b
+                    LEFT JOIN tour t ON b.tour_id = t.id
+                    WHERE b.assigned_hdv_id = ?
+                    AND b.trang_thai IN ('cho_xac_nhan', 'da_coc', 'da_thanh_toan', 'da_huy', 'hoan_thanh')
+                    ORDER BY b.ngay_tao DESC";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$user->id]);
+        }
         $bookings = [];
         foreach($stmt->fetchAll() as $row){
             $bookings[] = new Booking($row);
+        }
+        
+        // Lấy thông tin lịch khởi hành cho mỗi booking
+        foreach($bookings as $booking){
+            $lichKhoiHanh = Booking::getLatestLichKhoiHanh($booking->id);
+            if($lichKhoiHanh){
+                $booking->lich_khoi_hanh_id = $lichKhoiHanh['id'] ?? null;
+                $booking->ngay_gio_xuat_phat = $lichKhoiHanh['ngay_gio_xuat_phat'] ?? null;
+                $booking->diem_tap_trung = $lichKhoiHanh['diem_tap_trung'] ?? null;
+                $booking->thoi_gian_ket_thuc = $lichKhoiHanh['thoi_gian_ket_thuc'] ?? null;
+            }
         }
 
         view('guide.my-bookings', [
@@ -40,7 +66,7 @@ class GuideTourController
             'bookings' => $bookings,
             'breadcrumb' => [
                 ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
-                ['label' => 'Danh sách tour', 'url' => BASE_URL . 'guide-tours/my-bookings', 'active' => true],
+                ['label' => 'Danh sách tour', 'url' => BASE_URL . 'guide/my-bookings', 'active' => true],
             ],
         ]);
     }
@@ -50,35 +76,77 @@ class GuideTourController
     {
         requireGuideOrAdmin();
 
-        $hdvId = getCurrentHDVId();
-        if (!$hdvId) {
+        // Lấy user hiện tại
+        $user = getCurrentUser();
+        if (!$user || !isGuide()) {
             $_SESSION['error'] = 'Không tìm thấy thông tin hướng dẫn viên';
             header('Location: ' . BASE_URL . 'home');
             exit;
         }
 
+        // Lấy booking
         $booking = Booking::find($id);
         if (!$booking) {
             $_SESSION['error'] = 'Booking không tồn tại';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
-        // Kiểm tra quyền: chỉ HDV được gán mới xem được
-        if ($booking->assigned_hdv_id != $hdvId) {
-            $_SESSION['error'] = 'Bạn không có quyền xem booking này';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
-            exit;
-        }
-
-        // Lấy danh sách khách
+        // Lấy danh sách khách, lịch khởi hành, điểm danh
         $khachs = $booking->getKhachs();
-        
-        // Lấy lịch khởi hành
         $lichKhoiHanhId = $booking->lich_khoi_hanh_id ?: Booking::getLichKhoiHanhIdByBookingId($id);
-        
-        // Lấy điểm danh
         $diemDanh = Booking::getDiemDanhByBooking($id, $lichKhoiHanhId);
+
+        // Xác định quyền check-in (chỉ cho phép khi tour đang đi)
+        $now = time();
+        $start = $booking->ngay_gio_xuat_phat ? strtotime($booking->ngay_gio_xuat_phat) : null;
+        $end = $booking->thoi_gian_ket_thuc ? strtotime($booking->thoi_gian_ket_thuc) : null;
+        $isDone = $booking->trang_thai === 'hoan_thanh';
+        $canCheckIn = !$isDone && $lichKhoiHanhId && $start && $start <= $now && (empty($end) || $end >= $now);
+
+        // Đọc danh sách khách từ file Excel đã upload 
+        $guestListFromFile = [];
+        $uploadDir = BASE_PATH . '/public/uploads/guest_lists/';
+        $filePattern = $uploadDir . 'booking_' . $id . '.*';
+        $files = glob($filePattern);
+        // Tạo map họ tên -> booking_khach_id để gắn check-in nếu trùng tên
+        $khachNameMap = [];
+        foreach ($khachs as $k) {
+            $nameKey = trim(mb_strtolower($k['ho_ten'] ?? ''));
+            if ($nameKey !== '') {
+                $khachNameMap[$nameKey] = $k['id'];
+            }
+        }
+
+        if (!empty($files) && is_file($files[0])) {
+            $filePath = $files[0];
+            try {
+                $rawRows = readExcelFile($filePath, 2); // bỏ header, bắt đầu dòng 2
+                foreach ($rawRows as $row) {
+                    $hoTen = trim($row[0] ?? '');
+                    $nameKey = mb_strtolower($hoTen);
+                    $bookingKhachId = $khachNameMap[$nameKey] ?? null;
+
+                    $guestListFromFile[] = [
+                        'ho_ten' => trim($row[0] ?? ''),
+                        'gioi_tinh' => trim($row[1] ?? ''),
+                        'nam_sinh' => trim($row[2] ?? ''),
+                        'so_giay_to' => trim($row[3] ?? ''),
+                        'yeu_cau_ca_nhan' => trim($row[4] ?? ''),
+                        'booking_khach_id' => $bookingKhachId,
+                    ];
+                }
+            } catch (Exception $e) {
+                // Nếu lỗi đọc file, bỏ qua để không ảnh hưởng trang
+            }
+        }
+
+        // Lấy lịch trình tour
+        $tour = Tour::find($booking->tour_id);
+        $lichTrinh = [];
+        if ($tour) {
+            $lichTrinh = $tour->getLichTrinh();
+        }
 
         view('guide.booking-detail', [
             'title' => 'Chi tiết Tour: ' . $booking->ten_tour,
@@ -87,10 +155,13 @@ class GuideTourController
             'khachs' => $khachs,
             'diemDanh' => $diemDanh,
             'lichKhoiHanhId' => $lichKhoiHanhId,
+            'lichTrinh' => $lichTrinh,
+            'guestListFromFile' => $guestListFromFile,
+            'canCheckIn' => $canCheckIn,
             'breadcrumb' => [
                 ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
-                ['label' => 'Danh sách tour', 'url' => BASE_URL . 'guide-tours/my-bookings'],
-                ['label' => 'Chi tiết tour', 'url' => BASE_URL . 'guide-tours/booking/' . $id, 'active' => true],
+                ['label' => 'Danh sách tour', 'url' => BASE_URL . 'guide/my-bookings'],
+                ['label' => 'Chi tiết tour', 'url' => BASE_URL . 'guide/booking/' . $id, 'active' => true],
             ],
         ]);
     }
@@ -101,75 +172,188 @@ class GuideTourController
         requireGuideOrAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
-        $hdvId = getCurrentHDVId();
-        if (!$hdvId) {
+        // Lấy user hiện tại
+        $user = getCurrentUser();
+        if (!$user || !isGuide()) {
             $_SESSION['error'] = 'Không tìm thấy thông tin hướng dẫn viên';
             header('Location: ' . BASE_URL . 'home');
             exit;
         }
 
+        // Lấy dữ liệu từ form
         $bookingId = $_POST['booking_id'] ?? null;
         $lichKhoiHanhId = $_POST['lich_khoi_hanh_id'] ?? null;
         $bookingKhachId = $_POST['booking_khach_id'] ?? null;
+        $trangThai = trim($_POST['trang_thai'] ?? 'da_den');
 
         if (!$bookingId || !$lichKhoiHanhId || !$bookingKhachId) {
             $_SESSION['error'] = 'Thông tin không hợp lệ';
-            header('Location: ' . BASE_URL . 'guide-tours/booking/' . $bookingId);
+            header('Location: ' . BASE_URL . 'guide/booking/' . $bookingId);
             exit;
         }
 
-        // Kiểm tra quyền
+        // Lấy booking
         $booking = Booking::find($bookingId);
-        if (!$booking || $booking->assigned_hdv_id != $hdvId) {
-            $_SESSION['error'] = 'Bạn không có quyền thực hiện thao tác này';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại';
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
-        // Lưu điểm danh (check-in)
-        $trangThai = 'co_mat'; // Có mặt
-        $ghiChu = trim($_POST['ghi_chu'] ?? '');
-        
+        // Lưu điểm danh (check-in hoặc cập nhật)
         if (Booking::upsertDiemDanh($lichKhoiHanhId, $bookingKhachId, $trangThai, $ghiChu)) {
             $_SESSION['success'] = 'Check-in thành công';
         } else {
             $_SESSION['error'] = 'Check-in thất bại';
         }
 
-        header('Location: ' . BASE_URL . 'guide-tours/booking/' . $bookingId);
+        header('Location: ' . BASE_URL . 'guide/booking/' . $bookingId);
         exit;
     }
 
-    // Danh sách nhật ký tour
-    public function diaryList($bookingId): void
+    // Cập nhật yêu cầu đặc biệt của khách
+    public function updateYeuCau(): void
     {
         requireGuideOrAdmin();
 
-        $hdvId = getCurrentHDVId();
-        if (!$hdvId) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
+            exit;
+        }
+
+        // Lấy user hiện tại
+        $user = getCurrentUser();
+        if (!$user || !isGuide()) {
             $_SESSION['error'] = 'Không tìm thấy thông tin hướng dẫn viên';
             header('Location: ' . BASE_URL . 'home');
             exit;
         }
 
+        // Lấy dữ liệu từ form
+        $bookingId = $_POST['booking_id'] ?? null;
+        $bookingKhachId = $_POST['booking_khach_id'] ?? null;
+        $yeuCauCaNhan = trim($_POST['yeu_cau_ca_nhan'] ?? '');
+
+        if (!$bookingId || !$bookingKhachId) {
+            $_SESSION['error'] = 'Thông tin không hợp lệ';
+            header('Location: ' . BASE_URL . 'guide/booking/' . $bookingId);
+            exit;
+        }
+
+        // Lấy booking
         $booking = Booking::find($bookingId);
         if (!$booking) {
             $_SESSION['error'] = 'Booking không tồn tại';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
-        // Kiểm tra quyền
-        if ($booking->assigned_hdv_id != $hdvId) {
-            $_SESSION['error'] = 'Bạn không có quyền xem booking này';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+        // Lấy thông tin khách hiện tại để cập nhật
+        $pdo = getDB();
+        $sql = "SELECT * FROM booking_khach WHERE id = ? LIMIT 1";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$bookingKhachId]);
+        $khach = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$khach) {
+            $_SESSION['error'] = 'Không tìm thấy thông tin khách';
+            header('Location: ' . BASE_URL . 'guide/booking/' . $bookingId);
             exit;
         }
 
+        // Cập nhật yêu cầu đặc biệt
+        if (Booking::updateKhach(
+            $bookingKhachId,
+            $khach['ho_ten'],
+            $khach['gioi_tinh'],
+            $khach['nam_sinh'],
+            $khach['so_giay_to'],
+            $khach['tinh_trang_thanh_toan'],
+            $yeuCauCaNhan
+        )) {
+            $_SESSION['success'] = 'Cập nhật yêu cầu đặc biệt thành công';
+        } else {
+            $_SESSION['error'] = 'Cập nhật yêu cầu đặc biệt thất bại';
+        }
+
+        header('Location: ' . BASE_URL . 'guide/booking/' . $bookingId);
+        exit;
+    }
+
+    // Cập nhật yêu cầu đặc biệt của cả đoàn
+    public function updateYeuCauDoan(): void
+    {
+        requireGuideOrAdmin();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
+            exit;
+        }
+
+        // Lấy user hiện tại
+        $user = getCurrentUser();
+        if (!$user || !isGuide()) {
+            $_SESSION['error'] = 'Không tìm thấy thông tin hướng dẫn viên';
+            header('Location: ' . BASE_URL . 'home');
+            exit;
+        }
+
+        // Lấy dữ liệu từ form
+        $bookingId = $_POST['booking_id'] ?? null;
+        $yeuCauDacBiet = trim($_POST['yeu_cau_dac_biet'] ?? '');
+
+        if (!$bookingId) {
+            $_SESSION['error'] = 'Thông tin không hợp lệ';
+            header('Location: ' . BASE_URL . 'guide/booking/' . $bookingId);
+            exit;
+        }
+
+        // Lấy booking
+        $booking = Booking::find($bookingId);
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại';
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
+            exit;
+        }
+
+        // Cập nhật yêu cầu đặc biệt của cả đoàn
+        $booking->yeu_cau_dac_biet = $yeuCauDacBiet;
+        if (Booking::update($booking)) {
+            $_SESSION['success'] = 'Cập nhật yêu cầu đặc biệt của cả đoàn thành công';
+        } else {
+            $_SESSION['error'] = 'Cập nhật yêu cầu đặc biệt của cả đoàn thất bại';
+        }
+
+        header('Location: ' . BASE_URL . 'guide/booking/' . $bookingId);
+        exit;
+    }
+
+    // Danh sách nhật ký tour
+    public function nhatKyDanhSach($bookingId): void
+    {
+        requireGuideOrAdmin();
+
+        // Lấy user hiện tại
+        $user = getCurrentUser();
+        if (!$user || !isGuide()) {
+            $_SESSION['error'] = 'Không tìm thấy thông tin hướng dẫn viên';
+            header('Location: ' . BASE_URL . 'home');
+            exit;
+        }
+
+        // Lấy booking
+        $booking = Booking::find($bookingId);
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại';
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
+            exit;
+        }
+
+        // Lấy danh sách nhật ký
         $nhatKys = NhatKyTour::getByBookingId($bookingId);
 
         view('guide.diary-list', [
@@ -179,36 +363,31 @@ class GuideTourController
             'nhatKys' => $nhatKys,
             'breadcrumb' => [
                 ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
-                ['label' => 'Danh sách tour', 'url' => BASE_URL . 'guide-tours/my-bookings'],
-                ['label' => 'Chi tiết tour', 'url' => BASE_URL . 'guide-tours/booking/' . $bookingId],
-                ['label' => 'Nhật ký tour', 'url' => BASE_URL . 'guide-tours/diary/' . $bookingId, 'active' => true],
+                ['label' => 'Danh sách tour', 'url' => BASE_URL . 'guide/my-bookings'],
+                ['label' => 'Chi tiết tour', 'url' => BASE_URL . 'guide/booking/' . $bookingId],
+                ['label' => 'Nhật ký tour', 'url' => BASE_URL . 'guide/diary/' . $bookingId, 'active' => true],
             ],
         ]);
     }
 
     // Form tạo nhật ký mới
-    public function diaryCreate($bookingId): void
+    public function nhatKyTao($bookingId): void
     {
         requireGuideOrAdmin();
 
-        $hdvId = getCurrentHDVId();
-        if (!$hdvId) {
+        // Lấy user hiện tại
+        $user = getCurrentUser();
+        if (!$user || !isGuide()) {
             $_SESSION['error'] = 'Không tìm thấy thông tin hướng dẫn viên';
             header('Location: ' . BASE_URL . 'home');
             exit;
         }
 
+        // Lấy booking
         $booking = Booking::find($bookingId);
         if (!$booking) {
             $_SESSION['error'] = 'Booking không tồn tại';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
-            exit;
-        }
-
-        // Kiểm tra quyền
-        if ($booking->assigned_hdv_id != $hdvId) {
-            $_SESSION['error'] = 'Bạn không có quyền thêm nhật ký cho booking này';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
@@ -219,24 +398,25 @@ class GuideTourController
             'nhatKy' => null,
             'breadcrumb' => [
                 ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
-                ['label' => 'Danh sách tour', 'url' => BASE_URL . 'guide-tours/my-bookings'],
-                ['label' => 'Chi tiết tour', 'url' => BASE_URL . 'guide-tours/booking/' . $bookingId],
-                ['label' => 'Nhật ký tour', 'url' => BASE_URL . 'guide-tours/diary/' . $bookingId],
-                ['label' => 'Thêm nhật ký', 'url' => BASE_URL . 'guide-tours/diary/create/' . $bookingId, 'active' => true],
+                ['label' => 'Danh sách tour', 'url' => BASE_URL . 'guide/my-bookings'],
+                ['label' => 'Chi tiết tour', 'url' => BASE_URL . 'guide/booking/' . $bookingId],
+                ['label' => 'Nhật ký tour', 'url' => BASE_URL . 'guide/diary/' . $bookingId],
+                ['label' => 'Thêm nhật ký', 'url' => BASE_URL . 'guide/diary/create/' . $bookingId, 'active' => true],
             ],
         ]);
     }
 
-    // Xử lý lưu nhật ký mới
-    public function diaryStore(): void
+    // lưu nhật ký mới
+    public function nhatKyLuu(): void
     {
         requireGuideOrAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
+        // Lấy HDV ID từ user hiện tại
         $hdvId = getCurrentHDVId();
         if (!$hdvId) {
             $_SESSION['error'] = 'Không tìm thấy thông tin hướng dẫn viên';
@@ -244,21 +424,21 @@ class GuideTourController
             exit;
         }
 
+        // Lấy dữ liệu từ form
         $bookingId = $_POST['booking_id'] ?? null;
         if (!$bookingId) {
             $_SESSION['error'] = 'Booking ID không hợp lệ';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
-        // Kiểm tra quyền
+        // Lấy booking
         $booking = Booking::find($bookingId);
-        if (!$booking || $booking->assigned_hdv_id != $hdvId) {
-            $_SESSION['error'] = 'Bạn không có quyền thêm nhật ký cho booking này';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại';
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
-
         // Lấy dữ liệu từ form
         $ngay_gio = trim($_POST['ngay_gio'] ?? '');
         if (!empty($ngay_gio)) {
@@ -269,15 +449,10 @@ class GuideTourController
         $noi_dung = trim($_POST['noi_dung'] ?? '');
         $danh_gia_hdv = trim($_POST['danh_gia_hdv'] ?? '');
 
-        // Validate
-        $errors = [];
+        // Kiểm tra dữ liệu
         if (empty($noi_dung)) {
-            $errors[] = 'Vui lòng nhập nội dung nhật ký';
-        }
-
-        if (!empty($errors)) {
-            $_SESSION['error'] = implode(', ', $errors);
-            header('Location: ' . BASE_URL . 'guide-tours/diary/create/' . $bookingId);
+            $_SESSION['error'] = 'Vui lòng nhập nội dung nhật ký';
+            header('Location: ' . BASE_URL . 'guide/diary/create/' . $bookingId);
             exit;
         }
 
@@ -291,19 +466,20 @@ class GuideTourController
 
         if (NhatKyTour::create($nhatKy)) {
             $_SESSION['success'] = 'Thêm nhật ký thành công';
-            header('Location: ' . BASE_URL . 'guide-tours/diary/' . $bookingId);
+            header('Location: ' . BASE_URL . 'guide/diary/' . $bookingId);
         } else {
             $_SESSION['error'] = 'Thêm nhật ký thất bại';
-            header('Location: ' . BASE_URL . 'guide-tours/diary/create/' . $bookingId);
+            header('Location: ' . BASE_URL . 'guide/diary/create/' . $bookingId);
         }
         exit;
     }
 
     // Form sửa nhật ký
-    public function diaryEdit($id): void
+    public function nhatKySua($id): void
     {
         requireGuideOrAdmin();
 
+        // Lấy HDV ID từ user hiện tại
         $hdvId = getCurrentHDVId();
         if (!$hdvId) {
             $_SESSION['error'] = 'Không tìm thấy thông tin hướng dẫn viên';
@@ -311,24 +487,18 @@ class GuideTourController
             exit;
         }
 
+        // Lấy nhật ký, booking
         $nhatKy = NhatKyTour::find($id);
         if (!$nhatKy) {
             $_SESSION['error'] = 'Nhật ký không tồn tại';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
-        $booking = Booking::find($nhatKy->booking_id);
+       $booking = Booking::find($nhatKy->booking_id);
         if (!$booking) {
             $_SESSION['error'] = 'Booking không tồn tại';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
-            exit;
-        }
-
-        // Kiểm tra quyền
-        if ($booking->assigned_hdv_id != $hdvId) {
-            $_SESSION['error'] = 'Bạn không có quyền sửa nhật ký này';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
@@ -339,24 +509,25 @@ class GuideTourController
             'nhatKy' => $nhatKy,
             'breadcrumb' => [
                 ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
-                ['label' => 'Danh sách tour', 'url' => BASE_URL . 'guide-tours/my-bookings'],
-                ['label' => 'Chi tiết tour', 'url' => BASE_URL . 'guide-tours/booking/' . $booking->id],
-                ['label' => 'Nhật ký tour', 'url' => BASE_URL . 'guide-tours/diary/' . $booking->id],
-                ['label' => 'Sửa nhật ký', 'url' => BASE_URL . 'guide-tours/diary/edit/' . $id, 'active' => true],
+                ['label' => 'Danh sách tour', 'url' => BASE_URL . 'guide/my-bookings'],
+                ['label' => 'Chi tiết tour', 'url' => BASE_URL . 'guide/booking/' . $booking->id],
+                ['label' => 'Nhật ký tour', 'url' => BASE_URL . 'guide/diary/' . $booking->id],
+                ['label' => 'Sửa nhật ký', 'url' => BASE_URL . 'guide/diary/edit/' . $id, 'active' => true],
             ],
         ]);
     }
 
     // Xử lý cập nhật nhật ký
-    public function diaryUpdate(): void
+    public function nhatKyCapNhat(): void
     {
         requireGuideOrAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
+        // Lấy HDV ID từ user hiện tại
         $hdvId = getCurrentHDVId();
         if (!$hdvId) {
             $_SESSION['error'] = 'Không tìm thấy thông tin hướng dẫn viên';
@@ -364,25 +535,26 @@ class GuideTourController
             exit;
         }
 
+        // Lấy dữ liệu từ form
         $id = $_POST['id'] ?? null;
         if (!$id) {
             $_SESSION['error'] = 'ID nhật ký không hợp lệ';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
+        // Lấy nhật ký, booking
         $nhatKy = NhatKyTour::find($id);
         if (!$nhatKy) {
             $_SESSION['error'] = 'Nhật ký không tồn tại';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
-        // Kiểm tra quyền
         $booking = Booking::find($nhatKy->booking_id);
-        if (!$booking || $booking->assigned_hdv_id != $hdvId) {
-            $_SESSION['error'] = 'Bạn không có quyền sửa nhật ký này';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại';
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
@@ -396,15 +568,10 @@ class GuideTourController
         $noi_dung = trim($_POST['noi_dung'] ?? '');
         $danh_gia_hdv = trim($_POST['danh_gia_hdv'] ?? '');
 
-        // Validate
-        $errors = [];
+        // Kiểm tra dữ liệu
         if (empty($noi_dung)) {
-            $errors[] = 'Vui lòng nhập nội dung nhật ký';
-        }
-
-        if (!empty($errors)) {
-            $_SESSION['error'] = implode(', ', $errors);
-            header('Location: ' . BASE_URL . 'guide-tours/diary/edit/' . $id);
+            $_SESSION['error'] = 'Vui lòng nhập nội dung nhật ký';
+            header('Location: ' . BASE_URL . 'guide/diary/edit/' . $id);
             exit;
         }
 
@@ -415,24 +582,25 @@ class GuideTourController
 
         if (NhatKyTour::update($nhatKy)) {
             $_SESSION['success'] = 'Cập nhật nhật ký thành công';
-            header('Location: ' . BASE_URL . 'guide-tours/diary/' . $nhatKy->booking_id);
+            header('Location: ' . BASE_URL . 'guide/diary/' . $nhatKy->booking_id);
         } else {
             $_SESSION['error'] = 'Cập nhật nhật ký thất bại';
-            header('Location: ' . BASE_URL . 'guide-tours/diary/edit/' . $id);
+            header('Location: ' . BASE_URL . 'guide/diary/edit/' . $id);
         }
         exit;
     }
 
     // Xóa nhật ký
-    public function diaryDelete(): void
+    public function nhatKyXoa(): void
     {
         requireGuideOrAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
+        // Lấy HDV ID từ user hiện tại
         $hdvId = getCurrentHDVId();
         if (!$hdvId) {
             $_SESSION['error'] = 'Không tìm thấy thông tin hướng dẫn viên';
@@ -440,25 +608,26 @@ class GuideTourController
             exit;
         }
 
+        // Lấy dữ liệu từ form
         $id = $_POST['id'] ?? null;
         if (!$id) {
             $_SESSION['error'] = 'ID nhật ký không hợp lệ';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
+        // Lấy nhật ký, booking
         $nhatKy = NhatKyTour::find($id);
         if (!$nhatKy) {
             $_SESSION['error'] = 'Nhật ký không tồn tại';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
-        // Kiểm tra quyền
         $booking = Booking::find($nhatKy->booking_id);
-        if (!$booking || $booking->assigned_hdv_id != $hdvId) {
-            $_SESSION['error'] = 'Bạn không có quyền xóa nhật ký này';
-            header('Location: ' . BASE_URL . 'guide-tours/my-bookings');
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại';
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         }
 
@@ -469,7 +638,7 @@ class GuideTourController
             $_SESSION['error'] = 'Xóa nhật ký thất bại';
         }
 
-        header('Location: ' . BASE_URL . 'guide-tours/diary/' . $bookingId);
+        header('Location: ' . BASE_URL . 'guide/diary/' . $bookingId);
         exit;
     }
 }

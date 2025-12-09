@@ -580,10 +580,16 @@ class Booking
     public function getKhachs()
     {
         $pdo = getDB();
+        // Lấy TẤT CẢ khách từ booking_khach (đã được import từ file Excel)
         $sql = "SELECT * FROM booking_khach WHERE booking_id = ? ORDER BY id ASC";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$this->id]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $khachs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Log để debug (có thể xóa sau)
+        error_log("Booking ID {$this->id}: Lấy được " . count($khachs) . " khách từ booking_khach");
+        
+        return $khachs;
     }
 
     // Thêm khách hàng mới

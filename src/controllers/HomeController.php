@@ -33,8 +33,8 @@ class HomeController
 
         // Chuyển hướng dựa trên role
         if ($currentUser->isGuide()) {
-            // Hướng dẫn viên chuyển đến trang guide
-            header('Location: ' . BASE_URL . 'guide');
+            // Hướng dẫn viên chuyển đến trang danh sách tour của mình
+            header('Location: ' . BASE_URL . 'guide/my-bookings');
             exit;
         } elseif ($currentUser->isAdmin()) {
             // Admin ở lại trang home

@@ -186,10 +186,8 @@ ob_start();
 </div>
 
 <?php
-// Lấy nội dung đã capture
 $content = ob_get_clean();
 
-// Truyền vào layout
 view('layouts.GuideLayout', [
     'title' => $title ?? 'Danh sách khách hàng',
     'pageTitle' => $pageTitle ?? 'Danh sách khách hàng',

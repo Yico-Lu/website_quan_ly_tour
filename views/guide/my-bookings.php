@@ -54,10 +54,10 @@ ob_start();
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm gap-1">
-                                    <a href="<?= BASE_URL ?>guide-tours/booking/<?= $booking->id ?>" class="btn btn-info btn-sm" title="Xem chi tiết">
+                                    <a href="<?= BASE_URL ?>guide/booking/<?= $booking->id ?>" class="btn btn-info btn-sm" title="Xem chi tiết">
                                         <i class="bi bi-eye"></i> Chi tiết
                                     </a>
-                                    <a href="<?= BASE_URL ?>guide-tours/diary/<?= $booking->id ?>" class="btn btn-success btn-sm" title="Nhật ký tour">
+                                    <a href="<?= BASE_URL ?>guide/diary/<?= $booking->id ?>" class="btn btn-success btn-sm" title="Nhật ký tour">
                                         <i class="bi bi-journal-text"></i> Nhật ký
                                     </a>
                                 </div>
