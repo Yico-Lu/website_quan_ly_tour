@@ -150,100 +150,49 @@ function requireGuideOrAdmin()
     }
 }
 
-// Upload một ảnh đơn
-function uploadImage($file, $prefix = 'file', $uploadDir = 'uploads/general/')
+// Lấy HDV ID từ user hiện tại
+function getCurrentHDVId()
 {
-    // Kiểm tra xem tệp có tồn tại và không có lỗi tải lên không
-    if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
+    $user = getCurrentUser();
+    if (!$user || !isGuide()) {
         return null;
     }
 
-    // Xác thực loại tệp
-    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!in_array($file['type'], $allowedTypes)) {
-        return null; 
-    }
-
-    // Xác thực kích thước tệp
-    $maxSize = 5 * 1024 * 1024; // 5MB
-    if ($file['size'] > $maxSize) {
-        return null; 
-    }
-
-    // Lấy phần mở rộng của tệp
-    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
-    // Xác thực phần mở rộng như một biện pháp bảo mật bổ sung
-    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-    if (!in_array($extension, $allowedExtensions)) {
-        return null; 
-    }
-
-    // Tạo tên tệp duy nhất
-    $fileName = $prefix . '_' . time() . '_' . rand(1000, 9999) . '.' . $extension;
-
-    // Đường dẫn đầy đủ để lưu tệp
-    $fullUploadDir = __DIR__ . '/../../public/' . $uploadDir;
-    $filePath = $fullUploadDir . $fileName;
-
-    // Tạo thư mục nếu nó chưa tồn tại
-    if (!is_dir($fullUploadDir)) {
-        mkdir($fullUploadDir, 0755, true);
-    }
-
-    // Di chuyển tệp đã tải lên
-    if (move_uploaded_file($file['tmp_name'], $filePath)) {
-        return '/' . $uploadDir . $fileName; 
-    }
-
-    return null;
+    require_once __DIR__ . '/../models/HDV.php';
+    $hdv = HDV::findByTaiKhoanId($user->id);
+    return $hdv ? $hdv->id : null;
 }
 
-// tải nhiều ảnh
-function uploadMultipleImages($files, $prefix = 'file', $uploadDir = 'uploads/general/')
+// Thiết lập thông báo flash message
+function setFlashMessage($type, $message)
 {
-    $uploadedPaths = []; //mảng lưu trữ đường dẫn đã tải lên
+    $_SESSION['flash_messages'][] = [
+        'type' => $type,
+        'message' => $message,
+        'timestamp' => time()
+    ];
+}
 
-    if (!$files || !is_array($files['name'])) {
-        return $uploadedPaths; //trả về mảng rỗng nếu không có tệp
-    }
-
-    // Xử lý từng tệp
-    foreach ($files['name'] as $key => $name) {
-        if ($files['error'][$key] !== UPLOAD_ERR_NO_FILE) {
-            $file = [
-                'name' => $files['name'][$key],
-                'type' => $files['type'][$key],
-                'tmp_name' => $files['tmp_name'][$key],
-                'error' => $files['error'][$key],
-                'size' => $files['size'][$key]
-            ];
-            
-            $path = uploadImage($file, $prefix, $uploadDir);
-            if ($path) {
-                $uploadedPaths[] = $path; //thêm đường dẫn vào mảng
-            }
-        }
-    }
-
-    return $uploadedPaths;
+// Lấy và xóa thông báo flash message
+function getFlashMessages()
+{
+    $messages = $_SESSION['flash_messages'] ?? [];
+    unset($_SESSION['flash_messages']);
+    return $messages;
 }
 
 // Hiển thị thông báo flash message (success/error) 
 function displayFlashMessages(): void
 {
-    static $alertCount = 0;
-    
     if (isset($_SESSION['success'])) {
-        $alertId = 'flash-alert-' . $alertCount++;
-        echo '<div id="' . $alertId . '" class="alert alert-success alert-dismissible fade show" role="alert">';
+        echo '<div class="alert alert-success alert-dismissible fade show" role="alert">';
         echo '<i class="bi bi-check-circle-fill me-2"></i>';
         echo htmlspecialchars($_SESSION['success']);
         echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
         echo '</div>';
         echo '<script>
             setTimeout(function() {
-                const alert = document.getElementById("' . $alertId . '");
+                const alert = document.querySelector(".alert-success");
                 if (alert) {
                     const bsAlert = new bootstrap.Alert(alert);
                     bsAlert.close();
@@ -254,15 +203,14 @@ function displayFlashMessages(): void
     }
 
     if (isset($_SESSION['error'])) {
-        $alertId = 'flash-alert-' . $alertCount++;
-        echo '<div id="' . $alertId . '" class="alert alert-danger alert-dismissible fade show" role="alert">';
+        echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
         echo '<i class="bi bi-exclamation-circle-fill me-2"></i>';
         echo htmlspecialchars($_SESSION['error']);
         echo '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
         echo '</div>';
         echo '<script>
             setTimeout(function() {
-                const alert = document.getElementById("' . $alertId . '");
+                const alert = document.querySelector(".alert-danger");
                 if (alert) {
                     const bsAlert = new bootstrap.Alert(alert);
                     bsAlert.close();
@@ -271,4 +219,261 @@ function displayFlashMessages(): void
         </script>';
         unset($_SESSION['error']);
     }
+}
+
+// Upload một ảnh đơn
+function uploadImage($file, $prefix = 'file', $uploadDir = 'uploads/general/')
+{
+    if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
+
+    // Validate file type
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!in_array($file['type'], $allowedTypes)) {
+        return null; // Invalid file type
+    }
+
+    // Validate file size (5MB max)
+    $maxSize = 5 * 1024 * 1024; // 5MB
+    if ($file['size'] > $maxSize) {
+        return null; // File too large
+    }
+
+    // Get file extension
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+    // Validate extension as additional security
+    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    if (!in_array($extension, $allowedExtensions)) {
+        return null; // Invalid extension
+    }
+
+    // Generate unique filename
+    $fileName = $prefix . '_' . time() . '_' . rand(1000, 9999) . '.' . $extension;
+
+    // Full path to save file
+    $fullUploadDir = __DIR__ . '/../../public/' . $uploadDir;
+    $filePath = $fullUploadDir . $fileName;
+
+    // Create directory if it doesn't exist
+    if (!is_dir($fullUploadDir)) {
+        mkdir($fullUploadDir, 0755, true);
+    }
+
+    // Move uploaded file
+    if (move_uploaded_file($file['tmp_name'], $filePath)) {
+        return '/' . $uploadDir . $fileName; // Return web path
+    }
+
+    return null;
+}
+
+// Upload nhiều ảnh
+function uploadMultipleImages($files, $prefix = 'file', $uploadDir = 'uploads/general/')
+{
+    $uploadedPaths = [];
+
+    if (!$files || !is_array($files['name'])) {
+        return $uploadedPaths;
+    }
+
+    // Process each file
+    foreach ($files['name'] as $key => $name) {
+        if ($files['error'][$key] !== UPLOAD_ERR_NO_FILE) {
+            $file = [
+                'name' => $files['name'][$key],
+                'type' => $files['type'][$key],
+                'tmp_name' => $files['tmp_name'][$key],
+                'error' => $files['error'][$key],
+                'size' => $files['size'][$key]
+            ];
+
+            $path = uploadImage($file, $prefix, $uploadDir);
+            if ($path) {
+                $uploadedPaths[] = $path;
+            }
+        }
+    }
+
+    return $uploadedPaths;
+}
+
+// Đọc file Excel/CSV và trả về mảng dữ liệu
+function readExcelFile($filePath, $startRow = 2)
+{
+    if (!is_file($filePath) || !is_readable($filePath)) {
+        return null;
+    }
+
+    $data = [];
+    $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+    $colCount = 6; // Họ tên, Giới tính, Năm sinh, Số giấy tờ, Yêu cầu cá nhân, Ghi chú
+    
+    if ($extension === 'csv') {
+        // Đọc file CSV
+        if (($handle = fopen($filePath, "r")) !== FALSE) {
+            $rowNum = 0;
+            // Đọc với encoding UTF-8
+            while (($row = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                $rowNum++;
+                if ($rowNum < $startRow) continue; // Bỏ qua header
+                
+                // Chuyển đổi encoding nếu cần
+                $row = array_map(function($cell) {
+                    // Thử detect và convert encoding
+                    if (!mb_check_encoding($cell, 'UTF-8')) {
+                        $cell = mb_convert_encoding($cell, 'UTF-8', 'Windows-1252');
+                    }
+                    return trim($cell);
+                }, $row);
+                
+                if (empty(array_filter($row))) continue; // Bỏ qua dòng trống
+                $data[] = $row;
+            }
+            fclose($handle);
+        }
+    } elseif (in_array($extension, ['xls', 'xlsx'])) {
+        // Đọc file Excel - sử dụng PhpSpreadsheet nếu có
+        if (class_exists('\PhpOffice\PhpSpreadsheet\IOFactory')) {
+            try {
+                $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+                $worksheet = $spreadsheet->getActiveSheet();
+                $highestRow = $worksheet->getHighestRow();
+                
+                for ($row = $startRow; $row <= $highestRow; $row++) {
+                    $rowData = [];
+                    $cellValue = $worksheet->getCell('A' . $row)->getValue();
+                    if (empty($cellValue)) continue; // Bỏ qua dòng trống
+                    
+                    // Đọc các cột: A=Họ tên, B=Giới tính, C=Năm sinh, D=Số giấy tờ, E=Yêu cầu cá nhân, F=Ghi chú
+                    $rowData[] = trim($worksheet->getCell('A' . $row)->getValue() ?? ''); // Họ tên
+                    $rowData[] = trim($worksheet->getCell('B' . $row)->getValue() ?? ''); // Giới tính
+                    $rowData[] = trim($worksheet->getCell('C' . $row)->getValue() ?? ''); // Năm sinh
+                    $rowData[] = trim($worksheet->getCell('D' . $row)->getValue() ?? ''); // Số giấy tờ
+                    $rowData[] = trim($worksheet->getCell('E' . $row)->getValue() ?? ''); // Yêu cầu cá nhân
+                    $rowData[] = trim($worksheet->getCell('F' . $row)->getValue() ?? ''); // Ghi chú
+                    
+                    if (!empty($rowData[0])) { // Có ít nhất họ tên
+                        $data[] = $rowData;
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('Error reading Excel file: ' . $e->getMessage());
+                return null;
+            }
+        } elseif ($extension === 'xlsx' && class_exists('ZipArchive')) {
+            // Fallback: Đọc file XLSX bằng cách giải nén và parse XML (không cần PhpSpreadsheet)
+            try {
+                $data = readXlsxWithoutPhpSpreadsheet($filePath, $startRow);
+                if ($data !== null) {
+                    return $data;
+                }
+            } catch (Exception $e) {
+                error_log('Error reading XLSX file (fallback method): ' . $e->getMessage());
+            }
+            // Nếu fallback không thành công, hướng dẫn user
+            throw new Exception('Để import file Excel, vui lòng cài đặt thư viện PhpSpreadsheet (chạy: composer require phpoffice/phpspreadsheet) hoặc export file sang định dạng CSV');
+        } else {
+            // Nếu không có PhpSpreadsheet và không phải XLSX hoặc không có ZipArchive
+            throw new Exception('Để import file Excel, vui lòng cài đặt thư viện PhpSpreadsheet (chạy: composer require phpoffice/phpspreadsheet) hoặc export file sang định dạng CSV');
+        }
+    }
+    
+    return $data;
+}
+
+// Đọc file XLSX không cần PhpSpreadsheet (giải nén ZIP và parse XML)
+function readXlsxWithoutPhpSpreadsheet($filePath, $startRow = 2)
+{
+    if (!class_exists('ZipArchive') || !is_file($filePath) || !is_readable($filePath)) {
+        return null;
+    }
+    
+    $zip = new ZipArchive();
+    if ($zip->open($filePath) !== TRUE) {
+        return null;
+    }
+    
+    // Đọc file sharedStrings.xml để lấy danh sách chuỗi được chia sẻ
+    $sharedStrings = [];
+    if (($sharedStringsXml = $zip->getFromName('xl/sharedStrings.xml')) !== false) {
+        $xml = simplexml_load_string($sharedStringsXml);
+        if ($xml && isset($xml->si)) {
+            foreach ($xml->si as $si) {
+                $text = '';
+                if (isset($si->t)) {
+                    $text = (string)$si->t;
+                }
+                $sharedStrings[] = $text;
+            }
+        }
+    }
+    
+    // Đọc file xl/worksheets/sheet1.xml (sheet đầu tiên)
+    $sheetData = null;
+    $sheetFiles = ['xl/worksheets/sheet1.xml', 'xl/worksheets/sheet.xml'];
+    foreach ($sheetFiles as $sheetFile) {
+        if (($sheetXml = $zip->getFromName($sheetFile)) !== false) {
+            $sheetData = $sheetXml;
+            break;
+        }
+    }
+    
+    $zip->close();
+    
+    if (!$sheetData) {
+        return null;
+    }
+    
+    // Parse XML của sheet
+    $xml = simplexml_load_string($sheetData);
+    if (!$xml || !isset($xml->sheetData->row)) {
+        return null;
+    }
+    
+    $data = [];
+    $rowNum = 0;
+    $colCount = 6; // Họ tên, Giới tính, Năm sinh, Số giấy tờ, Yêu cầu cá nhân, Ghi chú
+    
+    foreach ($xml->sheetData->row as $row) {
+        $rowNum++;
+        if ($rowNum < $startRow) continue; // Bỏ qua header
+        
+        $rowData = array_fill(0, $colCount, '');
+        
+        if (isset($row->c)) {
+            foreach ($row->c as $cell) {
+                $cellRef = (string)$cell['r']; // Ví dụ: A1, B1, C1...
+                $col = preg_replace('/[0-9]+/', '', $cellRef); // Lấy chữ cái cột
+                $colIndex = ord($col) - ord('A'); // Chuyển thành index (A=0, B=1, ...)
+                
+                if ($colIndex < 0 || $colIndex >= $colCount) continue; // Chỉ đọc 6 cột đầu
+                
+                $value = '';
+                if (isset($cell->v)) {
+                    $cellValue = (string)$cell->v;
+                    
+                    // Nếu có thuộc tính t="s" thì giá trị là index trong sharedStrings
+                    if (isset($cell['t']) && (string)$cell['t'] === 's') {
+                        $stringIndex = (int)$cellValue;
+                        if (isset($sharedStrings[$stringIndex])) {
+                            $value = $sharedStrings[$stringIndex];
+                        }
+                    } else {
+                        $value = $cellValue;
+                    }
+                }
+                
+                $rowData[$colIndex] = trim($value);
+            }
+        }
+        
+        // Chỉ thêm dòng nếu có ít nhất họ tên (cột đầu tiên)
+        if (!empty($rowData[0])) {
+            $data[] = $rowData;
+        }
+    }
+    
+    return $data;
 }

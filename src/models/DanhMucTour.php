@@ -9,7 +9,6 @@ class DanhMucTour
     public $ngay_cap_nhat;
     public $trang_thai;
 
-    // Constructor để khởi tạo thực thể DanhMucTour
     public function __construct($data = [])
     {
         // Nếu truyền vào mảng dữ liệu thì gán vào các thuộc tính
@@ -31,7 +30,7 @@ class DanhMucTour
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
         $danhMucs = [];
-        foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row){
+        foreach($stmt->fetchAll() as $row){
             $danhMucs[] = new DanhMucTour($row);
         }
         return $danhMucs;
@@ -45,7 +44,7 @@ class DanhMucTour
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
         $danhMucs = [];
-        foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row){
+        foreach($stmt->fetchAll() as $row){
             $danhMucs[] = new DanhMucTour($row);
         }
         return $danhMucs;
@@ -58,7 +57,7 @@ class DanhMucTour
         $sql = "SELECT * FROM danh_muc_tour WHERE id = ? LIMIT 1";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$id]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $data = $stmt->fetch();
         return $data ? new DanhMucTour($data) : null;
     }
 
@@ -155,3 +154,6 @@ class DanhMucTour
     }
 }
 ?>
+
+
+

@@ -49,6 +49,7 @@ class AccountController
         // Lấy dữ liệu từ form
         $name = trim($_POST['name'] ?? '');
         $email = trim($_POST['email'] ?? '');
+        $sdt = trim($_POST['sdt'] ?? '');
         $password = $_POST['password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
         $role = $_POST['role'] ?? 'huong_dan_vien';
@@ -83,11 +84,23 @@ class AccountController
         $user = new User([
             'name' => $name,
             'email' => $email,
+            'sdt' => $sdt ?: null,
             'role' => $role,
             'status' => $status,
         ]);
 
-        if (User::create($user, $password)) {
+        $newUserId = User::create($user, $password);
+        if ($newUserId) {
+            // Nếu tạo tài khoản HDV thành công, tự động tạo record trong bảng hdv
+            if ($role === 'huong_dan_vien' && class_exists('HDV')) {
+                $hdv = new HDV([
+                    'tai_khoan_id' => $newUserId,
+                    'nhom' => 'noi_dia', // Mặc định là nội địa
+                    'chuyen_mon' => 'Chưa cập nhật'
+                ]);
+                HDV::create($hdv);
+            }
+            
             $_SESSION['success'] = 'Thêm tài khoản mới thành công';
             header('Location: ' . BASE_URL . 'accounts');
             exit;
@@ -142,6 +155,7 @@ class AccountController
         // Lấy dữ liệu từ form
         $name = trim($_POST['name'] ?? '');
         $email = trim($_POST['email'] ?? '');
+        $sdt = trim($_POST['sdt'] ?? '');
         $role = $_POST['role'] ?? 'huong_dan_vien';
         $status = isset($_POST['status']);
         $changePassword = isset($_POST['change_password']);
@@ -183,22 +197,39 @@ class AccountController
             'id' => $id,
             'name' => $name,
             'email' => $email,
+            'sdt' => $sdt ?: null,
             'role' => $role,
             'status' => $status,
         ]);
 
-        if (User::update($user)) {
+        $updateResult = User::update($user);
+        if ($updateResult) {
             // Cập nhật mật khẩu nếu có yêu cầu
             if ($changePassword && !empty($newPassword)) {
                 User::updatePassword($id, $newPassword);
             }
 
             $_SESSION['success'] = 'Cập nhật tài khoản thành công';
-            header('Location: ' . BASE_URL . 'accounts');
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            header('Location: ' . BASE_URL . 'accounts', true, 302);
             exit;
         } else {
+            // Kiểm tra lỗi cụ thể
+            $pdo = getDB();
+            $sqlCheck = "SELECT COUNT(*) FROM tai_khoan WHERE email = ? AND id != ?";
+            $stmtCheck = $pdo->prepare($sqlCheck);
+            $stmtCheck->execute([$email, $id]);
+            if ($stmtCheck->fetchColumn() > 0) {
             $_SESSION['error'] = 'Email đã tồn tại trong hệ thống';
-            header('Location: ' . BASE_URL . 'accounts/edit/' . $id);
+            } else {
+                $_SESSION['error'] = 'Cập nhật tài khoản thất bại. Vui lòng thử lại.';
+            }
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            header('Location: ' . BASE_URL . 'accounts/edit/' . $id, true, 302);
             exit;
         }
     }

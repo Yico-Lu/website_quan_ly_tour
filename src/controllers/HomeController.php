@@ -28,14 +28,31 @@ class HomeController
             exit;
         }
 
-        // Lấy thông tin user hiện tại (đã đảm bảo đăng nhập ở trên)
+        // Lấy thông tin user hiện tại
         $currentUser = getCurrentUser();
 
-        // Hiển thị view home với dữ liệu title và user
-        view('home', [
-            'title' => 'Trang chủ - Website Quản Lý Tour',
-            'user' => $currentUser,
-        ]);
+        // Chuyển hướng dựa trên role
+        if ($currentUser->isGuide()) {
+            // Hiển thị trang chủ riêng cho HDV (giao diện tương tự admin)
+            view('guide.index', [
+                'title' => 'Trang chủ - Hướng dẫn viên',
+                'pageTitle' => 'Trang chủ',
+                'user' => $currentUser,
+                'breadcrumb' => [
+                    ['label' => 'Trang chủ', 'url' => BASE_URL . 'home', 'active' => true],
+                ],
+            ]);
+        } elseif ($currentUser->isAdmin()) {
+            // Admin ở lại trang home
+            view('home', [
+                'title' => 'Trang chủ - Website Quản Lý Tour',
+                'user' => $currentUser,
+            ]);
+        } else {
+            // Trường hợp khác (nếu có role khác trong tương lai)
+            header('Location: ' . BASE_URL . 'welcome');
+            exit;
+        }
     }
 
     // Trang hiển thị khi route không tồn tại

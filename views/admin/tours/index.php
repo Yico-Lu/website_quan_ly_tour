@@ -13,59 +13,6 @@
         </div>
                   <!-- /.card-header -->
             <div class="card-body">
-              <?php displayFlashMessages(); ?>
-
-              <!-- Form tìm kiếm và lọc -->
-              <form method="GET" action="<?= BASE_URL ?>tours" class="mb-3">
-                  <div class="row g-2">
-                      <div class="col-md-4">
-                          <label for="keyword" class="form-label">Tìm kiếm theo tên tour</label>
-                          <input 
-                              type="text" 
-                              class="form-control" 
-                              id="keyword" 
-                              name="keyword" 
-                              value="<?= htmlspecialchars($keyword ?? '') ?>"
-                              placeholder="Nhập tên tour cần tìm..."
-                          >
-                      </div>
-                      <div class="col-md-3">
-                          <label for="danh_muc_id" class="form-label">Lọc theo danh mục</label>
-                          <select class="form-select" id="danh_muc_id" name="danh_muc_id">
-                              <option value="">Tất cả danh mục</option>
-                              <?php foreach($danhMucList as $danhMuc): ?>
-                                  <option 
-                                      value="<?= $danhMuc['id'] ?>"
-                                      <?= ($danh_muc_id ?? '') == $danhMuc['id'] ? 'selected' : '' ?>
-                                  >
-                                      <?= htmlspecialchars($danhMuc['ten_danh_muc']) ?>
-                                  </option>
-                              <?php endforeach; ?>
-                          </select>
-                      </div>
-                      <div class="col-md-3">
-                          <label for="trang_thai" class="form-label">Lọc theo trạng thái</label>
-                          <select class="form-select" id="trang_thai" name="trang_thai">
-                              <option value="">Tất cả trạng thái</option>
-                              <option value="1" <?= ($trang_thai ?? '') == '1' ? 'selected' : '' ?>>Hoạt động</option>
-                              <option value="0" <?= ($trang_thai ?? '') == '0' ? 'selected' : '' ?>>Ngưng hoạt động</option>
-                          </select>
-                      </div>
-                      <div class="col-md-2 d-flex align-items-end">
-                          <button type="submit" class="btn btn-primary w-100">
-                              <i class="bi bi-search"></i> Tìm kiếm
-                          </button>
-                      </div>
-                  </div>
-                  <?php if (!empty($keyword) || !empty($danh_muc_id) || !empty($trang_thai)): ?>
-                  <div class="mt-2">
-                      <a href="<?= BASE_URL ?>tours" class="btn btn-sm btn-secondary">
-                          <i class="bi bi-x-circle"></i> Xóa bộ lọc
-                      </a>
-                  </div>
-                  <?php endif; ?>
-              </form>
-
               <table class="table table-bordered text-center">
                     <thead>
                         <tr>
@@ -129,18 +76,10 @@
                         <?php else: ?>
                           <tr>
                             <td colspan="8" class="text-center py-4">
-                              <?php if (!empty($keyword) || !empty($danh_muc_id) || !empty($trang_thai)): ?>
-                                <h3 class="text-muted">Không tìm thấy tour nào</h3>
-                                <p class="text-muted">Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc</p>
-                                <a href="<?= BASE_URL ?>tours" class="btn btn-secondary mt-2">
-                                  <i class="bi bi-arrow-left"></i> Xem tất cả tour
-                                </a>
-                              <?php else: ?>
-                                <h3 class="text-muted">Chưa có tour nào trong hệ thống</h3>
-                                <a href="<?= BASE_URL ?>tours/create" class="btn btn-success mt-3">
-                                  <i class="bi bi-plus-circle"></i> Thêm Tour đầu tiên
-                                </a>
-                              <?php endif; ?>
+                              <h3 class="text-muted">Chưa có tour nào trong hệ thống</h3>
+                              <a href="<?= BASE_URL ?>tours/create" class="btn btn-success mt-3">
+                                <i class="bi bi-plus-circle"></i> Thêm Tour đầu tiên
+                              </a>
                             </td>
                           </tr>
                         <?php endif; ?>
@@ -166,6 +105,15 @@
     'pageTitle' => $pageTitle ?? 'Danh sách Tour',
     'content' => $content,
     'breadcrumb' => $breadcrumb ?? [],
+    'extraJs' => ['js/flash-messages.js'],
   ]);
 ?>
+
+<!-- Hiển thị thông báo -->
+<?php
+$flashMessages = getFlashMessages();
+if (!empty($flashMessages)):
+?>
+<script id="flash-messages-data" type="application/json"><?= json_encode($flashMessages, JSON_UNESCAPED_UNICODE | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
+<?php endif; ?>
 

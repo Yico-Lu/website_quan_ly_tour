@@ -3,8 +3,6 @@
 // Controller xử lý các chức năng liên quan đến xác thực (đăng nhập, đăng xuất)
 class AuthController
 {
-    
-    
     // Hiển thị form đăng nhập
     public function login()
     {
