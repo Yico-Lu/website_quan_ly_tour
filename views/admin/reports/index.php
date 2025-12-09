@@ -81,7 +81,6 @@ ob_start();
     </div>
 </div>
 
-<!-- Quick Actions -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
@@ -90,28 +89,10 @@ ob_start();
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <a href="<?= BASE_URL ?>reports/revenue-table" class="btn btn-primary btn-block">
                             <i class="bi bi-table"></i>
                             <br>Bảng Doanh thu
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="<?= BASE_URL ?>reports/revenue" class="btn btn-success btn-block">
-                            <i class="bi bi-graph-up"></i>
-                            <br>Báo cáo Doanh thu
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="<?= BASE_URL ?>reports/revenue-by-tour" class="btn btn-warning btn-block">
-                            <i class="bi bi-airplane"></i>
-                            <br>Doanh thu theo Tour
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="<?= BASE_URL ?>reports/revenue-by-category" class="btn btn-info btn-block">
-                            <i class="bi bi-tags"></i>
-                            <br>Doanh thu theo Danh mục
                         </a>
                     </div>
                 </div>
@@ -120,7 +101,6 @@ ob_start();
     </div>
 </div>
 
-<!-- Recent Activities -->
 <div class="row">
     <div class="col-md-6">
         <div class="card">
