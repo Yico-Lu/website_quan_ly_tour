@@ -1,9 +1,7 @@
 <?php
 class BookingController
 {
-    /**
-     * Lấy dữ liệu booking từ request (POST) và chuẩn hóa datetime-local.
-     */
+    // Lấy dữ liệu booking từ request (POST) và chuẩn hóa datetime-local.
     private function getBookingDataFromRequest(): array
     {
         $ngay_gio_xuat_phat = trim($_POST['ngay_gio_xuat_phat'] ?? '');
@@ -33,9 +31,7 @@ class BookingController
         ];
     }
 
-    /**
-     * Validate dữ liệu booking, trả về mảng lỗi.
-     */
+    // Validate dữ liệu booking, trả về mảng lỗi.
     private function validateBookingData(array $data): array
     {
         $errors = [];
@@ -47,9 +43,7 @@ class BookingController
         return $errors;
     }
 
-    /**
-     * Upload file danh sách khách hàng cho booking.
-     */
+    // Upload file danh sách khách hàng cho booking.
     private function handleFileUpload(int $bookingId): void
     {
         if (!isset($_FILES['guest_list_file']) || $_FILES['guest_list_file']['error'] !== UPLOAD_ERR_OK) {
@@ -76,9 +70,8 @@ class BookingController
         move_uploaded_file($file['tmp_name'], $filePath);
     }
 
-    /**
-     * Đồng bộ HDV cho booking.
-     */
+    // Đồng bộ HDV cho booking.
+     
     private function syncHDV(Booking $booking, array $postData): void
     {
         $hdv_id = trim($postData['hdv_id'] ?? '');
@@ -107,9 +100,7 @@ class BookingController
         }
     }
 
-    /**
-     * Đồng bộ khách đại diện.
-     */
+    // Đồng bộ khách đại diện
     private function syncKhach(Booking $booking, array $postData): void
     {
         if (!isset($postData['khach']) || !is_array($postData['khach'])) {
@@ -151,9 +142,7 @@ class BookingController
         }
     }
 
-    /**
-     * Đồng bộ điểm danh.
-     */
+    // Đồng bộ điểm danh.
     private function syncAttendance($bookingId, $oldBooking, array $postData): void
     {
         $lichKhoiHanhId = $oldBooking->lich_khoi_hanh_id ?: Booking::getLichKhoiHanhIdByBookingId($bookingId);
@@ -176,9 +165,7 @@ class BookingController
         }
     }
 
-    /**
-     * Đồng bộ dịch vụ từ yêu cầu đặc biệt / ghi chú.
-     */
+    // Đồng bộ dịch vụ từ yêu cầu đặc biệt / ghi chú.
     private function syncDichVuFromNotes(Booking $booking, int $bookingId, array $data, bool $isUpdate = false): void
     {
         if ($isUpdate) {
@@ -191,9 +178,7 @@ class BookingController
             $booking->addDichVu($tenDichVu, $chiTiet);
         }
     }
-    /**
-     * Lấy danh sách tour và HDV dùng chung cho form
-     */
+    // Lấy danh sách tour và HDV dùng chung cho form
     private function getFormLists(): array
     {
         return [
@@ -268,12 +253,10 @@ class BookingController
     // Hiển thị danh sách booking
     public function index(): void
     {
-        // Chỉ admin mới được truy cập quản lý booking
         requireAdmin();
 
         $bookings = Booking::getAll();
 
-        // Hiển thị view danh sách booking
         view('admin.bookings.index', [
             'title' => 'Danh sách Booking - Quản lý Tour',
             'pageTitle' => 'Danh sách Booking',
@@ -312,6 +295,7 @@ class BookingController
         $lichKhoiHanhId = $booking->lich_khoi_hanh_id ?: Booking::getLichKhoiHanhIdByBookingId($id);
         $diemDanh = Booking::getDiemDanhByBooking($id, $lichKhoiHanhId);
         $dichVus = $booking->getDichVus();
+        $nhatKys = NhatKyTour::getByBookingId($id);
 
         view('admin.bookings.show', [
             'title' => 'Chi tiết Booking - ' . $booking->ten_nguoi_dat,
@@ -321,6 +305,7 @@ class BookingController
             'khachs' => $khachs,
             'diemDanh' => $diemDanh,
             'dichVus' => $dichVus,
+            'nhatKys' => $nhatKys,
             'breadcrumb' => [
                 ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
                 ['label' => 'Danh sách booking', 'url' => BASE_URL . 'bookings'],

@@ -46,7 +46,7 @@
             $sql = "SELECT * FROM danh_muc_tour WHERE trang_thai = 1 ORDER BY ten_danh_muc";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $stmt->fetchAll();
         }
 
 
@@ -62,7 +62,7 @@
             $stmt->execute();
             $tours = [];
 
-            foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row){
+            foreach($stmt->fetchAll() as $row){
                 $tour = new Tour($row);
 
                 // Load dữ liệu liên quan nếu được yêu cầu
@@ -153,7 +153,7 @@
                     WHERE t.id = ? LIMIT 1";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$id]);
-            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+            $data = $stmt->fetch();
 
             if (!$data) {
                 return null;
@@ -205,7 +205,7 @@
             $sql = "SELECT * FROM tour_chinh_sach WHERE tour_id = ? ORDER BY ngay_tao";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$this->id]);
-            $this->chinh_sach = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->chinh_sach = $stmt->fetchAll();
             return $this->chinh_sach;
         }
 
@@ -220,7 +220,7 @@
             $sql = "SELECT * FROM tour_lich_trinh WHERE tour_id = ? ORDER BY ngay ASC";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$this->id]);
-            $this->lich_trinh = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->lich_trinh = $stmt->fetchAll();
             return $this->lich_trinh;
         }
 
@@ -235,7 +235,7 @@
             $sql = "SELECT * FROM tour_nha_cung_cap WHERE tour_id = ? ORDER BY ngay_tao";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$this->id]);
-            $this->nha_cung_cap = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->nha_cung_cap = $stmt->fetchAll();
             return $this->nha_cung_cap;
         }
 
@@ -250,7 +250,7 @@
             $sql = "SELECT * FROM tour_anh WHERE tour_id = ? ORDER BY ngay_tao";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$this->id]);
-            $this->anh_tour_chi_tiet = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->anh_tour_chi_tiet = $stmt->fetchAll();
             return $this->anh_tour_chi_tiet;
         }
 

@@ -129,7 +129,7 @@ ob_start();
         </div>
     </div>
 
-    <!-- Danh sách khách và Check-in (gộp) -->
+    <!-- Danh sách khách và Check-in -->
     <div class="col-md-12 mb-4">
         <div class="card">
             <div class="card-header">
@@ -310,75 +310,15 @@ ob_start();
     </div>
 
     <script>
-    function toggleCheckIn(khachId, isCheckIn) {
-        const lichKhoiHanhId = '<?= $lichKhoiHanhId ?>';
-        if (!lichKhoiHanhId) {
-            alert('Vui lòng cập nhật lịch khởi hành trước khi check-in.');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('booking_id', '<?= $booking->id ?>');
-        formData.append('lich_khoi_hanh_id', lichKhoiHanhId);
-        formData.append('booking_khach_id', khachId);
-        formData.append('trang_thai', isCheckIn ? 'da_den' : 'vang_mat');
-        
-        fetch('<?= BASE_URL ?>guide/check-in', {
-            method: 'POST',
-            body: formData
-        }).then(() => {
-            location.reload();
-        });
-    }
-
-    // Dữ liệu khách từ file để tạo mới khi chưa có trong hệ thống
-    const guestListFromFile = <?= json_encode($guestListFromFile, JSON_UNESCAPED_UNICODE) ?>;
-
-    function toggleCheckInFromFile(idx, isCheckIn) {
-        const lichKhoiHanhId = '<?= $lichKhoiHanhId ?>';
-        if (!lichKhoiHanhId) {
-            alert('Vui lòng cập nhật lịch khởi hành trước khi check-in.');
-            return;
-        }
-        // Lấy dữ liệu từ mảng PHP xuất ra JS
-        const guest = guestListFromFile[idx];
-        if (!guest || !guest.ho_ten) {
-            alert('Không tìm thấy thông tin khách.');
-            return;
-        }
-        const formData = new FormData();
-        formData.append('booking_id', '<?= $booking->id ?>');
-        formData.append('lich_khoi_hanh_id', lichKhoiHanhId);
-        formData.append('booking_khach_id', ''); // chưa có, sẽ tạo mới
-        formData.append('trang_thai', isCheckIn ? 'da_den' : 'vang_mat');
-        formData.append('ho_ten', guest.ho_ten);
-        formData.append('gioi_tinh', guest.gioi_tinh || '');
-        formData.append('nam_sinh', guest.nam_sinh || '');
-        formData.append('so_giay_to', guest.so_giay_to || '');
-        formData.append('yeu_cau_ca_nhan', guest.yeu_cau_ca_nhan || '');
-
-        fetch('<?= BASE_URL ?>guide/check-in', {
-            method: 'POST',
-            body: formData
-        }).then(() => {
-            location.reload();
-        });
-    }
-
-    function showUpdateYeuCau(khachId, yeuCau) {
-        document.getElementById('modalKhachId').value = khachId;
-        document.getElementById('modalYeuCau').value = yeuCau;
-        const modal = new bootstrap.Modal(document.getElementById('updateYeuCauModal'));
-        modal.show();
-    }
-
-    function showUpdateYeuCauDoan() {
-        const yeuCauDoan = '<?= htmlspecialchars(addslashes($booking->yeu_cau_dac_biet ?? '')) ?>';
-        document.getElementById('modalYeuCauDoan').value = yeuCauDoan;
-        const modal = new bootstrap.Modal(document.getElementById('updateYeuCauDoanModal'));
-        modal.show();
-    }
+        window.guideBookingData = {
+            bookingId: '<?= $booking->id ?>',
+            lichKhoiHanhId: '<?= $lichKhoiHanhId ?>',
+            baseUrl: '<?= BASE_URL ?>',
+            guestListFromFile: <?= json_encode($guestListFromFile, JSON_UNESCAPED_UNICODE) ?>,
+            yeuCauDoan: '<?= htmlspecialchars(addslashes($booking->yeu_cau_dac_biet ?? '')) ?>'
+        };
     </script>
+    <script src="<?= BASE_URL ?>public/js/guide-booking.js"></script>
 
     <!-- Modal cập nhật yêu cầu đặc biệt của cả đoàn -->
     <div class="modal fade" id="updateYeuCauDoanModal" tabindex="-1">

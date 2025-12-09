@@ -302,8 +302,13 @@ function uploadMultipleImages($files, $prefix = 'file', $uploadDir = 'uploads/ge
 // Đọc file Excel/CSV và trả về mảng dữ liệu
 function readExcelFile($filePath, $startRow = 2)
 {
+    if (!is_file($filePath) || !is_readable($filePath)) {
+        return null;
+    }
+
     $data = [];
     $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+    $colCount = 6; // Họ tên, Giới tính, Năm sinh, Số giấy tờ, Yêu cầu cá nhân, Ghi chú
     
     if ($extension === 'csv') {
         // Đọc file CSV
@@ -338,15 +343,16 @@ function readExcelFile($filePath, $startRow = 2)
                 
                 for ($row = $startRow; $row <= $highestRow; $row++) {
                     $rowData = [];
-                    $cellValue = $worksheet->getCell('A' . $row)->getCalculatedValue();
+                    $cellValue = $worksheet->getCell('A' . $row)->getValue();
                     if (empty($cellValue)) continue; // Bỏ qua dòng trống
                     
-                    // Đọc các cột: A=Họ tên, B=Giới tính, C=Năm sinh, D=Số giấy tờ, E=Yêu cầu cá nhân
-                    $rowData[] = trim($worksheet->getCell('A' . $row)->getCalculatedValue() ?? ''); // Họ tên
-                    $rowData[] = trim($worksheet->getCell('B' . $row)->getCalculatedValue() ?? ''); // Giới tính
-                    $rowData[] = trim($worksheet->getCell('C' . $row)->getCalculatedValue() ?? ''); // Năm sinh
-                    $rowData[] = trim($worksheet->getCell('D' . $row)->getCalculatedValue() ?? ''); // Số giấy tờ
-                    $rowData[] = trim($worksheet->getCell('E' . $row)->getCalculatedValue() ?? ''); // Yêu cầu cá nhân
+                    // Đọc các cột: A=Họ tên, B=Giới tính, C=Năm sinh, D=Số giấy tờ, E=Yêu cầu cá nhân, F=Ghi chú
+                    $rowData[] = trim($worksheet->getCell('A' . $row)->getValue() ?? ''); // Họ tên
+                    $rowData[] = trim($worksheet->getCell('B' . $row)->getValue() ?? ''); // Giới tính
+                    $rowData[] = trim($worksheet->getCell('C' . $row)->getValue() ?? ''); // Năm sinh
+                    $rowData[] = trim($worksheet->getCell('D' . $row)->getValue() ?? ''); // Số giấy tờ
+                    $rowData[] = trim($worksheet->getCell('E' . $row)->getValue() ?? ''); // Yêu cầu cá nhân
+                    $rowData[] = trim($worksheet->getCell('F' . $row)->getValue() ?? ''); // Ghi chú
                     
                     if (!empty($rowData[0])) { // Có ít nhất họ tên
                         $data[] = $rowData;
@@ -380,7 +386,7 @@ function readExcelFile($filePath, $startRow = 2)
 // Đọc file XLSX không cần PhpSpreadsheet (giải nén ZIP và parse XML)
 function readXlsxWithoutPhpSpreadsheet($filePath, $startRow = 2)
 {
-    if (!class_exists('ZipArchive')) {
+    if (!class_exists('ZipArchive') || !is_file($filePath) || !is_readable($filePath)) {
         return null;
     }
     
@@ -428,12 +434,13 @@ function readXlsxWithoutPhpSpreadsheet($filePath, $startRow = 2)
     
     $data = [];
     $rowNum = 0;
+    $colCount = 6; // Họ tên, Giới tính, Năm sinh, Số giấy tờ, Yêu cầu cá nhân, Ghi chú
     
     foreach ($xml->sheetData->row as $row) {
         $rowNum++;
         if ($rowNum < $startRow) continue; // Bỏ qua header
         
-        $rowData = ['', '', '', '', '']; // 5 cột: Họ tên, Giới tính, Năm sinh, Số giấy tờ, Yêu cầu cá nhân
+        $rowData = array_fill(0, $colCount, '');
         
         if (isset($row->c)) {
             foreach ($row->c as $cell) {
@@ -441,7 +448,7 @@ function readXlsxWithoutPhpSpreadsheet($filePath, $startRow = 2)
                 $col = preg_replace('/[0-9]+/', '', $cellRef); // Lấy chữ cái cột
                 $colIndex = ord($col) - ord('A'); // Chuyển thành index (A=0, B=1, ...)
                 
-                if ($colIndex < 0 || $colIndex >= 5) continue; // Chỉ đọc 5 cột đầu
+                if ($colIndex < 0 || $colIndex >= $colCount) continue; // Chỉ đọc 6 cột đầu
                 
                 $value = '';
                 if (isset($cell->v)) {

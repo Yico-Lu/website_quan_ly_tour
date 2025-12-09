@@ -48,7 +48,7 @@ class HDV
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
         $hdvs = [];
-        foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row){
+        foreach($stmt->fetchAll() as $row){
             $hdvs[] = new HDV($row);
         }
         return $hdvs;
@@ -67,7 +67,7 @@ class HDV
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
         $hdvs = [];
-        foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row){
+        foreach($stmt->fetchAll() as $row){
             $hdvs[] = new HDV($row);
         }
         return $hdvs;
@@ -84,7 +84,7 @@ class HDV
                 WHERE h.id = ? LIMIT 1";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$id]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $data = $stmt->fetch();
         if(!$data) return null;
 
         return new HDV($data);
@@ -101,7 +101,7 @@ class HDV
                 WHERE h.tai_khoan_id = ? LIMIT 1";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$tai_khoan_id]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $data = $stmt->fetch();
         if(!$data) return null;
 
         return new HDV($data);
@@ -124,7 +124,7 @@ class HDV
         $sqlCheckAccount = "SELECT phan_quyen FROM tai_khoan WHERE id = ?";
         $stmtCheckAccount = $pdo->prepare($sqlCheckAccount);
         $stmtCheckAccount->execute([$hdv->tai_khoan_id]);
-        $account = $stmtCheckAccount->fetch(PDO::FETCH_ASSOC);
+        $account = $stmtCheckAccount->fetch();
         if(!$account || $account['phan_quyen'] !== 'hdv'){
             return false; // Tài khoản không phải là HDV
         }
@@ -228,7 +228,7 @@ class HDV
                 ORDER BY tk.ho_ten";
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll();
     }
 
     // Lấy số lượng booking của HDV

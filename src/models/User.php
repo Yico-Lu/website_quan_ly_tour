@@ -77,7 +77,7 @@ class User
             $sql = "SELECT * FROM tai_khoan WHERE email = ? AND trang_thai = 'hoat_dong' LIMIT 1";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$email]);
-            $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+            $userData = $stmt->fetch();
 
             // Nếu không tìm thấy user hoặc password không đúng
             if(!$userData || !password_verify($password, $userData['mat_khau'])){
@@ -110,7 +110,7 @@ class User
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $users = [];
-            foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row){
+            foreach($stmt->fetchAll() as $row){
                 $users[] = new User([
                     'id' => $row['id'],
                     'ho_ten' => $row['ho_ten'],
@@ -132,7 +132,7 @@ class User
             $sql = "SELECT * FROM tai_khoan WHERE id = ? LIMIT 1";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$id]);
-            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+            $data = $stmt->fetch();
             if(!$data) return null;
 
             return new User([

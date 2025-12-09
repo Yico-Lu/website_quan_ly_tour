@@ -88,7 +88,7 @@ class Booking
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
         $bookings = [];
-        foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row){
+        foreach($stmt->fetchAll() as $row){
             $bookings[] = new Booking($row);
         }
         return $bookings;
@@ -122,7 +122,7 @@ class Booking
                 WHERE b.id = ? LIMIT 1";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$id]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $data = $stmt->fetch();
         return $data ? new Booking($data) : null;
     }
 
@@ -139,7 +139,7 @@ class Booking
                 ORDER BY t.ten_tour";
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll();
     }
 
     // Lấy danh sách hướng dẫn viên từ bảng hdv
@@ -153,7 +153,7 @@ class Booking
                 ORDER BY tk.ho_ten";
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll();
     }
 
 
@@ -373,7 +373,7 @@ class Booking
         $sql = "SELECT * FROM booking_dich_vu WHERE booking_id = ? ORDER BY ngay_tao ASC";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$this->id]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll();
     }
 
     public static function deleteDichVuByBooking($bookingId)
@@ -437,7 +437,7 @@ class Booking
                 ORDER BY bh.id ASC";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$this->id]);
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $results = $stmt->fetchAll();
         
         // Lọc bỏ các bản ghi không có thông tin HDV hợp lệ
         $filteredResults = [];
@@ -561,7 +561,7 @@ class Booking
         $sql = "SELECT * FROM booking_khach WHERE booking_id = ? ORDER BY id ASC";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$this->id]);
-        $khachs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $khachs = $stmt->fetchAll();
         
         // Log để debug (có thể xóa sau)
         error_log("Booking ID {$this->id}: Lấy được " . count($khachs) . " khách từ booking_khach");
@@ -665,7 +665,7 @@ class Booking
         }
         $stmt = $pdo->prepare("SELECT id FROM lich_khoi_hanh WHERE booking_id = ? ORDER BY id DESC LIMIT 1");
         $stmt->execute([$bookingId]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $row = $stmt->fetch();
         return $row['id'] ?? null;
     }
 
@@ -756,7 +756,7 @@ class Booking
             LIMIT 1
         ");
         $stmt->execute([$bookingId]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        return $stmt->fetch() ?: null;
     }
 
     /**
@@ -771,7 +771,7 @@ class Booking
 
         $select = $pdo->prepare("SELECT id FROM lich_khoi_hanh WHERE booking_id = ? ORDER BY id DESC LIMIT 1");
         $select->execute([$bookingId]);
-        $row = $select->fetch(PDO::FETCH_ASSOC);
+        $row = $select->fetch();
 
         if ($row && !empty($row['id'])) {
             $stmt = $pdo->prepare("
