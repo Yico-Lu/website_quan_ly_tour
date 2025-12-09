@@ -214,6 +214,7 @@ match ($act) {
     'guide/diary/delete' => $guideTourController->nhatKyXoa(),
     // Đường dẫn báo cáo thống kê
     'reports' => $reportController->index(),
+    'reports/revenue-table' => $reportController->revenueTable(),
 
     // Xử lý route có tham số
     default => match($route) {
