@@ -3,7 +3,7 @@
   <!--begin::Sidebar Brand-->
   <div class="sidebar-brand">
     <!--begin::Brand Link-->
-    <a href="<?= BASE_URL . (isGuide() ? 'guide/my-bookings' : 'home') ?>" class="brand-link">
+    <a href="<?= BASE_URL . 'home' ?>" class="brand-link">
       <!--begin::Brand Image-->
       <img
         src="<?= asset('dist/assets/img/AdminLTELogo.png') ?>"
@@ -30,27 +30,16 @@
       >
         <?php if (isGuide()): ?>
           <li class="nav-item">
-            <a href="<?= BASE_URL . 'guide/my-bookings' ?>" class="nav-link">
+            <a href="<?= BASE_URL . 'home' ?>" class="nav-link">
               <i class="nav-icon bi bi-house-door"></i>
               <p>Trang chủ HDV</p>
             </a>
           </li>
           <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="<?= BASE_URL . 'guide/my-bookings' ?>" class="nav-link">
               <i class="nav-icon bi bi-map"></i>
-              <p>
-                Tour được phân công
-                <i class="nav-arrow bi bi-chevron-right"></i>
-              </p>
+              <p>Tour được phân công</p>
             </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="<?= BASE_URL . 'guide/my-bookings' ?>" class="nav-link">
-                  <i class="nav-icon bi bi-circle"></i>
-                  <p>Danh sách Tour</p>
-                </a>
-              </li>
-            </ul>
           </li>
           <?php else: ?>
           <li class="nav-item">

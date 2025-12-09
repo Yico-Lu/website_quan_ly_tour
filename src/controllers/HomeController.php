@@ -33,15 +33,21 @@ class HomeController
 
         // Chuyển hướng dựa trên role
         if ($currentUser->isGuide()) {
-            // Hướng dẫn viên chuyển đến trang danh sách tour của mình
-            header('Location: ' . BASE_URL . 'guide/my-bookings');
-            exit;
+            // Hiển thị trang chủ riêng cho HDV (giao diện tương tự admin)
+            view('guide.index', [
+                'title' => 'Trang chủ - Hướng dẫn viên',
+                'pageTitle' => 'Trang chủ',
+                'user' => $currentUser,
+                'breadcrumb' => [
+                    ['label' => 'Trang chủ', 'url' => BASE_URL . 'home', 'active' => true],
+                ],
+            ]);
         } elseif ($currentUser->isAdmin()) {
             // Admin ở lại trang home
-        view('home', [
-            'title' => 'Trang chủ - Website Quản Lý Tour',
-            'user' => $currentUser,
-        ]);
+            view('home', [
+                'title' => 'Trang chủ - Website Quản Lý Tour',
+                'user' => $currentUser,
+            ]);
         } else {
             // Trường hợp khác (nếu có role khác trong tương lai)
             header('Location: ' . BASE_URL . 'welcome');

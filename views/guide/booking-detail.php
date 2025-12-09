@@ -185,7 +185,25 @@ ob_start();
                                         <td><?= htmlspecialchars($row['gioi_tinh'] ?? '') ?></td>
                                         <td><?= htmlspecialchars($row['nam_sinh'] ?? '') ?></td>
                                         <td><?= htmlspecialchars($row['so_giay_to'] ?? '') ?></td>
-                                        <td><?= !empty($row['yeu_cau_ca_nhan']) ? nl2br(htmlspecialchars($row['yeu_cau_ca_nhan'])) : '<span class="text-muted">Chưa có</span>' ?></td>
+                                        <td>
+                                            <?php if (!empty($row['booking_khach_id'])): ?>
+                                                <div class="yeu-cau-cell-wrapper">
+                                                    <span id="yeuCauTextFile<?= $row['booking_khach_id'] ?>">
+                                                        <?= !empty($row['yeu_cau_ca_nhan']) ? nl2br(htmlspecialchars($row['yeu_cau_ca_nhan'])) : '<span class="text-muted">Chưa có</span>' ?>
+                                                    </span>
+                                                    <button 
+                                                        type="button" 
+                                                        class="btn btn-sm btn-outline-primary" 
+                                                        onclick="showUpdateYeuCau(<?= $row['booking_khach_id'] ?>, '<?= htmlspecialchars(addslashes($row['yeu_cau_ca_nhan'] ?? '')) ?>')"
+                                                        title="Sửa yêu cầu cá nhân"
+                                                    >
+                                                        <i class="bi bi-pencil"></i> Sửa
+                                                    </button>
+                                                </div>
+                                            <?php else: ?>
+                                                <?= !empty($row['yeu_cau_ca_nhan']) ? nl2br(htmlspecialchars($row['yeu_cau_ca_nhan'])) : '<span class="text-muted">Chưa có</span>' ?>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><?= !empty($row['ghi_chu_file']) ? nl2br(htmlspecialchars($row['ghi_chu_file'])) : '<span class="text-muted">-</span>' ?></td>
                                         <td>
                                         <?php 
@@ -219,16 +237,19 @@ ob_start();
                                         <td><?= htmlspecialchars($khach['nam_sinh'] ?? '') ?></td>
                                         <td><?= htmlspecialchars($khach['so_giay_to'] ?? '') ?></td>
                                         <td>
-                                            <span id="yeuCauText<?= $khach['id'] ?>">
-                                                <?= !empty($khach['yeu_cau_ca_nhan']) ? nl2br(htmlspecialchars($khach['yeu_cau_ca_nhan'])) : '<span class="text-muted">Chưa có</span>' ?>
-                                            </span>
-                                            <button 
-                                                type="button" 
-                                                class="btn btn-sm btn-outline-primary ms-2" 
-                                                onclick="showUpdateYeuCau(<?= $khach['id'] ?>, '<?= htmlspecialchars(addslashes($khach['yeu_cau_ca_nhan'] ?? '')) ?>')"
-                                            >
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
+                                            <div class="yeu-cau-cell-wrapper">
+                                                <span id="yeuCauText<?= $khach['id'] ?>">
+                                                    <?= !empty($khach['yeu_cau_ca_nhan']) ? nl2br(htmlspecialchars($khach['yeu_cau_ca_nhan'])) : '<span class="text-muted">Chưa có</span>' ?>
+                                                </span>
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-sm btn-outline-primary" 
+                                                    onclick="showUpdateYeuCau(<?= $khach['id'] ?>, '<?= htmlspecialchars(addslashes($khach['yeu_cau_ca_nhan'] ?? '')) ?>')"
+                                                    title="Sửa yêu cầu cá nhân"
+                                                >
+                                                    <i class="bi bi-pencil"></i> Sửa
+                                                </button>
+                                            </div>
                                         </td>
                                         <td><span class="text-muted">-</span></td>
                                         <td>
@@ -309,6 +330,21 @@ ob_start();
         </div>
     </div>
 
+    <style>
+        .yeu-cau-cell-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .yeu-cau-cell-wrapper > span {
+            flex: 1;
+            min-width: 150px;
+        }
+        .yeu-cau-cell-wrapper > button {
+            flex-shrink: 0;
+        }
+    </style>
     <script>
         window.guideBookingData = {
             bookingId: '<?= $booking->id ?>',

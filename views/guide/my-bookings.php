@@ -1,7 +1,6 @@
 <?php
 ob_start();
 ?>
-
 <div class="card mb-4">
     <div class="card-header">
         <h3 class="card-title">Danh sách Tour của tôi</h3>
@@ -77,4 +76,3 @@ view('layouts.GuideLayout', [
     'breadcrumb' => $breadcrumb ?? [],
 ]);
 ?>
-
