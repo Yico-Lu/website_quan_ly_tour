@@ -60,7 +60,6 @@ ob_start();
                     <tr>
                         <td colspan="8" class="text-center py-4">
                             <h3 class="text-muted">Chưa có tour nào được phân công</h3>
-                            <p class="text-muted">Bạn sẽ thấy các tour được phân công ở đây</p>
                         </td>
                     </tr>
                 <?php endif; ?>

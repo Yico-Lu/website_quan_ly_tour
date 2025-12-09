@@ -128,20 +128,29 @@ if (strpos($act, 'guide/booking/') === 0) {
 }
 
 if (strpos($act, 'guide/diary/') === 0) {
-    $parts = explode('/', $act);
-    if (isset($parts[3]) && $parts[3] === 'create') {
+    $parts = explode('/', $act); 
+
+    // Bỏ qua các action POST chuyên biệt để nhường cho match() bên dưới
+    if (isset($parts[2]) && in_array($parts[2], ['store','update','delete'], true)) {
+        // Bỏ qua, để match() xử lý các route POST này
+    } else {
+        //thêm, sửa, xem nhật kí
+        if (isset($parts[2]) && $parts[2] === 'create') {
+            $bookingId = $parts[3] ?? null;
+            $guideTourController->nhatKyTao($bookingId);
+            exit;
+        }
+
+        if (isset($parts[2]) && $parts[2] === 'edit') {
+            $id = $parts[3] ?? null;
+            $guideTourController->nhatKySua($id);
+            exit;
+        }
+
         $bookingId = $parts[2] ?? null;
-        $guideTourController->nhatKyTao($bookingId);
+        $guideTourController->nhatKyDanhSach($bookingId);
         exit;
     }
-    if (isset($parts[3]) && $parts[3] === 'edit') {
-        $id = $parts[4] ?? null;
-        $guideTourController->nhatKySua($id);
-        exit;
-    }
-    $bookingId = $parts[2] ?? null;
-    $guideTourController->nhatKyDanhSach($bookingId);
-    exit;
 }
 
 // Match đảm bảo chỉ một action tương ứng được gọi
