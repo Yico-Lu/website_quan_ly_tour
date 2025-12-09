@@ -19,3 +19,23 @@ ob_start();
         </form>
     </div>
 </div>
+
+<?php
+$year = $year ?? date('Y');
+$totalBookings = 0;
+$totalCustomers = 0;
+$totalRevenue = 0;
+$totalCompleted = 0;
+
+// Tính tổng từ dữ liệu hàng tháng
+if (!empty($monthlyData)) {
+    foreach ($monthlyData as $data) {
+        $totalBookings += $data['total_bookings'] ?? 0;
+        $totalCustomers += $data['total_customers'] ?? 0;
+        $totalRevenue += $data['revenue'] ?? 0;
+        $totalCompleted += $data['completed_bookings'] ?? 0;
+    }
+}
+
+$avgMonthlyRevenue = count($monthlyData) > 0 ? $totalRevenue / count($monthlyData) : 0;
+?>
