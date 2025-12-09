@@ -43,7 +43,6 @@ ob_start();
                         <span class="text-success fw-bold">
                             <i class="bi bi-calendar-check"></i> <?= date('d/m/Y H:i', strtotime($booking->ngay_gio_xuat_phat)) ?>
                         </span>
-                        <small class="text-muted ms-2">(Đã xác nhận)</small>
                     </div>
                 </div>
                 <?php elseif ($booking->thoi_gian_tour): ?>
@@ -130,93 +129,27 @@ ob_start();
         </div>
     </div>
 
-    <!-- Danh sách khách từ file Excel (tham khảo) -->
-    <?php if (!empty($guestListFromFile)): ?>
-    <div class="col-md-12 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Danh sách khách</h3>
-            </div>
-            <div class="card-body">
-                <?php if (empty($lichKhoiHanhId)): ?>
-                    <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-circle"></i>
-                        Chưa có lịch khởi hành. Vui lòng cập nhật ngày giờ xuất phát để bật check-in.
-                    </div>
-                <?php elseif (!$canCheckIn): ?>
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i>
-                        Check-in chỉ khả dụng khi tour đang diễn ra (đã đến giờ khởi hành và chưa hoàn thành).
-                    </div>
-                <?php endif; ?>
-                <div class="mb-3">
-                    <small class="text-muted">
-                        <i class="bi bi-info-circle"></i> Tổng số khách trong file: <strong><?= count($guestListFromFile) ?></strong> người
-                    </small>
-                </div>
-                <table class="table table-bordered">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 10px">#</th>
-                            <th>Họ tên</th>
-                            <th>Giới tính</th>
-                            <th>Năm sinh</th>
-                            <th>Số giấy tờ</th>
-                            <th>Yêu cầu cá nhân</th>
-                            <th style="width: 120px">Check-in</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($guestListFromFile as $idx => $row): ?>
-                            <tr>
-                                <td><?= $idx + 1 ?>.</td>
-                                <td><strong><?= htmlspecialchars($row['ho_ten'] ?? '') ?></strong></td>
-                                <td><?= htmlspecialchars($row['gioi_tinh'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($row['nam_sinh'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($row['so_giay_to'] ?? '') ?></td>
-                                <td><?= !empty($row['yeu_cau_ca_nhan']) ? nl2br(htmlspecialchars($row['yeu_cau_ca_nhan'])) : '<span class="text-muted">Chưa có</span>' ?></td>
-                                <td>
-                                    <?php if (!empty($row['booking_khach_id'])): ?>
-                                        <?php 
-                                            $dd = $diemDanhMap[$row['booking_khach_id']] ?? null;
-                                            $trangThaiCheckIn = $dd['trang_thai'] ?? null;
-                                            $isCheckedIn = $trangThaiCheckIn === 'da_den';
-                                        ?>
-                                        <button 
-                                            type="button" 
-                                            class="btn btn-sm <?= $isCheckedIn ? 'btn-success' : 'btn-outline-secondary' ?>" 
-                                            onclick="toggleCheckIn(<?= $row['booking_khach_id'] ?>, <?= $isCheckedIn ? 'false' : 'true' ?>)"
-                                            id="btnCheckInFile<?= $row['booking_khach_id'] ?>"
-                                            <?= (!$canCheckIn ? 'disabled' : '') ?>
-                                        >
-                                            <?= $isCheckedIn ? '<i class="bi bi-check-circle"></i> Đã đến' : '<i class="bi bi-x-circle"></i> Vắng mặt' ?>
-                                        </button>
-                                    <?php else: ?>
-                                        <span class="text-muted">Chưa có trong hệ thống</span>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <!-- Danh sách khách và check-in -->
+    <!-- Danh sách khách và Check-in (gộp) -->
     <div class="col-md-12 mb-4">
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Danh sách khách và Check-in</h3>
             </div>
             <div class="card-body">
-                <?php if (!empty($khachs)): ?>
-                    <div class="mb-3">
-                        <small class="text-muted">
-                            <i class="bi bi-info-circle"></i> Tổng số khách: <strong><?= count($khachs) ?></strong> người
-                        </small>
+                <?php if (empty($lichKhoiHanhId)): ?>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-circle"></i>
+                        Chưa có lịch khởi hành. Vui lòng cập nhật ngày giờ xuất phát.
                     </div>
+                <?php endif; ?>
+
+                <?php
+                    // Dùng danh sách từ file nếu có, nếu không dùng danh sách đã lưu
+                    $usingFile = !empty($guestListFromFile);
+                    $totalGuests = $usingFile ? count($guestListFromFile) : count($khachs);
+                ?>
+
+                <?php if ($usingFile || !empty($khachs)): ?>
                     <table class="table table-bordered">
                         <thead class="table-light">
                             <tr>
@@ -226,7 +159,8 @@ ob_start();
                                 <th>Năm sinh</th>
                                 <th>Số giấy tờ</th>
                                 <th>Yêu cầu cá nhân</th>
-                                <th style="width: 120px">Check-in</th>
+                                <th>Ghi chú</th>
+                                <th style="width: 140px">Check-in</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -238,43 +172,78 @@ ob_start();
                                 }
                             }
                             ?>
-                            <?php foreach ($khachs as $index => $khach): ?>
-                                <?php 
-                                $dd = $diemDanhMap[$khach['id']] ?? null;
-                                $trangThaiCheckIn = $dd['trang_thai'] ?? null;
-                                $isCheckedIn = $trangThaiCheckIn === 'da_den';
-                                ?>
-                                <tr>
-                                    <td><?= $index + 1 ?>.</td>
-                                    <td><strong><?= htmlspecialchars($khach['ho_ten']) ?></strong></td>
-                                    <td><?= htmlspecialchars($khach['gioi_tinh'] ?? '') ?></td>
-                                    <td><?= htmlspecialchars($khach['nam_sinh'] ?? '') ?></td>
-                                    <td><?= htmlspecialchars($khach['so_giay_to'] ?? '') ?></td>
-                                    <td>
-                                        <span id="yeuCauText<?= $khach['id'] ?>">
-                                            <?= !empty($khach['yeu_cau_ca_nhan']) ? nl2br(htmlspecialchars($khach['yeu_cau_ca_nhan'])) : '<span class="text-muted">Chưa có</span>' ?>
-                                        </span>
-                                        <button 
-                                            type="button" 
-                                            class="btn btn-sm btn-outline-primary ms-2" 
-                                            onclick="showUpdateYeuCau(<?= $khach['id'] ?>, '<?= htmlspecialchars(addslashes($khach['yeu_cau_ca_nhan'] ?? '')) ?>')"
-                                        >
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                    </td>
-                                    <td>
+                            <?php if ($usingFile): ?>
+                                <?php foreach ($guestListFromFile as $idx => $row): ?>
+                                    <?php 
+                                        $dd = !empty($row['booking_khach_id']) ? ($diemDanhMap[$row['booking_khach_id']] ?? null) : null;
+                                        $trangThaiCheckIn = $dd['trang_thai'] ?? null;
+                                        $isCheckedIn = $trangThaiCheckIn === 'da_den';
+                                    ?>
+                                    <tr>
+                                        <td><?= $idx + 1 ?>.</td>
+                                        <td><strong><?= htmlspecialchars($row['ho_ten'] ?? '') ?></strong></td>
+                                        <td><?= htmlspecialchars($row['gioi_tinh'] ?? '') ?></td>
+                                        <td><?= htmlspecialchars($row['nam_sinh'] ?? '') ?></td>
+                                        <td><?= htmlspecialchars($row['so_giay_to'] ?? '') ?></td>
+                                        <td><?= !empty($row['yeu_cau_ca_nhan']) ? nl2br(htmlspecialchars($row['yeu_cau_ca_nhan'])) : '<span class="text-muted">Chưa có</span>' ?></td>
+                                        <td><?= !empty($row['ghi_chu_file']) ? nl2br(htmlspecialchars($row['ghi_chu_file'])) : '<span class="text-muted">-</span>' ?></td>
+                                        <td>
+                                        <?php 
+                                            $btnId = !empty($row['booking_khach_id']) ? $row['booking_khach_id'] : ('New'.$idx);
+                                            $onclick = !empty($row['booking_khach_id'])
+                                                ? "toggleCheckIn({$row['booking_khach_id']}, " . ($isCheckedIn ? 'false' : 'true') . ")"
+                                                : "toggleCheckInFromFile({$idx}, true)";
+                                        ?>
                                         <button 
                                             type="button" 
                                             class="btn btn-sm <?= $isCheckedIn ? 'btn-success' : 'btn-outline-secondary' ?>" 
-                                            onclick="toggleCheckIn(<?= $khach['id'] ?>, <?= $isCheckedIn ? 'false' : 'true' ?>)"
-                                            id="btnCheckIn<?= $khach['id'] ?>"
-                                            <?= (!$canCheckIn ? 'disabled' : '') ?>
+                                            onclick="<?= $onclick ?>"
+                                            id="btnCheckInFile<?= $btnId ?>"
                                         >
-                                            <?= $isCheckedIn ? '<i class="bi bi-check-circle"></i> Đã đến' : '<i class="bi bi-x-circle"></i> Vắng mặt' ?>
+                                            <?= $isCheckedIn ? '<i class="bi bi-check-circle"></i> Đã đến' : '<i class="bi bi-x-circle"></i> Check-in' ?>
                                         </button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <?php foreach ($khachs as $index => $khach): ?>
+                                    <?php 
+                                    $dd = $diemDanhMap[$khach['id']] ?? null;
+                                    $trangThaiCheckIn = $dd['trang_thai'] ?? null;
+                                    $isCheckedIn = $trangThaiCheckIn === 'da_den';
+                                    ?>
+                                    <tr>
+                                        <td><?= $index + 1 ?>.</td>
+                                        <td><strong><?= htmlspecialchars($khach['ho_ten']) ?></strong></td>
+                                        <td><?= htmlspecialchars($khach['gioi_tinh'] ?? '') ?></td>
+                                        <td><?= htmlspecialchars($khach['nam_sinh'] ?? '') ?></td>
+                                        <td><?= htmlspecialchars($khach['so_giay_to'] ?? '') ?></td>
+                                        <td>
+                                            <span id="yeuCauText<?= $khach['id'] ?>">
+                                                <?= !empty($khach['yeu_cau_ca_nhan']) ? nl2br(htmlspecialchars($khach['yeu_cau_ca_nhan'])) : '<span class="text-muted">Chưa có</span>' ?>
+                                            </span>
+                                            <button 
+                                                type="button" 
+                                                class="btn btn-sm btn-outline-primary ms-2" 
+                                                onclick="showUpdateYeuCau(<?= $khach['id'] ?>, '<?= htmlspecialchars(addslashes($khach['yeu_cau_ca_nhan'] ?? '')) ?>')"
+                                            >
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                        </td>
+                                        <td><span class="text-muted">-</span></td>
+                                        <td>
+                                            <button 
+                                                type="button" 
+                                                class="btn btn-sm <?= $isCheckedIn ? 'btn-success' : 'btn-outline-secondary' ?>" 
+                                                onclick="toggleCheckIn(<?= $khach['id'] ?>, <?= $isCheckedIn ? 'false' : 'true' ?>)"
+                                                id="btnCheckIn<?= $khach['id'] ?>"
+                                            >
+                                                <?= $isCheckedIn ? '<i class="bi bi-check-circle"></i> Đã đến' : '<i class="bi bi-x-circle"></i> Vắng mặt' ?>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 <?php else: ?>
@@ -343,13 +312,8 @@ ob_start();
     <script>
     function toggleCheckIn(khachId, isCheckIn) {
         const lichKhoiHanhId = '<?= $lichKhoiHanhId ?>';
-        const canCheckIn = <?= $canCheckIn ? 'true' : 'false' ?>;
         if (!lichKhoiHanhId) {
             alert('Vui lòng cập nhật lịch khởi hành trước khi check-in.');
-            return;
-        }
-        if (!canCheckIn) {
-            alert('Check-in chỉ khả dụng khi tour đang diễn ra.');
             return;
         }
 
@@ -359,6 +323,40 @@ ob_start();
         formData.append('booking_khach_id', khachId);
         formData.append('trang_thai', isCheckIn ? 'da_den' : 'vang_mat');
         
+        fetch('<?= BASE_URL ?>guide/check-in', {
+            method: 'POST',
+            body: formData
+        }).then(() => {
+            location.reload();
+        });
+    }
+
+    // Dữ liệu khách từ file để tạo mới khi chưa có trong hệ thống
+    const guestListFromFile = <?= json_encode($guestListFromFile, JSON_UNESCAPED_UNICODE) ?>;
+
+    function toggleCheckInFromFile(idx, isCheckIn) {
+        const lichKhoiHanhId = '<?= $lichKhoiHanhId ?>';
+        if (!lichKhoiHanhId) {
+            alert('Vui lòng cập nhật lịch khởi hành trước khi check-in.');
+            return;
+        }
+        // Lấy dữ liệu từ mảng PHP xuất ra JS
+        const guest = guestListFromFile[idx];
+        if (!guest || !guest.ho_ten) {
+            alert('Không tìm thấy thông tin khách.');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('booking_id', '<?= $booking->id ?>');
+        formData.append('lich_khoi_hanh_id', lichKhoiHanhId);
+        formData.append('booking_khach_id', ''); // chưa có, sẽ tạo mới
+        formData.append('trang_thai', isCheckIn ? 'da_den' : 'vang_mat');
+        formData.append('ho_ten', guest.ho_ten);
+        formData.append('gioi_tinh', guest.gioi_tinh || '');
+        formData.append('nam_sinh', guest.nam_sinh || '');
+        formData.append('so_giay_to', guest.so_giay_to || '');
+        formData.append('yeu_cau_ca_nhan', guest.yeu_cau_ca_nhan || '');
+
         fetch('<?= BASE_URL ?>guide/check-in', {
             method: 'POST',
             body: formData

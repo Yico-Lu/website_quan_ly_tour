@@ -15,9 +15,7 @@ ob_start();
                     <th style="width: 10px">#</th>
                     <th>Tour</th>
                     <th>Người đặt</th>
-                    <th>Thời gian tour</th>
                     <th>Ngày khởi hành</th>
-                    <th>Số lượng</th>
                     <th>Trạng thái</th>
                     <th style="width: 200px">Thao tác</th>
                 </tr>
@@ -32,9 +30,6 @@ ob_start();
                             </td>
                             <td><?= htmlspecialchars($booking->ten_nguoi_dat) ?></td>
                             <td>
-                                <?= $booking->thoi_gian_tour ? date('d/m/Y H:i', strtotime($booking->thoi_gian_tour)) : 'Chưa xác định' ?>
-                            </td>
-                            <td>
                                 <?php if ($booking->ngay_gio_xuat_phat): ?>
                                     <?= date('d/m/Y H:i', strtotime($booking->ngay_gio_xuat_phat)) ?>
                                     <?php if ($booking->diem_tap_trung): ?>
@@ -43,9 +38,6 @@ ob_start();
                                 <?php else: ?>
                                     <span class="text-muted">Chưa có</span>
                                 <?php endif; ?>
-                            </td>
-                            <td>
-                                <span class="badge bg-primary"><?= $booking->so_luong ?> người</span>
                             </td>
                             <td>
                                 <span class="badge <?= $booking->getTrangThaiBadgeClass() ?>">

@@ -4,7 +4,6 @@ class Booking
     // Các thuộc tính của booking
     public $id;
     public $tai_khoan_id;
-    public $assigned_hdv_id;
     public $tour_id;
     public $loai_khach;
     public $ten_nguoi_dat;
@@ -35,7 +34,6 @@ class Booking
         if (is_array($data)) {
             $this->id = $data['id'] ?? null;
             $this->tai_khoan_id = $data['tai_khoan_id'] ?? null;
-            $this->assigned_hdv_id = $data['assigned_hdv_id'] ?? null;
             $this->tour_id = $data['tour_id'] ?? null;
             $this->loai_khach = $data['loai_khach'] ?? 'le';
             $this->ten_nguoi_dat = $data['ten_nguoi_dat'] ?? '';
@@ -73,28 +71,19 @@ class Booking
                        (SELECT l1.ngay_gio_xuat_phat FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS ngay_gio_xuat_phat,
                        (SELECT l1.diem_tap_trung FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS diem_tap_trung,
                        (SELECT l1.thoi_gian_ket_thuc FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS thoi_gian_ket_thuc,
-                       COALESCE(
-                           (SELECT GROUP_CONCAT(DISTINCT CONCAT(tk.ho_ten, ' (', tk.email, ')') SEPARATOR ', ')
+                       (SELECT GROUP_CONCAT(DISTINCT CONCAT(tk.ho_ten, ' (', tk.email, ')') SEPARATOR ', ')
                             FROM booking_hdv bh2
                             INNER JOIN hdv h2 ON bh2.hdv_id = h2.id
                             INNER JOIN tai_khoan tk ON h2.tai_khoan_id = tk.id
-                            WHERE bh2.booking_id = b.id),
-                           tk.ho_ten,
-                           ''
-                       ) AS ten_hdv,
-                       COALESCE(
-                           (SELECT h2.id
+                            WHERE bh2.booking_id = b.id) AS ten_hdv,
+                       (SELECT h2.id
                             FROM booking_hdv bh2
                             INNER JOIN hdv h2 ON bh2.hdv_id = h2.id
                             WHERE bh2.booking_id = b.id
-                            LIMIT 1),
-                           h.id
-                       ) AS hdv_id
+                            LIMIT 1) AS hdv_id
                 FROM booking b
                 LEFT JOIN tour t ON b.tour_id = t.id
                 LEFT JOIN lich_khoi_hanh lkh ON lkh.booking_id = b.id
-                LEFT JOIN hdv h ON b.assigned_hdv_id = h.id
-                LEFT JOIN tai_khoan tk ON h.tai_khoan_id = tk.id
                 ORDER BY b.ngay_tao DESC";
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
@@ -117,28 +106,19 @@ class Booking
                        (SELECT l1.ngay_gio_xuat_phat FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS ngay_gio_xuat_phat,
                        (SELECT l1.diem_tap_trung FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS diem_tap_trung,
                        (SELECT l1.thoi_gian_ket_thuc FROM lich_khoi_hanh l1 WHERE l1.booking_id = b.id ORDER BY l1.id DESC LIMIT 1) AS thoi_gian_ket_thuc,
-                       COALESCE(
-                           (SELECT GROUP_CONCAT(DISTINCT CONCAT(tk.ho_ten, ' (', tk.email, ')') SEPARATOR ', ')
+                       (SELECT GROUP_CONCAT(DISTINCT CONCAT(tk.ho_ten, ' (', tk.email, ')') SEPARATOR ', ')
                             FROM booking_hdv bh2
                             INNER JOIN hdv h2 ON bh2.hdv_id = h2.id
                             INNER JOIN tai_khoan tk ON h2.tai_khoan_id = tk.id
-                            WHERE bh2.booking_id = b.id),
-                           tk.ho_ten,
-                           ''
-                       ) AS ten_hdv,
-                       COALESCE(
-                           (SELECT h2.id
+                            WHERE bh2.booking_id = b.id) AS ten_hdv,
+                       (SELECT h2.id
                             FROM booking_hdv bh2
                             INNER JOIN hdv h2 ON bh2.hdv_id = h2.id
                             WHERE bh2.booking_id = b.id
-                            LIMIT 1),
-                           h.id
-                       ) AS hdv_id
+                            LIMIT 1) AS hdv_id
                 FROM booking b
                 LEFT JOIN tour t ON b.tour_id = t.id
                 LEFT JOIN lich_khoi_hanh lkh ON lkh.booking_id = b.id
-                LEFT JOIN hdv h ON b.assigned_hdv_id = h.id
-                LEFT JOIN tai_khoan tk ON h.tai_khoan_id = tk.id
                 WHERE b.id = ? LIMIT 1";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$id]);
@@ -182,12 +162,11 @@ class Booking
     {
         $pdo = getDB();
         try {
-            $sql = "INSERT INTO booking (tai_khoan_id, assigned_hdv_id, tour_id, loai_khach, ten_nguoi_dat, so_luong, thoi_gian_tour, lien_he, yeu_cau_dac_biet, trang_thai, ghi_chu, ngay_tao, ngay_cap_nhat)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+            $sql = "INSERT INTO booking (tai_khoan_id, tour_id, loai_khach, ten_nguoi_dat, so_luong, thoi_gian_tour, lien_he, yeu_cau_dac_biet, trang_thai, ghi_chu, ngay_tao, ngay_cap_nhat)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
             $stmt = $pdo->prepare($sql);
             $result = $stmt->execute([
                 $booking->tai_khoan_id ?: null, // Có thể null nếu không có khách hàng
-                $booking->assigned_hdv_id ?: null,
                 $booking->tour_id,
                 $booking->loai_khach,
                 $booking->ten_nguoi_dat,
@@ -217,7 +196,6 @@ class Booking
         try {
             $sql = "UPDATE booking SET
                             tai_khoan_id = ?,
-                            assigned_hdv_id = ?,
                             tour_id = ?,
                             loai_khach = ?,
                             ten_nguoi_dat = ?,
@@ -232,7 +210,6 @@ class Booking
             $stmt = $pdo->prepare($sql);
             $result = $stmt->execute([
                 $booking->tai_khoan_id,
-                $booking->assigned_hdv_id,
                 $booking->tour_id,
                 $booking->loai_khach,
                 $booking->ten_nguoi_dat,

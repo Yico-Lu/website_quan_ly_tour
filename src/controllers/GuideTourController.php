@@ -22,27 +22,20 @@ class GuideTourController
         $hdv = HDV::findByTaiKhoanId($user->id);
         $hdvId = $hdv ? $hdv->id : null;
         
-        // Lấy booking từ assigned_hdv_id  HOẶC từ booking_hdv 
+        // Lấy booking chỉ qua bảng booking_hdv (đúng HDV đang đăng nhập)
         if ($hdvId) {
             $sql = "SELECT DISTINCT b.*, t.ten_tour, t.gia AS gia_tour
                     FROM booking b
+                    INNER JOIN booking_hdv bh ON b.id = bh.booking_id
                     LEFT JOIN tour t ON b.tour_id = t.id
-                    LEFT JOIN booking_hdv bh ON b.id = bh.booking_id
-                    WHERE (b.assigned_hdv_id = ? OR bh.hdv_id = ?)
+                    WHERE bh.hdv_id = ?
                     AND b.trang_thai IN ('cho_xac_nhan', 'da_coc', 'da_thanh_toan', 'da_huy', 'hoan_thanh')
                     ORDER BY b.ngay_tao DESC";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$user->id, $hdvId]);
+            $stmt->execute([$hdvId]);
         } else {
-            // Nếu không tìm thấy HDV, chỉ lấy theo assigned_hdv_id
-            $sql = "SELECT DISTINCT b.*, t.ten_tour, t.gia AS gia_tour
-                    FROM booking b
-                    LEFT JOIN tour t ON b.tour_id = t.id
-                    WHERE b.assigned_hdv_id = ?
-                    AND b.trang_thai IN ('cho_xac_nhan', 'da_coc', 'da_thanh_toan', 'da_huy', 'hoan_thanh')
-                    ORDER BY b.ngay_tao DESC";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$user->id]);
+            // Không có HDV tương ứng với tài khoản => không có booking nào
+            $bookings = [];
         }
         $bookings = [];
         foreach($stmt->fetchAll() as $row){
@@ -97,13 +90,6 @@ class GuideTourController
         $lichKhoiHanhId = $booking->lich_khoi_hanh_id ?: Booking::getLichKhoiHanhIdByBookingId($id);
         $diemDanh = Booking::getDiemDanhByBooking($id, $lichKhoiHanhId);
 
-        // Xác định quyền check-in (chỉ cho phép khi tour đang đi)
-        $now = time();
-        $start = $booking->ngay_gio_xuat_phat ? strtotime($booking->ngay_gio_xuat_phat) : null;
-        $end = $booking->thoi_gian_ket_thuc ? strtotime($booking->thoi_gian_ket_thuc) : null;
-        $isDone = $booking->trang_thai === 'hoan_thanh';
-        $canCheckIn = !$isDone && $lichKhoiHanhId && $start && $start <= $now && (empty($end) || $end >= $now);
-
         // Đọc danh sách khách từ file Excel đã upload 
         $guestListFromFile = [];
         $uploadDir = BASE_PATH . '/public/uploads/guest_lists/';
@@ -133,6 +119,7 @@ class GuideTourController
                         'nam_sinh' => trim($row[2] ?? ''),
                         'so_giay_to' => trim($row[3] ?? ''),
                         'yeu_cau_ca_nhan' => trim($row[4] ?? ''),
+                        'ghi_chu_file' => trim($row[5] ?? ''),
                         'booking_khach_id' => $bookingKhachId,
                     ];
                 }
@@ -157,7 +144,6 @@ class GuideTourController
             'lichKhoiHanhId' => $lichKhoiHanhId,
             'lichTrinh' => $lichTrinh,
             'guestListFromFile' => $guestListFromFile,
-            'canCheckIn' => $canCheckIn,
             'breadcrumb' => [
                 ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
                 ['label' => 'Danh sách tour', 'url' => BASE_URL . 'guide/my-bookings'],
@@ -190,7 +176,14 @@ class GuideTourController
         $bookingKhachId = $_POST['booking_khach_id'] ?? null;
         $trangThai = trim($_POST['trang_thai'] ?? 'da_den');
 
-        if (!$bookingId || !$lichKhoiHanhId || !$bookingKhachId) {
+        // Thông tin khách (trường hợp chưa có trong hệ thống)
+        $hoTen = trim($_POST['ho_ten'] ?? '');
+        $gioiTinh = trim($_POST['gioi_tinh'] ?? '');
+        $namSinh = trim($_POST['nam_sinh'] ?? '');
+        $soGiayTo = trim($_POST['so_giay_to'] ?? '');
+        $yeuCauCaNhan = trim($_POST['yeu_cau_ca_nhan'] ?? '');
+
+        if (!$bookingId || !$lichKhoiHanhId || empty($trangThai)) {
             $_SESSION['error'] = 'Thông tin không hợp lệ';
             header('Location: ' . BASE_URL . 'guide/booking/' . $bookingId);
             exit;
@@ -201,6 +194,37 @@ class GuideTourController
         if (!$booking) {
             $_SESSION['error'] = 'Booking không tồn tại';
             header('Location: ' . BASE_URL . 'guide/my-bookings');
+            exit;
+        }
+
+        // Nếu chưa có booking_khach_id, tạo mới từ dữ liệu gửi lên
+        if (empty($bookingKhachId)) {
+            if (empty($hoTen)) {
+                $_SESSION['error'] = 'Thiếu thông tin khách để check-in';
+                header('Location: ' . BASE_URL . 'guide/booking/' . $bookingId);
+                exit;
+            }
+            $booking->addKhach(
+                $hoTen,
+                $gioiTinh ?: null,
+                !empty($namSinh) ? (int)$namSinh : null,
+                $soGiayTo ?: null,
+                'chua_thanh_toan',
+                $yeuCauCaNhan ?: null
+            );
+            // Lấy lại danh sách khách để tìm ID vừa tạo
+            $khachsTmp = $booking->getKhachs();
+            foreach ($khachsTmp as $k) {
+                if (trim(mb_strtolower($k['ho_ten'])) === trim(mb_strtolower($hoTen))) {
+                    $bookingKhachId = $k['id'];
+                    break;
+                }
+            }
+        }
+
+        if (!$bookingKhachId) {
+            $_SESSION['error'] = 'Không xác định được khách để check-in';
+            header('Location: ' . BASE_URL . 'guide/booking/' . $bookingId);
             exit;
         }
 

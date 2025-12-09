@@ -17,7 +17,6 @@ class BookingController
         }
 
         return [
-            'assigned_hdv_id' => trim($_POST['assigned_hdv_id'] ?? ''),
             'tour_id' => trim($_POST['tour_id'] ?? ''),
             'loai_khach' => trim($_POST['loai_khach'] ?? 'le'),
             'ten_nguoi_dat' => trim($_POST['ten_nguoi_dat'] ?? ''),
@@ -371,7 +370,6 @@ class BookingController
 
         $booking = new Booking([
             'tai_khoan_id' => null,
-            'assigned_hdv_id' => $data['assigned_hdv_id'] ?: null,
             'tour_id' => $data['tour_id'],
             'loai_khach' => $data['loai_khach'],
             'ten_nguoi_dat' => $data['ten_nguoi_dat'],
@@ -484,7 +482,6 @@ class BookingController
         $booking = new Booking([
             'id' => $id,
             'tai_khoan_id' => $data['tai_khoan_id'],
-            'assigned_hdv_id' => $data['assigned_hdv_id'] ? (int)$data['assigned_hdv_id'] : null,
             'tour_id' => $data['tour_id'] ? (int)$data['tour_id'] : null,
             'loai_khach' => $data['loai_khach'],
             'ten_nguoi_dat' => $data['ten_nguoi_dat'],
