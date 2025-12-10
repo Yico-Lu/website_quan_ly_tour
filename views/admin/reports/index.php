@@ -199,10 +199,9 @@ $pdo = getDB();
             <div class="card-header">
                 <h3 class="card-title">So sánh Doanh thu Theo Năm</h3>
             </div>
-            <div class="card-body">
                 <?php
                 $currentYear = date('Y');
-                $comparisonYears = [$currentYear - 1, $currentYear];
+                $comparisonYears = [$currentYear - 2, $currentYear - 1, $currentYear]; // 3 năm để thấy trend
                 $yearlyStats = [];
 
                 foreach ($comparisonYears as $year) {
@@ -222,48 +221,181 @@ $pdo = getDB();
                         'revenue' => (float)($yearStats['revenue'] ?? 0)
                     ];
                 }
+
+                // Chuẩn bị dữ liệu cho biểu đồ
+                $yearsLabels = array_map(function($year) {
+                    return "'" . $year . "'";
+                }, $comparisonYears);
+
+                $bookingsData = array_map(function($stats) {
+                    return $stats['bookings'];
+                }, array_values($yearlyStats));
+
+                $revenueData = array_map(function($stats) {
+                    return round($stats['revenue'] / 1000000, 1); // Chuyển thành triệu VND
+                }, array_values($yearlyStats));
+
+                // Tính max values để làm cột cao hơn
+                $maxRevenue = !empty($revenueData) ? max($revenueData) * 1.2 : 100; // Tăng 20%
+                $maxBookings = !empty($bookingsData) ? max($bookingsData) * 1.2 : 100; // Tăng 20%
                 ?>
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="table-primary">
-                            <tr>
-                                <th>Năm</th>
-                                <th class="text-center">Số đơn đặt</th>
-                                <th class="text-end">Doanh thu</th>
-                                <th class="text-center">Tăng trưởng</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($comparisonYears as $index => $year): ?>
-                                <?php
-                                $currentStats = $yearlyStats[$year];
-                                $prevStats = $index > 0 ? $yearlyStats[$comparisonYears[$index - 1]] : null;
-                                $bookingGrowth = $prevStats ? (($currentStats['bookings'] - $prevStats['bookings']) / max($prevStats['bookings'], 1)) * 100 : 0;
-                                $revenueGrowth = $prevStats ? (($currentStats['revenue'] - $prevStats['revenue']) / max($prevStats['revenue'], 1)) * 100 : 0;
-                                ?>
-                                <tr>
-                                    <td><strong><?= $year ?></strong></td>
-                                    <td class="text-center">
-                                        <span class="badge bg-info"><?= number_format($currentStats['bookings']) ?></span>
-                                    </td>
-                                    <td class="text-end">
-                                        <strong class="text-success"><?= number_format($currentStats['revenue'], 0, ',', '.') ?> VND</strong>
-                                    </td>
-                                    <td class="text-center">
-                                        <?php if ($prevStats): ?>
-                                            <small class="text-<?= $revenueGrowth >= 0 ? 'success' : 'danger' ?>">
-                                                <i class="bi bi-arrow-<?= $revenueGrowth >= 0 ? 'up' : 'down' ?>"></i>
-                                                <?= number_format(abs($revenueGrowth), 1) ?>%
-                                            </small>
-                                        <?php else: ?>
-                                            <small class="text-muted">-</small>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+
+                <!-- Biểu đồ tăng trưởng -->
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <canvas id="growthChart" style="max-height: 700px;"></canvas>
+                    </div>
                 </div>
+
+                <!-- Thống kê chi tiết -->
+                <div class="row">
+                    <?php foreach ($comparisonYears as $index => $year): ?>
+                        <?php
+                        $currentStats = $yearlyStats[$year];
+                        $prevStats = $index > 0 ? $yearlyStats[$comparisonYears[$index - 1]] : null;
+                        $bookingGrowth = $prevStats ? (($currentStats['bookings'] - $prevStats['bookings']) / max($prevStats['bookings'], 1)) * 100 : 0;
+                        $revenueGrowth = $prevStats ? (($currentStats['revenue'] - $prevStats['revenue']) / max($prevStats['revenue'], 1)) * 100 : 0;
+                        $isCurrentYear = $year == $currentYear;
+                        ?>
+                        <div class="col-md-4 mb-2">
+                            <div class="card border-<?= $isCurrentYear ? 'primary' : 'secondary' ?> h-100">
+                                <div class="card-header bg-<?= $isCurrentYear ? 'primary' : 'secondary' ?> text-white text-center py-2">
+                                    <h6 class="card-title mb-0 fs-6">
+                                        <i class="bi bi-calendar-year me-1"></i>Năm <?= $year ?>
+                                        <?php if ($isCurrentYear): ?>
+                                            <small class="badge bg-light text-primary ms-1">Hiện tại</small>
+                                        <?php endif; ?>
+                                    </h6>
+                                </div>
+                                <div class="card-body text-center p-2">
+                                    <div class="row mb-2">
+                                        <div class="col-6">
+                                            <i class="bi bi-receipt text-info fs-5"></i>
+                                            <div class="fw-bold text-info fs-6"><?= number_format($currentStats['bookings']) ?></div>
+                                            <small class="text-muted small">Đơn đặt</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <i class="bi bi-cash-coin text-success fs-5"></i>
+                                            <div class="fw-bold text-success fs-6">
+                                                <?= number_format($currentStats['revenue'] / 1000000, 1) ?>M
+                                            </div>
+                                            <small class="text-muted small">Doanh thu</small>
+                                        </div>
+                                    </div>
+
+                                  
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <!-- Script cho biểu đồ -->
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const ctx = document.getElementById('growthChart').getContext('2d');
+                    const growthChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: [<?= implode(',', $yearsLabels) ?>],
+                            datasets: [{
+                                label: 'Doanh thu (Triệu VND)',
+                                data: [<?= implode(',', $revenueData) ?>],
+                                backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                                borderColor: 'rgb(40, 167, 69)',
+                                borderWidth: 1,
+                                yAxisID: 'y',
+                                barPercentage: 0.8,
+                                categoryPercentage: 0.8
+                            }, {
+                                label: 'Số đơn đặt',
+                                data: [<?= implode(',', $bookingsData) ?>],
+                                backgroundColor: 'rgba(23, 162, 184, 0.8)',
+                                borderColor: 'rgb(23, 162, 184)',
+                                borderWidth: 1,
+                                yAxisID: 'y1',
+                                barPercentage: 0.8,
+                                categoryPercentage: 0.8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false,
+                            },
+                            scales: {
+                                x: {
+                                    display: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Năm'
+                                    }
+                                },
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    title: {
+                                        display: true,
+                                        text: 'Doanh thu (Triệu VND)'
+                                    },
+                                    min: 0,
+                                    max: Math.max(<?= $maxRevenue ?>, 600), // Đảm bảo ít nhất 600M
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value + 'M';
+                                        },
+                                        stepSize: 300, // Mốc 300M
+                                        beginAtZero: true
+                                    }
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    title: {
+                                        display: true,
+                                        text: 'Số đơn đặt'
+                                    },
+                                    grid: {
+                                        drawOnChartArea: false,
+                                    },
+                                    min: 0,
+                                    max: Math.max(<?= $maxBookings ?>, 50), // Đảm bảo ít nhất 50 đơn
+                                    ticks: {
+                                        stepSize: 10 // Mốc 10 đơn
+                                    }
+                                }
+                            },
+                            plugins: {
+                                
+                                legend: {
+                                    display: true,
+                                    position: 'top'
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.datasetIndex === 0) {
+                                                label += context.parsed.y + ' triệu VND';
+                                            } else {
+                                                label += context.parsed.y + ' đơn';
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+                </script>
             </div>
         </div>
     </div>
@@ -302,13 +434,7 @@ $pdo = getDB();
                     ];
                 }
 
-                // Tính quý
-                $quarters = [
-                    'Q1' => array_sum(array_column(array_slice($monthlyStats, 0, 3, true), 'revenue')),
-                    'Q2' => array_sum(array_column(array_slice($monthlyStats, 3, 3, true), 'revenue')),
-                    'Q3' => array_sum(array_column(array_slice($monthlyStats, 6, 3, true), 'revenue')),
-                    'Q4' => array_sum(array_column(array_slice($monthlyStats, 9, 3, true), 'revenue'))
-                ];
+                
                 ?>
                 <div class="row">
                     <div class="col-md-8">
@@ -347,26 +473,6 @@ $pdo = getDB();
                                     </tr>
                                 </tfoot>
                             </table>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <h5 class="text-center mb-3">Doanh thu theo Quý</h5>
-                        <div class="row">
-                            <?php foreach ($quarters as $quarter => $revenue): ?>
-                                <div class="col-6 mb-3">
-                                    <div class="card border-primary">
-                                        <div class="card-body text-center p-2">
-                                            <h6 class="card-title mb-1"><?= $quarter ?></h6>
-                                            <h5 class="text-primary mb-0">
-                                                <?= number_format($revenue / 1000000, 1) ?>M
-                                            </h5>
-                                            <small class="text-muted">
-                                                <?= number_format(($revenue / $totalYearRevenue) * 100, 1) ?>%
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>

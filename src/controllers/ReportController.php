@@ -104,38 +104,44 @@ foreach ($monthlyData as $data) {
 
         // Thống kê hôm nay
         $today = date('Y-m-d');
-        $todayStats = $pdo->query("
+        $stmt = $pdo->prepare("
             SELECT
                 COUNT(*) as total_bookings_today,
                 SUM(CASE WHEN b.trang_thai IN ('da_coc', 'da_thanh_toan') THEN so_luong * t.gia ELSE 0 END) as revenue_today
             FROM booking b
             LEFT JOIN tour t ON b.tour_id = t.id
-            WHERE DATE(b.ngay_tao) = '{$today}'
-        ")->fetch(PDO::FETCH_ASSOC);
+            WHERE DATE(b.ngay_tao) = ?
+        ");
+        $stmt->execute([$today]);
+        $todayStats = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // Thống kê tháng này
         $monthStart = date('Y-m-01');
         $monthEnd = date('Y-m-t');
-        $monthStats = $pdo->query("
+        $stmt = $pdo->prepare("
             SELECT
                 COUNT(*) as total_bookings_month,
                 SUM(CASE WHEN b.trang_thai IN ('da_coc', 'da_thanh_toan') THEN so_luong * t.gia ELSE 0 END) as revenue_month
             FROM booking b
             LEFT JOIN tour t ON b.tour_id = t.id
-            WHERE b.ngay_tao BETWEEN '{$monthStart}' AND '{$monthEnd}'
-        ")->fetch(PDO::FETCH_ASSOC);
+            WHERE b.ngay_tao BETWEEN ? AND ?
+        ");
+        $stmt->execute([$monthStart, $monthEnd]);
+        $monthStats = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // Thống kê năm nay
         $yearStart = date('Y-01-01');
         $yearEnd = date('Y-12-31');
-        $yearStats = $pdo->query("
+        $stmt = $pdo->prepare("
             SELECT
                 COUNT(*) as total_bookings_year,
                 SUM(CASE WHEN b.trang_thai IN ('da_coc', 'da_thanh_toan') THEN so_luong * t.gia ELSE 0 END) as revenue_year
             FROM booking b
             LEFT JOIN tour t ON b.tour_id = t.id
-            WHERE b.ngay_tao BETWEEN '{$yearStart}' AND '{$yearEnd}'
-        ")->fetch(PDO::FETCH_ASSOC);
+            WHERE b.ngay_tao BETWEEN ? AND ?
+        ");
+        $stmt->execute([$yearStart, $yearEnd]);
+        $yearStats = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // Tour hoạt động và danh mục
         $activeTours = $pdo->query("SELECT COUNT(*) as count FROM tour WHERE trang_thai = 'active'")->fetch(PDO::FETCH_ASSOC);
@@ -148,14 +154,14 @@ foreach ($monthlyData as $data) {
                 t.ten_tour,
                 b.so_luong,
                 b.ngay_tao,
-                SUM(CASE WHEN b.trang_thai IN ('da_coc', 'da_thanh_toan') THEN b.so_luong * t.gia ELSE 0 END) as revenue
+                (CASE WHEN b.trang_thai IN ('da_coc', 'da_thanh_toan') THEN b.so_luong * t.gia ELSE 0 END) as revenue
             FROM booking b
             LEFT JOIN tour t ON b.tour_id = t.id
-            GROUP BY b.id, t.ten_tour, b.so_luong, b.ngay_tao
             ORDER BY b.ngay_tao DESC
             LIMIT 5
         ")->fetchAll(PDO::FETCH_ASSOC);
-// Top tour bán chạy (theo số lượng booking)
+
+        // Top tour bán chạy (theo số lượng booking)
         $topTours = $pdo->query("
             SELECT
                 t.ten_tour,
