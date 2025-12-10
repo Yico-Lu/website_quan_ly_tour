@@ -83,7 +83,7 @@ class ReportController
         }
 
         // Điền dữ liệu thực tế
-        foreach ($monthlyData as $data) {
+foreach ($monthlyData as $data) {
             $monthNum = $data['month'];
             $fullYearData[$monthNum] = [
                 'month' => $monthNum,
@@ -155,8 +155,7 @@ class ReportController
             ORDER BY b.ngay_tao DESC
             LIMIT 5
         ")->fetchAll(PDO::FETCH_ASSOC);
-
-        // Top tour bán chạy (theo số lượng booking)
+// Top tour bán chạy (theo số lượng booking)
         $topTours = $pdo->query("
             SELECT
                 t.ten_tour,
@@ -208,6 +207,57 @@ class ReportController
 
         $filename = "bang-doanh-thu-{$year}";
         $this->exportToExcel($monthlyData, $year, $totalBookings, $totalCustomers, $totalRevenue, $totalCompleted, $filename);
+    }
+
+    private function exportToExcel(array $monthlyData, string $year, int $totalBookings, int $totalCustomers, float $totalRevenue, int $totalCompleted, string $filename): void
+    {
+        // Set headers for Excel file
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '.xlsx"');
+        header('Cache-Control: max-age=0');
+        header('Content-Transfer-Encoding: binary');
+
+        // Create Excel-compatible CSV content
+        $output = fopen('php://output', 'w');
+
+        // BOM for UTF-8 (important for Excel)
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        // Title row
+        fputcsv($output, ['BÁO CÁO DOANH THU NĂM ' . $year]);
+        fputcsv($output, []); // Empty row
+
+        // Headers
+fputcsv($output, ['Tháng', 'Tên tháng', 'Số đơn đặt', 'Số khách hàng', 'Đơn hoàn thành', 'Doanh thu (VND)']);
+
+        // Data rows
+        foreach ($monthlyData as $data) {
+            fputcsv($output, [
+                $data['month'],
+                $data['month_name'],
+                $data['total_bookings'],
+                $data['total_customers'],
+                $data['completed_bookings'],
+                number_format($data['revenue'], 0, ',', '.') . ' VND'
+            ]);
+        }
+
+        // Empty row before total
+        fputcsv($output, []);
+
+        // Total row
+        fputcsv($output, [
+            'TỔNG CỘNG',
+            '',
+            $totalBookings,
+            $totalCustomers,
+            $totalCompleted,
+            number_format($totalRevenue, 0, ',', '.') . ' VND',
+            '100.0%'
+        ]);
+
+        fclose($output);
+        exit;
     }
 
 }
