@@ -45,7 +45,7 @@ $pdo = getDB();
 
     <div class="col-12 col-sm-6 col-md-3">
         <div class="info-box">
-            <span class="info-box-icon bg-warning"><i class="bi bi-calendar-year"></i></span>
+            <span class="info-box-icon bg-warning"><i class="bi bi-trophy-fill"></i></span>
             <div class="info-box-content">
                 <span class="info-box-text">Năm nay</span>
                 <span class="info-box-number">
