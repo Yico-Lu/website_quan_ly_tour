@@ -213,6 +213,24 @@ $avgMonthlyRevenue = count($monthlyData) > 0 ? $totalRevenue / count($monthlyDat
         <?php endif; ?>
     </div>
 </div></div>
+<script>
+function exportReport(format) {
+    const url = new URL(window.location);
+    url.searchParams.set('export', format);
+
+    // Create a temporary link and click it
+    const link = document.createElement('a');
+    link.href = url.toString();
+    link.download = `bang-doanh-thu-${<?= $year ?>}.${format}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
+    modal.hide();
+}
+</script>
 
 <?php
 $content = ob_get_clean();
