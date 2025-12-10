@@ -325,5 +325,7 @@ class Booking
     {
         return number_format($this->getTongTien(), 0, ',', '.') . ' VND';
     }
+
+    
 }
 ?>
