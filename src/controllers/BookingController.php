@@ -178,6 +178,29 @@ class BookingController
             $booking->addDichVu($tenDichVu, $chiTiet);
         }
     }
+
+    /**
+     * Đồng bộ dịch vụ được nhập trực tiếp trên form tạo booking.
+     * @return bool true nếu có ít nhất 1 dịch vụ được thêm
+     */
+    private function syncDichVuFromForm(Booking $booking, array $postData): bool
+    {
+        if (!isset($postData['dich_vu']) || !is_array($postData['dich_vu'])) {
+            return false;
+        }
+
+        $added = false;
+        foreach ($postData['dich_vu'] as $dv) {
+            $ten = trim($dv['ten_dich_vu'] ?? '');
+            $chiTiet = trim($dv['chi_tiet'] ?? '');
+            if ($ten === '') {
+                continue;
+            }
+            $booking->addDichVu($ten, $chiTiet ?: null);
+            $added = true;
+        }
+        return $added;
+    }
     // Lấy danh sách tour và HDV dùng chung cho form
     private function getFormLists(): array
     {
@@ -377,7 +400,10 @@ class BookingController
         $this->syncHDV($booking, $_POST);
         $this->syncKhach($booking, $_POST);
         Booking::upsertLichKhoiHanh($bookingId, $data['ngay_gio_xuat_phat'] ?: null, $data['diem_tap_trung'] ?: null, $data['thoi_gian_ket_thuc'] ?: null, $data['lich_ghi_chu'] ?: null);
-        $this->syncDichVuFromNotes($booking, $bookingId, $data, false);
+        $addedDichVu = $this->syncDichVuFromForm($booking, $_POST);
+        if (!$addedDichVu) {
+            $this->syncDichVuFromNotes($booking, $bookingId, $data, false);
+        }
         $this->handleFileUpload($bookingId);
 
         $_SESSION['success'] = 'Thêm booking mới thành công';

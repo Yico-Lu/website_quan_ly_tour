@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const oldKhachs = (typeof window.OLD_KHACH_DATA !== 'undefined' && Array.isArray(window.OLD_KHACH_DATA)) 
         ? window.OLD_KHACH_DATA 
         : [];
+    // Khởi tạo dịch vụ booking (giữ lại để auto-fill nếu cần)
+    const dichVuContainer = document.getElementById('dich_vu_container');
+    const oldDichVu = (typeof window.OLD_DICH_VU !== 'undefined' && Array.isArray(window.OLD_DICH_VU))
+        ? window.OLD_DICH_VU
+        : [];
 
     const escapeHtml = (text = '') => {
         const div = document.createElement('div');
@@ -119,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const startVal = startInput.value;
         if (!startVal) {
             endInput.value = '';
-            if (endEl) endEl.textContent = '-';
             return;
         }
         const days = parseDaysFromTour();
@@ -130,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
         endDate.setDate(endDate.getDate() + days);
         const endStr = endDate.toISOString().slice(0, 16);
         endInput.value = endStr;
-        if (endEl) endEl.textContent = endDate.toLocaleString('vi-VN');
     };
 
     const updateTourInfo = () => {

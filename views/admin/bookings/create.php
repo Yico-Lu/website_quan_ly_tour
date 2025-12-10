@@ -115,6 +115,60 @@ ob_start();
                 </div>
             </div>
 
+            <!-- Lịch khởi hành -->
+            <div class="card mb-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Lịch khởi hành</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="ngay_gio_xuat_phat" class="form-label">Ngày giờ xuất phát</label>
+                            <input
+                                type="datetime-local"
+                                class="form-control"
+                                id="ngay_gio_xuat_phat"
+                                name="ngay_gio_xuat_phat"
+                                value="<?= htmlspecialchars($old['ngay_gio_xuat_phat'] ?? '') ?>"
+                            />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="thoi_gian_ket_thuc" class="form-label">Thời gian kết thúc</label>
+                            <input
+                                type="datetime-local"
+                                class="form-control"
+                                id="thoi_gian_ket_thuc"
+                                name="thoi_gian_ket_thuc"
+                                value="<?= htmlspecialchars($old['thoi_gian_ket_thuc'] ?? '') ?>"
+                            />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="diem_tap_trung" class="form-label">Điểm tập trung</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="diem_tap_trung"
+                                name="diem_tap_trung"
+                                value="<?= htmlspecialchars($old['diem_tap_trung'] ?? '') ?>"
+                                placeholder="Ví dụ: Sân bay Tân Sơn Nhất - Cổng D2"
+                            />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="lich_ghi_chu" class="form-label">Ghi chú lịch khởi hành</label>
+                            <textarea
+                                class="form-control"
+                                id="lich_ghi_chu"
+                                name="lich_ghi_chu"
+                                rows="2"
+                                placeholder="Ghi chú cho lịch khởi hành (nếu có)"
+                            ><?= htmlspecialchars($old['lich_ghi_chu'] ?? '') ?></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Upload file danh sách khách hàng -->
             <div class="card mb-3">
                 <div class="card-header bg-light">
@@ -134,6 +188,32 @@ ob_start();
                             Định dạng file: XLSX, XLS, CSV. File sẽ được lưu với tên: <strong>booking_{id}.extension</strong>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Dịch vụ booking -->
+            <div class="card mb-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Dịch vụ booking</h5>
+                </div>
+                <div class="card-body" id="dich_vu_container">
+                    <div class="row align-items-end g-3 mb-2 dich-vu-row">
+                        <div class="col-md-5">
+                            <label class="form-label">Tên dịch vụ</label>
+                            <input type="text" class="form-control" name="dich_vu[0][ten_dich_vu]"
+                                value="<?= htmlspecialchars($old['dich_vu'][0]['ten_dich_vu'] ?? '') ?>"
+                                placeholder="Ví dụ: Đón sân bay, Ăn sáng, Phòng sớm">
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label">Chi tiết</label>
+                            <input type="text" class="form-control" name="dich_vu[0][chi_tiet]"
+                                value="<?= htmlspecialchars($old['dich_vu'][0]['chi_tiet'] ?? '') ?>"
+                                placeholder="Ghi chú thêm cho dịch vụ (tùy chọn)">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">Để trống nếu chưa chốt dịch vụ kèm theo.</small>
                 </div>
             </div>
 
@@ -249,5 +329,6 @@ view('layouts.AdminLayout', [
 <script>
     // Truyền dữ liệu khách hàng cũ cho JS
     window.OLD_KHACH_DATA = <?= json_encode($old['khach'] ?? []) ?>;
+    window.OLD_DICH_VU = <?= json_encode($old['dich_vu'] ?? []) ?>;
 </script>
 
