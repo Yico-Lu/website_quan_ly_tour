@@ -228,17 +228,17 @@ function exportReport(format) {
     const url = new URL(window.location);
     url.searchParams.set('export', format);
 
-    // Create a temporary link and click it
     const link = document.createElement('a');
     link.href = url.toString();
-    link.download = `bang-doanh-thu-${<?= $year ?>}.${format}`;
+    link.target = '_blank';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    // Close modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
-    modal.hide();
+    if (modal) {
+        modal.hide();
+    }
 }
 </script>
 

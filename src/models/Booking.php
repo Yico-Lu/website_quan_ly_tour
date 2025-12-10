@@ -266,6 +266,64 @@ class Booking
     }
 
 
-  
+    // Lấy tên loại khách
+    public function getLoaiKhach()
+    {
+        $types = [
+            'le' => 'Khách lẻ',
+            'doan' => 'Khách đoàn'
+        ];
+        return $types[$this->loai_khach] ?? 'Không xác định';
+    }
+
+    // Lấy tên trạng thái
+    public function getTrangThai()
+    {
+        $statuses = [
+            'cho_xac_nhan' => 'Chờ xác nhận',
+            'da_coc' => 'Đã cọc',
+            'da_thanh_toan' => 'Đã thanh toán',
+            'da_huy' => 'Đã hủy',
+            'dang_xu_ly' => 'Đang xử lý',
+            'da_xac_nhan' => 'Đã xác nhận',
+            'hoan_thanh' => 'Hoàn thành'
+        ];
+        return $statuses[$this->trang_thai] ?? 'Không xác định';
+    }
+
+    // Lấy class badge cho trạng thái
+    public function getTrangThaiBadgeClass()
+    {
+        $classes = [
+            'cho_xac_nhan' => 'text-bg-warning',
+            'da_coc' => 'text-bg-info',
+            'da_thanh_toan' => 'text-bg-primary',
+            'da_huy' => 'text-bg-danger',
+            'dang_xu_ly' => 'text-bg-warning',
+            'da_xac_nhan' => 'text-bg-info',
+            'hoan_thanh' => 'text-bg-success'
+        ];
+        return $classes[$this->trang_thai] ?? 'text-bg-secondary';
+    }
+
+    // Lấy class badge cho loại khách
+    public function getLoaiKhachBadgeClass()
+    {
+        return $this->loai_khach === 'le' ? 'text-bg-success' : 'text-bg-info';
+    }
+
+    // Tính tổng tiền (nếu cần)
+    public function getTongTien()
+    {
+        // Giả sử có logic tính tổng tiền dựa trên tour và số lượng
+        // Hiện tại chưa implement, có thể mở rộng sau
+        return 0;
+    }
+
+    // Format tiền tệ
+    public function formatTongTien()
+    {
+        return number_format($this->getTongTien(), 0, ',', '.') . ' VND';
+    }
 }
 ?>
