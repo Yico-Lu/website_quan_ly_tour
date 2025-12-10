@@ -122,16 +122,6 @@ match ($act) {
     'reports' => $reportController->index(),
     'reports/revenue-table' => $reportController->revenueTable(),
 
-    // Xử lý route có tham số
-    default => match($route) {
-        'tours' => match($param) {
-        'edit' => $tourController->edit($actParts[2] ?? null),
-        default => $homeController->notFound()
-        },
-        'tours/update' => $tourController->update(),
-        default => $homeController->notFound()
-    }
-
     // Đường dẫn không tồn tại
-    // default => $homeController->notFound(),
+    default => $homeController->notFound(),
 };

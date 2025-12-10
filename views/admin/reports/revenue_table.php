@@ -133,13 +133,11 @@ $avgMonthlyRevenue = count($monthlyData) > 0 ? $totalRevenue / count($monthlyDat
                             <th class="text-center">Khách hàng</th>
                             <th class="text-center">Hoàn thành</th>
                             <th class="text-end">Doanh thu</th>
-                            <th class="text-center">Tỷ lệ</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($monthlyData as $data): ?>
                             <?php
-                            $percentage = $totalRevenue > 0 ? ($data['revenue'] / $totalRevenue) * 100 : 0;
                             $completionRate = $data['total_bookings'] > 0 ? ($data['completed_bookings'] / $data['total_bookings']) * 100 : 0;
                             ?>
                             <tr>
@@ -178,17 +176,6 @@ $avgMonthlyRevenue = count($monthlyData) > 0 ? $totalRevenue / count($monthlyDat
                                         <?= number_format($data['revenue'], 0, ',', '.') ?> VND
                                     </strong>
                                 </td>
-                                <td class="text-center">
-                                    <div class="progress" style="height: 20px; min-width: 70px;">
-                                        <div class="progress-bar bg-primary" role="progressbar"
-                                             style="width: <?= $percentage ?>%"
-                                             aria-valuenow="<?= $percentage ?>"
-                                             aria-valuemin="0"
-                                             aria-valuemax="100">
-                                            <?= number_format($percentage, 1) ?>%
-                                        </div>
-                                    </div>
-                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -199,7 +186,6 @@ $avgMonthlyRevenue = count($monthlyData) > 0 ? $totalRevenue / count($monthlyDat
                             <th class="text-center"><strong><?= number_format($totalCustomers) ?> khách</strong></th>
                             <th class="text-center"><strong><?= number_format($totalCompleted) ?> hoàn thành</strong></th>
                             <th class="text-end"><strong class="text-success"><?= number_format($totalRevenue, 0, ',', '.') ?> VND</strong></th>
-                            <th class="text-center"><strong>100%</strong></th>
                         </tr>
                     </tfoot>
                 </table>
@@ -212,7 +198,31 @@ $avgMonthlyRevenue = count($monthlyData) > 0 ? $totalRevenue / count($monthlyDat
             </div>
         <?php endif; ?>
     </div>
-</div></div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportModalLabel">Xuất báo cáo doanh thu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có muốn xuất báo cáo doanh thu năm <strong><?= $year ?></strong> ra file Excel không?</p>
+                <div class="text-center">
+                    <button type="button" class="btn btn-success btn-lg" onclick="exportReport('xlsx')">
+                        <i class="bi bi-file-earmark-excel me-2"></i>Xuất Excel (.xlsx)
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function exportReport(format) {
     const url = new URL(window.location);

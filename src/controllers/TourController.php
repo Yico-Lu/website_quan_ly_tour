@@ -10,8 +10,8 @@
 
             //hiển thị view danh sách tour
             view('admin.tours.index', [
-                'title' => $title ?? 'Danh sách Tour - Quản lý Tour',
-                'pageTitle' => $pageTitle ?? 'Danh sách Tour',
+                'title' => 'Danh sách Tour - Quản lý Tour',
+                'pageTitle' => 'Danh sách Tour',
                 'tours' => $tours,
                 'breadcrumb' => [
                     ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],

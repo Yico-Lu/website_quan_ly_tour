@@ -29,21 +29,10 @@
         data-accordion="false"
       >
       <li class="nav-item">
-        <a href="#" class="nav-link">
+        <a href="<?= BASE_URL . 'reports' ?>" class="nav-link">
           <i class="nav-icon bi bi-bar-chart-line"></i>
-          <p>
-            Dashboard
-            <i class="nav-arrow bi bi-chevron-right"></i>
-          </p>
+          <p>Dashboard Báo cáo</p>
         </a>
-        <ul class="nav nav-treeview">
-          <li class="nav-item">
-            <a href="<?= BASE_URL . 'reports/revenue-table' ?>" class="nav-link">
-              <i class="nav-icon bi bi-circle"></i>
-              <p>Bảng Doanh thu</p>
-            </a>
-          </li>
-        </ul>
       </li>
  
         <li class="nav-item">

@@ -52,11 +52,9 @@ class Booking
     {
         $pdo = getDB();
         $sql = "SELECT b.*,
-                       t.ten_tour,
-                       CONCAT(hdv.ho_ten, ' (', hdv.email, ')') as ten_hdv
+                       t.ten_tour
                 FROM booking b
                 LEFT JOIN tour t ON b.tour_id = t.id
-                LEFT JOIN tai_khoan hdv ON b.assigned_hdv_id = hdv.id
                 ORDER BY b.ngay_tao DESC";
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
@@ -72,11 +70,9 @@ class Booking
     {
         $pdo = getDB();
         $sql = "SELECT b.*,
-                       t.ten_tour,
-                       CONCAT(hdv.ho_ten, ' (', hdv.email, ')') as ten_hdv
+                       t.ten_tour
                 FROM booking b
                 LEFT JOIN tour t ON b.tour_id = t.id
-                LEFT JOIN tai_khoan hdv ON b.assigned_hdv_id = hdv.id
                 WHERE b.id = ? LIMIT 1";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$id]);
@@ -104,62 +100,132 @@ class Booking
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Kiểm tra xem cột assigned_hdv_id có tồn tại không
+    public static function hasAssignedHdvColumn()
+    {
+        $pdo = getDB();
+        try {
+            $stmt = $pdo->prepare("DESCRIBE booking");
+            $stmt->execute();
+            $columns = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+            return in_array('assigned_hdv_id', $columns);
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
 
     // Tạo booking mới
     public static function create(Booking $booking)
     {
         $pdo = getDB();
-        $sql = "INSERT INTO booking (tai_khoan_id, assigned_hdv_id, tour_id, loai_khach, ten_nguoi_dat, so_luong, thoi_gian_tour, lien_he, yeu_cau_dac_biet, trang_thai, ghi_chu, ngay_tao, ngay_cap_nhat)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
-        $stmt = $pdo->prepare($sql);
-        return $stmt->execute([
-            $booking->tai_khoan_id ?: null, // Có thể null nếu không có khách hàng
-            $booking->assigned_hdv_id ?: null,
-            $booking->tour_id,
-            $booking->loai_khach,
-            $booking->ten_nguoi_dat,
-            $booking->so_luong,
-            $booking->thoi_gian_tour,
-            $booking->lien_he,
-            $booking->yeu_cau_dac_biet,
-            $booking->trang_thai,
-            $booking->ghi_chu
-        ]);
+
+        // Kiểm tra xem cột assigned_hdv_id có tồn tại không
+        $hasAssignedHdvColumn = self::hasAssignedHdvColumn();
+
+        if ($hasAssignedHdvColumn) {
+            $sql = "INSERT INTO booking (tai_khoan_id, assigned_hdv_id, tour_id, loai_khach, ten_nguoi_dat, so_luong, thoi_gian_tour, lien_he, yeu_cau_dac_biet, trang_thai, ghi_chu, ngay_tao, ngay_cap_nhat)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+            $stmt = $pdo->prepare($sql);
+            return $stmt->execute([
+                $booking->tai_khoan_id ?: null, // Có thể null nếu không có khách hàng
+                $booking->assigned_hdv_id ?: null,
+                $booking->tour_id,
+                $booking->loai_khach,
+                $booking->ten_nguoi_dat,
+                $booking->so_luong,
+                $booking->thoi_gian_tour,
+                $booking->lien_he,
+                $booking->yeu_cau_dac_biet,
+                $booking->trang_thai,
+                $booking->ghi_chu
+            ]);
+        } else {
+            $sql = "INSERT INTO booking (tai_khoan_id, tour_id, loai_khach, ten_nguoi_dat, so_luong, thoi_gian_tour, lien_he, yeu_cau_dac_biet, trang_thai, ghi_chu, ngay_tao, ngay_cap_nhat)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+            $stmt = $pdo->prepare($sql);
+            return $stmt->execute([
+                $booking->tai_khoan_id ?: null, // Có thể null nếu không có khách hàng
+                $booking->tour_id,
+                $booking->loai_khach,
+                $booking->ten_nguoi_dat,
+                $booking->so_luong,
+                $booking->thoi_gian_tour,
+                $booking->lien_he,
+                $booking->yeu_cau_dac_biet,
+                $booking->trang_thai,
+                $booking->ghi_chu
+            ]);
+        }
     }
 
     // Cập nhật booking
     public static function update(Booking $booking)
     {
         $pdo = getDB();
-        $sql = "UPDATE booking SET
-                        tai_khoan_id = ?,
-                        assigned_hdv_id = ?,
-                        tour_id = ?,
-                        loai_khach = ?,
-                        ten_nguoi_dat = ?,
-                        so_luong = ?,
-                        thoi_gian_tour = ?,
-                        lien_he = ?,
-                        yeu_cau_dac_biet = ?,
-                        trang_thai = ?,
-                        ghi_chu = ?,
-                        ngay_cap_nhat = NOW()
-                WHERE id = ?";
-        $stmt = $pdo->prepare($sql);
-        return $stmt->execute([
-            $booking->tai_khoan_id,
-            $booking->assigned_hdv_id,
-            $booking->tour_id,
-            $booking->loai_khach,
-            $booking->ten_nguoi_dat,
-            $booking->so_luong,
-            $booking->thoi_gian_tour,
-            $booking->lien_he,
-            $booking->yeu_cau_dac_biet,
-            $booking->trang_thai,
-            $booking->ghi_chu,
-            $booking->id
-        ]);
+
+        // Kiểm tra xem cột assigned_hdv_id có tồn tại không
+        $hasAssignedHdvColumn = self::hasAssignedHdvColumn();
+
+        if ($hasAssignedHdvColumn) {
+            $sql = "UPDATE booking SET
+                            tai_khoan_id = ?,
+                            assigned_hdv_id = ?,
+                            tour_id = ?,
+                            loai_khach = ?,
+                            ten_nguoi_dat = ?,
+                            so_luong = ?,
+                            thoi_gian_tour = ?,
+                            lien_he = ?,
+                            yeu_cau_dac_biet = ?,
+                            trang_thai = ?,
+                            ghi_chu = ?,
+                            ngay_cap_nhat = NOW()
+                    WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            return $stmt->execute([
+                $booking->tai_khoan_id,
+                $booking->assigned_hdv_id,
+                $booking->tour_id,
+                $booking->loai_khach,
+                $booking->ten_nguoi_dat,
+                $booking->so_luong,
+                $booking->thoi_gian_tour,
+                $booking->lien_he,
+                $booking->yeu_cau_dac_biet,
+                $booking->trang_thai,
+                $booking->ghi_chu,
+                $booking->id
+            ]);
+        } else {
+            $sql = "UPDATE booking SET
+                            tai_khoan_id = ?,
+                            tour_id = ?,
+                            loai_khach = ?,
+                            ten_nguoi_dat = ?,
+                            so_luong = ?,
+                            thoi_gian_tour = ?,
+                            lien_he = ?,
+                            yeu_cau_dac_biet = ?,
+                            trang_thai = ?,
+                            ghi_chu = ?,
+                            ngay_cap_nhat = NOW()
+                    WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            return $stmt->execute([
+                $booking->tai_khoan_id,
+                $booking->tour_id,
+                $booking->loai_khach,
+                $booking->ten_nguoi_dat,
+                $booking->so_luong,
+                $booking->thoi_gian_tour,
+                $booking->lien_he,
+                $booking->yeu_cau_dac_biet,
+                $booking->trang_thai,
+                $booking->ghi_chu,
+                $booking->id
+            ]);
+        }
     }
 
     // Xóa booking hoàn toàn
@@ -200,64 +266,6 @@ class Booking
     }
 
 
-    // Lấy tên loại khách
-    public function getLoaiKhach()
-    {
-        $types = [
-            'le' => 'Khách lẻ',
-            'doan' => 'Khách đoàn'
-        ];
-        return $types[$this->loai_khach] ?? 'Không xác định';
-    }
-
-    // Lấy tên trạng thái
-    public function getTrangThai()
-    {
-        $statuses = [
-            'cho_xac_nhan' => 'Chờ xác nhận',
-            'da_coc' => 'Đã cọc',
-            'da_thanh_toan' => 'Đã thanh toán',
-            'da_huy' => 'Đã hủy',
-            'dang_xu_ly' => 'Đang xử lý',
-            'da_xac_nhan' => 'Đã xác nhận',
-            'hoan_thanh' => 'Hoàn thành'
-        ];
-        return $statuses[$this->trang_thai] ?? 'Không xác định';
-    }
-
-    // Lấy class badge cho trạng thái
-    public function getTrangThaiBadgeClass()
-    {
-        $classes = [
-            'cho_xac_nhan' => 'text-bg-warning',
-            'da_coc' => 'text-bg-info',
-            'da_thanh_toan' => 'text-bg-primary',
-            'da_huy' => 'text-bg-danger',
-            'dang_xu_ly' => 'text-bg-warning',
-            'da_xac_nhan' => 'text-bg-info',
-            'hoan_thanh' => 'text-bg-success'
-        ];
-        return $classes[$this->trang_thai] ?? 'text-bg-secondary';
-    }
-
-    // Lấy class badge cho loại khách
-    public function getLoaiKhachBadgeClass()
-    {
-        return $this->loai_khach === 'le' ? 'text-bg-success' : 'text-bg-info';
-    }
-
-    // Tính tổng tiền (nếu cần)
-    public function getTongTien()
-    {
-        // Giả sử có logic tính tổng tiền dựa trên tour và số lượng
-        // Hiện tại chưa implement, có thể mở rộng sau
-        return 0;
-    }
-
-    // Format tiền tệ
-    public function formatTongTien()
-    {
-        return number_format($this->getTongTien(), 0, ',', '.') . ' VND';
-    }
+  
 }
 ?>
