@@ -38,6 +38,9 @@
     <!--begin::Required Plugin(AdminLTE)-->
     <link rel="stylesheet" href="<?= asset('dist/css/adminlte.css') ?>" />
     <!--end::Required Plugin(AdminLTE)-->
+    <!--begin::Chart.js-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!--end::Chart.js-->
   </head>
   <!--end::Head-->
   <!--begin::Body-->
