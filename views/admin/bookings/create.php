@@ -331,4 +331,3 @@ view('layouts.AdminLayout', [
     window.OLD_KHACH_DATA = <?= json_encode($old['khach'] ?? []) ?>;
     window.OLD_DICH_VU = <?= json_encode($old['dich_vu'] ?? []) ?>;
 </script>
-

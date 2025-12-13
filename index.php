@@ -24,6 +24,7 @@ require_once __DIR__ . '/src/controllers/BookingController.php';
 require_once __DIR__ . '/src/controllers/DanhMucTourController.php';
 require_once __DIR__ . '/src/controllers/HDVController.php';
 require_once __DIR__ . '/src/controllers/GuideTourController.php';
+require_once __DIR__ . '/src/controllers/ReportController.php';
 
 // Khởi tạo các controller
 $homeController = new HomeController();
@@ -34,6 +35,7 @@ $bookingController = new BookingController();
 $danhMucController = new DanhMucTourController();
 $hdvController = new HDVController();
 $guideTourController = new GuideTourController();
+$reportController = new ReportController();
 
 // Xác định route dựa trên tham số act (mặc định là trang chủ '/')
 $act = $_GET['act'] ?? '/';
@@ -210,7 +212,19 @@ match ($act) {
     'guide/diary/store' => $guideTourController->nhatKyLuu(),
     'guide/diary/update' => $guideTourController->nhatKyCapNhat(),
     'guide/diary/delete' => $guideTourController->nhatKyXoa(),
+    // Đường dẫn báo cáo thống kê
+    'reports' => $reportController->index(),
+    'reports/revenue-table' => $reportController->revenueTable(),
 
-    // Đường dẫn không tồn tại
-    default => $homeController->notFound(),
+    // Xử lý route có tham số
+    default => match($route) {
+        'tours' => match($param) {
+        'edit' => $tourController->edit($actParts[2] ?? null),
+        default => $homeController->notFound()
+        },
+        'tours/update' => $tourController->update(),
+        default => $homeController->notFound()
+    }
+
+
 };

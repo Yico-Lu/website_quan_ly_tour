@@ -15,6 +15,17 @@ class TourController
             $tours = Tour::search($keyword, $danh_muc_id, $trang_thai);
         } else {
             $tours = Tour::getAll();
+
+            //hiển thị view danh sách tour
+            view('admin.tours.index', [
+                'title' => 'Danh sách Tour - Quản lý Tour',
+                'pageTitle' => 'Danh sách Tour',
+                'tours' => $tours,
+                'breadcrumb' => [
+                    ['label' => 'Trang chủ', 'url' => BASE_URL . 'home'],
+                    ['label' => 'Danh sách tour', 'url' => BASE_URL . 'tours', 'active' => true],
+                ],
+            ]);
         }
 
         // Lấy danh sách danh mục
