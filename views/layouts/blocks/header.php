@@ -66,7 +66,7 @@
         <li class="nav-item dropdown user-menu">
           <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
             <img
-              src="<?= asset('dist/assets/img/user2-160x160.jpg') ?>"
+              src="<?= asset('dist/assets/img/admin1.png') ?>"
               class="user-image rounded-circle shadow"
               alt="User Image"
             />
@@ -76,7 +76,7 @@
             <!--begin::User Image-->
             <li class="user-header <?= isGuide() ? 'text-bg-success' : 'text-bg-primary' ?>">
               <img
-                src="<?= asset('dist/assets/img/user2-160x160.jpg') ?>"
+                src="<?= asset('dist/assets/img/admin1.png') ?>"
                 class="rounded-circle shadow"
                 alt="User Image"
               />
