@@ -50,3 +50,4 @@ document.addEventListener("DOMContentLoaded", function () {
     autoHideAlert(alert, 3000);
   });
 });
+
