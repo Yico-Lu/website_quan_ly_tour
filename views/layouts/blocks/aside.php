@@ -31,7 +31,7 @@
         <li class="nav-item">
         <a href="<?= BASE_URL . 'reports' ?>" class="nav-link">
           <i class="nav-icon bi bi-bar-chart-line"></i>
-          <p>Dashboard Báo cáo</p>
+          <p>Dashboard </p>
         </a>
         </li>
 
@@ -76,77 +76,6 @@
         <?php endif; ?>
         <?php if (isAdmin()): ?>
           <li class="nav-item">
-            <a href="#" class="nav-link">
-              <i class="nav-icon bi bi-folder"></i>
-              <p>
-                Danh mục Tour
-                <i class="nav-arrow bi bi-chevron-right"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="<?= BASE_URL . 'categories' ?>" class="nav-link">
-                  <i class="nav-icon bi bi-circle"></i>
-                  <p>Danh sách Danh mục</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="<?= BASE_URL . 'categories/create' ?>" class="nav-link">
-                  <i class="nav-icon bi bi-circle"></i>
-                  <p>Thêm Danh mục mới</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-item">
-            <a href="#" class="nav-link">
-              <i class="nav-icon bi bi-calendar-check"></i>
-              <p>
-                Quản lý Booking
-                <i class="nav-arrow bi bi-chevron-right"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="<?= BASE_URL . 'bookings' ?>" class="nav-link">
-                  <i class="nav-icon bi bi-circle"></i>
-                  <p>Danh sách Booking</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="<?= BASE_URL . 'bookings/create' ?>" class="nav-link">
-                  <i class="nav-icon bi bi-circle"></i>
-                  <p>Thêm Booking mới</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-        <?php endif; ?>
-
-        <li class="nav-item">
-          <a href="#" class="nav-link">
-            <i class="nav-icon bi bi-airplane-engines"></i>
-            <p>
-              Quản lý Tour
-              <i class="nav-arrow bi bi-chevron-right"></i>
-            </p>
-          </a>
-          <ul class="nav nav-treeview">
-            <li class="nav-item">
-              <a href="<?= BASE_URL . 'tours' ?>" class="nav-link">
-                <i class="nav-icon bi bi-circle"></i>
-                <p>Danh sách Tour</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="<?= BASE_URL . 'tours/create' ?>" class="nav-link">
-                <i class="nav-icon bi bi-circle"></i>
-                <p>Thêm Tour mới</p>
-              </a>
-            </li>
-          </ul>
-        </li>
-        <li class="nav-item">
           <a href="#" class="nav-link">
             <i class="nav-icon bi bi-tags-fill"></i>
             <p>
@@ -169,30 +98,33 @@
             </li>
           </ul>
         </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link">
-            <i class="nav-icon bi bi-journal-text"></i>
-            <p>
-              Quản lý Booking
-              <i class="nav-arrow bi bi-chevron-right"></i>
-            </p>
-          </a>
-          <ul class="nav nav-treeview">
-            <li class="nav-item">
-              <a href="<?= BASE_URL . 'bookings' ?>" class="nav-link">
-                <i class="nav-icon bi bi-circle"></i>
-                <p>Danh sách Booking</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="<?= BASE_URL . 'bookings/create' ?>" class="nav-link">
-                <i class="nav-icon bi bi-circle"></i>
-                <p>Thêm Booking mới</p>
-              </a>
-            </li>
-          </ul>
-        </li>
-        <?php if (isAdmin()): ?>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="nav-icon bi bi-journal-text"></i>
+              <p>
+                Quản lý Booking
+                <i class="nav-arrow bi bi-chevron-right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="<?= BASE_URL . 'bookings' ?>" class="nav-link">
+                  <i class="nav-icon bi bi-circle"></i>
+                  <p>Danh sách Booking</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="<?= BASE_URL . 'bookings/create' ?>" class="nav-link">
+                  <i class="nav-icon bi bi-circle"></i>
+                  <p>Thêm Booking mới</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+        <?php endif; ?>
+
+        
+         <?php if (isAdmin()): ?>
           <li class="nav-item">
             <a href="#" class="nav-link">
               <i class="nav-icon bi bi-person-gear"></i>
