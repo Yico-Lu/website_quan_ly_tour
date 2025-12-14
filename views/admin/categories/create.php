@@ -39,8 +39,7 @@ ob_start();
                         placeholder="Nhập tên danh mục tour"
                         required
                     />
-                    <div class="form-text">Ví dụ: Tour miền Bắc, Tour miền Trung, Tour Phú Quốc...</div>
-                </div>
+                    </div>
 
                 <!-- Trạng thái -->
                 <div class="col-md-4 mb-3">
@@ -59,8 +58,7 @@ ob_start();
                             Hoạt động
                         </label>
                     </div>
-                    <div class="form-text">Bỏ check nếu muốn tạm ngưng danh mục này</div>
-                </div>
+                    </div>
             </div>
 
             <!-- Mô tả -->
@@ -74,7 +72,6 @@ ob_start();
                     placeholder="Mô tả chi tiết về danh mục tour này..."
                     required
                 ><?= htmlspecialchars($old['mo_ta'] ?? '') ?></textarea>
-                <div class="form-text">Mô tả sẽ giúp người dùng hiểu rõ hơn về danh mục này</div>
             </div>
         </div>
 

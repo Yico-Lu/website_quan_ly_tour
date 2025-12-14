@@ -44,7 +44,6 @@ ob_start();
                     <input type="text" class="form-control" id="name" name="name"
                            value="<?= htmlspecialchars($old['name'] ?? $user->name) ?>"
                            placeholder="Nhập họ tên" required>
-                    <div class="form-text">Tên đầy đủ của người dùng</div>
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -52,7 +51,6 @@ ob_start();
                     <input type="email" class="form-control" id="email" name="email"
                            value="<?= htmlspecialchars($old['email'] ?? $user->email) ?>"
                            placeholder="Nhập địa chỉ email" required>
-                    <div class="form-text">Email sẽ được dùng để đăng nhập</div>
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -60,7 +58,6 @@ ob_start();
                     <input type="tel" class="form-control" id="sdt" name="sdt"
                            value="<?= htmlspecialchars($old['sdt'] ?? ($user->sdt ?? '')) ?>"
                            placeholder="Nhập số điện thoại">
-                    <div class="form-text">Ví dụ: 0912345678</div>
                 </div>
             </div>
 
@@ -71,7 +68,6 @@ ob_start();
                         <option value="huong_dan_vien" <?= ($old['role'] ?? $user->role) === 'huong_dan_vien' ? 'selected' : '' ?>>Hướng dẫn viên</option>
                         <option value="admin" <?= ($old['role'] ?? $user->role) === 'admin' ? 'selected' : '' ?>>Quản trị viên</option>
                     </select>
-                    <div class="form-text">Quyền truy cập của tài khoản trong hệ thống</div>
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -83,14 +79,12 @@ ob_start();
                             Tài khoản hoạt động
                         </label>
                     </div>
-                    <div class="form-text">Bỏ check nếu muốn tạm ngưng tài khoản</div>
                 </div>
             </div>
 
             <hr>
             <h5><i class="bi bi-key"></i> Đổi mật khẩu</h5>
-            <p class="text-muted">Để trống nếu không muốn đổi mật khẩu</p>
-
+            
             <div class="row">
                 <div class="col-md-12 mb-3">
                     <div class="form-check">
@@ -108,14 +102,12 @@ ob_start();
                     <label for="new_password" class="form-label">Mật khẩu mới <span class="text-danger">*</span></label>
                     <input type="password" class="form-control" id="new_password" name="new_password"
                            placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)">
-                    <div class="form-text">Mật khẩu tối thiểu 6 ký tự</div>
-                </div>
+                    </div>
 
                 <div class="col-md-6 mb-3">
                     <label for="confirm_password" class="form-label">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
                     <input type="password" class="form-control" id="confirm_password" name="confirm_password"
                            placeholder="Nhập lại mật khẩu mới">
-                    <div class="form-text">Nhập lại mật khẩu để xác nhận</div>
                 </div>
             </div>
 

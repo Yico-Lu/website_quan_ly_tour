@@ -133,7 +133,8 @@ ob_start();
                     </div>
                 </div>
             </div>
-
+            
+            
             <!-- Upload file danh sách khách hàng -->
             <div class="card mb-3">
                 <div class="card-header bg-light">
@@ -150,23 +151,6 @@ ob_start();
                     $fileName = $hasFile ? basename($filePath) : null;
                     ?>
                     
-                    <?php if ($hasFile && $fileName): ?>
-                        <div class="alert alert-success mb-3">
-                            <i class="bi bi-file-earmark-excel"></i>
-                            <strong>File hiện tại:</strong> <?= htmlspecialchars($fileName) ?>
-                            <br>
-                            <a href="<?= BASE_URL ?>public/uploads/guest_lists/<?= htmlspecialchars($fileName) ?>" 
-                               class="btn btn-sm btn-primary mt-2" download>
-                                <i class="bi bi-download"></i> Tải danh sách khách hàng
-                            </a>
-                        </div>
-                    <?php else: ?>
-                        <div class="alert alert-info mb-3">
-                            <i class="bi bi-info-circle"></i>
-                            Chưa có file danh sách khách hàng cho booking này.
-                        </div>
-                    <?php endif; ?>
-                    
                     <div class="mb-3">
                         <label for="guest_list_file" class="form-label">
                             <?= $hasFile ? 'Thay thế file (tùy chọn)' : 'Chọn file Excel/CSV (tùy chọn)' ?>
@@ -181,8 +165,6 @@ ob_start();
                         <div class="form-text">
                             Định dạng file: XLSX, XLS, CSV. File sẽ được lưu với tên: <strong>booking_<?= $booking->id ?>.extension</strong>
                             <?php if ($hasFile): ?>
-                                <br>
-                                <small class="text-warning">Nếu chọn file mới, file cũ sẽ bị thay thế.</small>
                             <?php endif; ?>
                         </div>
                     </div>

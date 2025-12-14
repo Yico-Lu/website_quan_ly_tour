@@ -242,7 +242,7 @@ class Booking
             $pdo->beginTransaction();
 
             // Xóa dữ liệu liên quan trước (nếu có)
-            $tables = ['booking_nhat_ky_log', 'booking_dich_vu', 'booking_hdv', 'booking_hoa_don', 'booking_chi_tiet']; // Các bảng có thể liên quan
+            $tables = ['booking_dich_vu', 'booking_hdv']; // Các bảng có thể liên quan
 
             foreach ($tables as $table) {
                 try {

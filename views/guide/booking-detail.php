@@ -238,17 +238,17 @@ ob_start();
                                         <td><?= htmlspecialchars($khach['so_giay_to'] ?? '') ?></td>
                                         <td>
                                             <div class="yeu-cau-cell-wrapper">
-                                                <span id="yeuCauText<?= $khach['id'] ?>">
-                                                    <?= !empty($khach['yeu_cau_ca_nhan']) ? nl2br(htmlspecialchars($khach['yeu_cau_ca_nhan'])) : '<span class="text-muted">Chưa có</span>' ?>
-                                                </span>
-                                                <button 
-                                                    type="button" 
+                                            <span id="yeuCauText<?= $khach['id'] ?>">
+                                                <?= !empty($khach['yeu_cau_ca_nhan']) ? nl2br(htmlspecialchars($khach['yeu_cau_ca_nhan'])) : '<span class="text-muted">Chưa có</span>' ?>
+                                            </span>
+                                            <button 
+                                                type="button" 
                                                     class="btn btn-sm btn-outline-primary" 
-                                                    onclick="showUpdateYeuCau(<?= $khach['id'] ?>, '<?= htmlspecialchars(addslashes($khach['yeu_cau_ca_nhan'] ?? '')) ?>')"
+                                                onclick="showUpdateYeuCau(<?= $khach['id'] ?>, '<?= htmlspecialchars(addslashes($khach['yeu_cau_ca_nhan'] ?? '')) ?>')"
                                                     title="Sửa yêu cầu cá nhân"
-                                                >
+                                            >
                                                     <i class="bi bi-pencil"></i> Sửa
-                                                </button>
+                                            </button>
                                             </div>
                                         </td>
                                         <td><span class="text-muted">-</span></td>

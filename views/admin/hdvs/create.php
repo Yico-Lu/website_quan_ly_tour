@@ -39,7 +39,6 @@ ob_start();
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <div class="form-text">Chọn tài khoản HDV chưa có thông tin chi tiết</div>
                     <?php if (empty($availableAccounts)): ?>
                         <div class="alert alert-warning mt-2">
                             <i class="bi bi-exclamation-triangle"></i> 
@@ -99,7 +98,6 @@ ob_start();
                     placeholder="Ví dụ: Hướng dẫn văn hóa, lịch sử; Hướng dẫn du lịch thiên nhiên..."
                     required
                 ><?= htmlspecialchars($old['chuyen_mon'] ?? '') ?></textarea>
-                <div class="form-text">Mô tả chuyên môn và kinh nghiệm của hướng dẫn viên</div>
             </div>
 
             <!-- Ảnh đại diện -->
@@ -112,7 +110,6 @@ ob_start();
                     name="anh_dai_dien"
                     accept="image/*"
                 />
-                <div class="form-text">Chấp nhận định dạng: JPG, PNG, GIF. Kích thước tối đa: 5MB</div>
             </div>
         </div>
 

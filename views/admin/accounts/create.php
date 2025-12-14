@@ -31,7 +31,6 @@ ob_start();
                     <input type="text" class="form-control" id="name" name="name"
                            value="<?= htmlspecialchars($old['name'] ?? '') ?>"
                            placeholder="Nhập họ tên" required>
-                    <div class="form-text">Tên đầy đủ của người dùng</div>
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -39,7 +38,6 @@ ob_start();
                     <input type="email" class="form-control" id="email" name="email"
                            value="<?= htmlspecialchars($old['email'] ?? '') ?>"
                            placeholder="Nhập địa chỉ email" required>
-                    <div class="form-text">Email sẽ được dùng để đăng nhập</div>
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -47,7 +45,6 @@ ob_start();
                     <input type="tel" class="form-control" id="sdt" name="sdt"
                            value="<?= htmlspecialchars($old['sdt'] ?? '') ?>"
                            placeholder="Nhập số điện thoại">
-                    <div class="form-text">Ví dụ: 0912345678</div>
                 </div>
             </div>
 
@@ -56,14 +53,12 @@ ob_start();
                     <label for="password" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
                     <input type="password" class="form-control" id="password" name="password"
                            placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)" required>
-                    <div class="form-text">Mật khẩu tối thiểu 6 ký tự</div>
                 </div>
 
                 <div class="col-md-6 mb-3">
                     <label for="confirm_password" class="form-label">Xác nhận mật khẩu <span class="text-danger">*</span></label>
                     <input type="password" class="form-control" id="confirm_password" name="confirm_password"
                            placeholder="Nhập lại mật khẩu" required>
-                    <div class="form-text">Nhập lại mật khẩu để xác nhận</div>
                 </div>
             </div>
 
@@ -74,7 +69,6 @@ ob_start();
                         <option value="huong_dan_vien" <?= ($old['role'] ?? '') === 'huong_dan_vien' ? 'selected' : '' ?>>Hướng dẫn viên</option>
                         <option value="admin" <?= ($old['role'] ?? '') === 'admin' ? 'selected' : '' ?>>Quản trị viên</option>
                     </select>
-                    <div class="form-text">Quyền truy cập của tài khoản trong hệ thống</div>
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -86,7 +80,6 @@ ob_start();
                             Tài khoản hoạt động
                         </label>
                     </div>
-                    <div class="form-text">Bỏ check nếu muốn tạm ngưng tài khoản</div>
                 </div>
             </div>
         </div>

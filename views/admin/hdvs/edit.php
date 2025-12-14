@@ -30,11 +30,6 @@ ob_start();
                 </div>
             <?php endif; ?>
 
-            <!-- Thông tin tài khoản (readonly) -->
-            <div class="alert alert-info">
-                <strong>Tài khoản:</strong> <?= htmlspecialchars($hdv->ho_ten) ?> (<?= htmlspecialchars($hdv->email) ?>)
-            </div>
-
             <div class="row">
                 <!-- Nhóm -->
                 <div class="col-md-6 mb-3">
@@ -104,7 +99,6 @@ ob_start();
                     placeholder="Ví dụ: Hướng dẫn văn hóa, lịch sử; Hướng dẫn du lịch thiên nhiên..."
                     required
                 ><?= htmlspecialchars($old['chuyen_mon'] ?? $hdv->chuyen_mon) ?></textarea>
-                <div class="form-text">Mô tả chuyên môn và kinh nghiệm của hướng dẫn viên</div>
             </div>
 
             <!-- Ảnh đại diện mới -->
@@ -117,7 +111,6 @@ ob_start();
                     name="anh_dai_dien"
                     accept="image/*"
                 />
-                <div class="form-text">Để trống nếu không muốn thay đổi ảnh. Chấp nhận định dạng: JPG, PNG, GIF</div>
             </div>
 
             <!-- Thông tin bổ sung -->
