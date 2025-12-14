@@ -28,6 +28,13 @@
         role="menu"
         data-accordion="false"
       >
+        <li class="nav-item">
+        <a href="<?= BASE_URL . 'reports' ?>" class="nav-link">
+          <i class="nav-icon bi bi-bar-chart-line"></i>
+          <p>Dashboard Báo cáo</p>
+        </a>
+        </li>
+
        <?php if (isGuide()): ?>
           <li class="nav-item">
             <a href="<?= BASE_URL . 'home' ?>" class="nav-link">
@@ -35,6 +42,7 @@
               <p>Trang chủ HDV</p>
             </a>
           </li>
+
           <li class="nav-item">
             <a href="<?= BASE_URL . 'guide/my-bookings' ?>" class="nav-link">
               <i class="nav-icon bi bi-map"></i>
@@ -42,12 +50,6 @@
             </a>
           </li>
           <?php else: ?>
-          <li class="nav-item">
-            <a href="<?= BASE_URL . 'home' ?>" class="nav-link">
-              <i class="nav-icon bi bi-speedometer"></i>
-              <p>Dashboard</p>
-            </a>
-          </li>
           <li class="nav-item">
             <a href="#" class="nav-link">
               <i class="nav-icon bi bi-airplane-engines"></i>
@@ -120,13 +122,7 @@
             </ul>
           </li>
         <?php endif; ?>
-      <li class="nav-item">
-        <a href="<?= BASE_URL . 'reports' ?>" class="nav-link">
-          <i class="nav-icon bi bi-bar-chart-line"></i>
-          <p>Dashboard Báo cáo</p>
-        </a>
-      </li>
- 
+
         <li class="nav-item">
           <a href="#" class="nav-link">
             <i class="nav-icon bi bi-airplane-engines"></i>
