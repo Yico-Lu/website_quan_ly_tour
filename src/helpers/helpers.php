@@ -163,24 +163,6 @@ function getCurrentHDVId()
     return $hdv ? $hdv->id : null;
 }
 
-// Thiết lập thông báo flash message
-function setFlashMessage($type, $message)
-{
-    $_SESSION['flash_messages'][] = [
-        'type' => $type,
-        'message' => $message,
-        'timestamp' => time()
-    ];
-}
-
-// Lấy và xóa thông báo flash message
-function getFlashMessages()
-{
-    $messages = $_SESSION['flash_messages'] ?? [];
-    unset($_SESSION['flash_messages']);
-    return $messages;
-}
-
 // Hiển thị thông báo flash message (success/error) 
 function displayFlashMessages(): void
 {
@@ -197,7 +179,7 @@ function displayFlashMessages(): void
                     const bsAlert = new bootstrap.Alert(alert);
                     bsAlert.close();
                 }
-            }, 2000);
+            }, 5000);
         </script>';
         unset($_SESSION['success']);
     }
@@ -215,7 +197,7 @@ function displayFlashMessages(): void
                     const bsAlert = new bootstrap.Alert(alert);
                     bsAlert.close();
                 }
-            }, 2000);
+            }, 5000);
         </script>';
         unset($_SESSION['error']);
     }
